@@ -5,6 +5,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=EUC-KR">
+<link href="<c:url value="/css/bootstrap.min.css" />" rel="stylesheet">
 <title>Simple Calendar</title>
 
 <style type="text/css">
