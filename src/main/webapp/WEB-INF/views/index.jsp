@@ -115,7 +115,6 @@
 		if((m%2 == 0 && m<= 6) || (m%2 == 1 && m>=9)){
 			lastDate = 30;
 		}
-		
 		if(m==2 && y%4 == 0 && y%100 != 0 || y%400 == 0){
 			lastDate = 29;
 		}else if(m == 2){
@@ -204,9 +203,7 @@
 			table+="</tr>";
 		}
 		document.write(table);
-		
 	}
-	
 	
 	printCalendar();
 	</script>
