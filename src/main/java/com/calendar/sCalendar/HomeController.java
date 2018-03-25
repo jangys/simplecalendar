@@ -54,8 +54,8 @@ public class HomeController {
 		int dateList[] = new int[size];
 		for(int i=0;i<size;i++) {
 			CalendarDTO tempDTO = gcs.dto.get(i);
-			titleList[i] = tempDTO.getTitle();
-			dateList[i] = tempDTO.startYMD[2];
+			titleList[i] = tempDTO.getSummary();
+			dateList[i] = tempDTO.getStartTime()[2];
 		}
 		model.addAttribute("eventDate",dateList);
 		model.addAttribute("eventSummary",titleList);
@@ -104,8 +104,8 @@ public class HomeController {
 		int dateList[] = new int[size];
 		for(int i=0;i<size;i++) {
 			CalendarDTO tempDTO = gcs.dto.get(i);
-			titleList[i] = tempDTO.getTitle();
-			dateList[i] = tempDTO.startYMD[2];
+			titleList[i] = tempDTO.getSummary();
+			dateList[i] = tempDTO.getStartTime()[2];
 		}
 		model.addAttribute("year", year);
 		model.addAttribute("month", month);

@@ -146,43 +146,32 @@ public class GoogleCalendarService {
                     }
                     System.out.printf("%s (%s)\n", event.getSummary(), start);
                     CalendarDTO tempDTO = new CalendarDTO();
-                    tempDTO.setStart(start.toString());
-                    tempDTO.setTitle(event.getSummary());
+                    tempDTO.setStart(start);
+                    tempDTO.setSummary(event.getSummary());
                     dto.add(tempDTO);
                 }
             }
     }
 
-    /*
-    public static void main(String[] args) throws IOException {
-        // Build a new authorized API client service.
-        // Note: Do not confuse this class with the
-        //   com.google.api.services.calendar.model.Calendar class.
-        com.google.api.services.calendar.Calendar service =
-            getCalendarService();
-
-        // List the next 10 events from the primary calendar.
-        DateTime now = new DateTime(System.currentTimeMillis());
-        Events events = service.events().list("primary")
-            .setMaxResults(10)
-            .setTimeMin(now)
-            .setOrderBy("startTime")
-            .setSingleEvents(true)
-            .execute();
-        List<Event> items = events.getItems();
-        if (items.size() == 0) {
-            System.out.println("No upcoming events found.");
-        } else {
-            System.out.println("Upcoming events");
-            for (Event event : items) {
-                DateTime start = event.getStart().getDateTime();
-                if (start == null) {
-                    start = event.getStart().getDate();
-                }
-                System.out.printf("%s (%s)\n", event.getSummary(), start);
-                sum = event.getSummary();
-            }
-        }
-    }
-    */
+    
+//    public static void main(String[] args) throws IOException {
+//        // Build a new authorized API client service.
+//        // Note: Do not confuse this class with the
+//        //   com.google.api.services.calendar.model.Calendar class.
+//      com.google.api.services.calendar.Calendar service = getCalendarService();
+//      // Ä¶¸°´õ Á¶È¸
+//      String pageToken = null;
+//      do {
+//        CalendarList calendarList = service.calendarList().list().setPageToken(pageToken).execute();
+//        List<CalendarListEntry> items1 = calendarList.getItems();
+//        for (CalendarListEntry calendarListEntry : items1) {
+//          System.out.println(calendarListEntry.getSummary());
+//          System.out.println(calendarListEntry.getId());
+//          System.out.println(calendarListEntry.getColorId());
+//        }
+//        pageToken = calendarList.getNextPageToken();
+//      } while (pageToken != null);
+//
+//    }
+    
 }

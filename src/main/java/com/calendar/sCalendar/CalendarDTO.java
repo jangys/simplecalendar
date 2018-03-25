@@ -1,63 +1,100 @@
 package com.calendar.sCalendar;
 
-public class CalendarDTO {
-	public int id;
-	public String title;
-	public String start;
-	public String end;
-	public String detail;
-	public String calendarID;
-	
-	public int[] startYMD;
-	public int[] endYMD;
+import com.google.api.client.util.DateTime;
 
-	public void setID(int id) {
-		this.id = id;
-	}
-	public void setTitle(String title) {
-		this.title = title;
-	}
-	public void setStart(String start) {
-		this.start = start;
-		startYMD = new int[3];
-		startYMD[0] = Integer.parseInt(start.substring(0, 4));	//년
-		startYMD[1] = Integer.parseInt(start.substring(5,7));	//월
-		startYMD[2] = Integer.parseInt(start.substring(8,10));	//일
-	}
-	public void setEnd(String end) {
-		this.end = end;
-		endYMD = new int[3];
-		endYMD[0] = Integer.parseInt(end.substring(0, 4));
-		endYMD[1] = Integer.parseInt(end.substring(5,7));
-		endYMD[2] = Integer.parseInt(end.substring(8,10));
-	}
-	public void setDetail(String detail) {
-		this.detail = detail;
-	}
+public class CalendarDTO {
+	private String calendarID;
+	private String calendarSummary;
+	private String eventID;
+	private String summary;
+	private DateTime start;
+	private int[] startTime;
+	private DateTime end;
+	private int[] endTime;
+	private String description;
+	private String location;
+
 	public void setCalendarID(String calendarID) {
 		this.calendarID = calendarID;
 	}
-	public int getID() {
-		return id;
+	public void setCalendarSummary(String calendarSummary) {
+		this.calendarSummary = calendarSummary;
 	}
-	public String getTitle() {
-		return title;
+	public void setEventID(String eventID) {
+		this.eventID = eventID;
 	}
-	public String getStart() {
-		return start;
+	public void setSummary(String summary) {
+		this.summary = summary;
 	}
-	public String getEnd() {
-		return end;
+	public void setStart(DateTime start) {
+		this.start = start;
+		String strStart = start.toString();
+		startTime = new int[5];
+		startTime[0] = Integer.parseInt(strStart.substring(0, 4));	//년
+		startTime[1] = Integer.parseInt(strStart.substring(5,7));	//월
+		startTime[2] = Integer.parseInt(strStart.substring(8,10));	//일
+		if(strStart.length() >= 13) {//시간이 있는 경우
+			startTime[3] = Integer.parseInt(strStart.substring(11,13));
+			startTime[4] = Integer.parseInt(strStart.substring(14,16));
+			//System.out.println("hour : "+startTime[3]+" , min : "+startTime[4]);
+		}else {
+			startTime[3] = -1;
+		}
+		
 	}
-	public String getDetail() {
-		return detail;
+	public void setEnd(DateTime end) {
+		this.end = end;
+		endTime = new int[5];
+		if(end != null) {
+			String strEnd = end.toString();
+			endTime[0] = Integer.parseInt(strEnd.substring(0, 4));
+			endTime[1] = Integer.parseInt(strEnd.substring(5,7));
+			endTime[2] = Integer.parseInt(strEnd.substring(8,10));
+			if(strEnd.length() >= 13) {//시간이 있는 경우
+				endTime[3] = Integer.parseInt(strEnd.substring(11,13));
+				endTime[4] = Integer.parseInt(strEnd.substring(14,16));
+				//System.out.println("hour : "+endTime[3]+" , min : "+endTime[4]);
+			}else {
+				endTime[3] = -1;
+			}
+		}else {
+			endTime[0] = -1;
+		}
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public void setLocation(String location) {
+		this.location = location;
 	}
 	public String getCalendarID() {
 		return calendarID;
 	}
-	
-	@Override
-	public String toString() {
-		return "CalendarDTO id="+id+", title="+title+", start="+start+", end ="+end+", detail="+detail;
+	public String getCalendarSummary() {
+		return calendarSummary;
+	}
+	public String getEventID() {
+		return eventID;
+	}
+	public String getSummary() {
+		return summary;
+	}
+	public DateTime getStart() {
+		return start;
+	}
+	public int[] getStartTime() {
+		return startTime;
+	}
+	public DateTime getEnd() {
+		return end;
+	}
+	public int[] getEndTime() {
+		return endTime;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public String getLocation() {
+		return location;
 	}
 }
