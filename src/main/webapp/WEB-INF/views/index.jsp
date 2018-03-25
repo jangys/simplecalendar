@@ -75,6 +75,10 @@
 		margin: 2% 5%;
 		height: 100%;
 	}
+	/*오늘 날짜 표시*/
+	#today{
+		background-color: #E8FFFF;
+	}
 </style>
 </head>
 
@@ -156,7 +160,11 @@
 					if(j < startDay){
 						table+="<td class='date'>"+"   "+"</td>";
 					}else{
-						table+="<td class='date'onclick='javascript:alert("+dateNum+")'>"+dateNum;	//날짜 출력
+						table+="<td class='date'onclick='javascript:alert("+dateNum+")'";
+						if(dateNum == date){
+							table+=" id = 'today'";
+						}
+						table += ">"+dateNum;	//날짜 출력
 						//일정 출력
 						if(size != 0 && dateNum == eventDateList[eventNum]){
 							table+="<table class='eventList'>";
@@ -181,7 +189,11 @@
 					if(dateNum > lastDate){
 						table+="<td class='date'>"+"   "+"</td>";
 					}else{
-						table+="<td class='date'onclick='javascript:alert("+dateNum+")'>"+dateNum;
+						table+="<td class='date'onclick='javascript:alert("+dateNum+")'";
+						if(dateNum == date){
+							table+=" id = 'today'";
+						}
+						table += ">"+dateNum;
 						if(size != 0 && dateNum == eventDateList[eventNum]){
 							table+="<table class='eventList'>";
 							while(dateNum == eventDateList[eventNum]){
