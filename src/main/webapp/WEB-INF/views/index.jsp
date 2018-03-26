@@ -1,11 +1,12 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ page language="java" contentType="text/html; charset=EUC-KR"
-    pageEncoding="EUC-KR"%>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+    pageEncoding="UTF-8"%>
+<!DOCTYPE>
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=EUC-KR">
-<link href="<c:url value="/css/bootstrap.min.css" />" rel="stylesheet">
+<script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="/bootstrap/css/bootstrap.css">
 <title>Simple Calendar</title>
 
 <style type="text/css">
@@ -34,48 +35,48 @@
 		font-weight: bold;
 		font-size:20px;
 	}
-	/*¿äÀÏ ÁÙ*/
+	/*ìš”ì¼ ì¤„*/
 	#dayLine{
 		background-color:#C2E2E8;
 		height:3%;		
 	}
-	/*¿ùº° Ä¶¸°´õ Ç¥*/
+	/*ì›”ë³„ ìº˜ë¦°ë” í‘œ*/
 	#monthlyCalendar{
 		margin: 25px auto;
 		height:80%;		
 	}
-	/*³¯Â¥ ÇÑ Ä­*/
+	/*ë‚ ì§œ í•œ ì¹¸*/
 	.date{
 		vertical-align: top;
 	}
-	/*³¯Â¥ ÇÑ ÁÙ*/
+	/*ë‚ ì§œ í•œ ì¤„*/
 	.dateLine{
 		height:13%;
 	}
-	/*YYYY³â MM¿ù*/
+	/*YYYYë…„ MMì›”*/
 	#calendarTitle{
 		display: inline;
 		font-weight: bold;
 		font-size: 20px;
 	}
-	/*ÀÏÁ¤ ÇÑ Ä­*/
+	/*ì¼ì • í•œ ì¹¸*/
 	.event{
 		background-color:#918EDB;
 		font-weight: bold;
 		color: white;
 		border: 1px solid #918EDB;
 	}
-	/*ÀÏÁ¤ Ç¥*/
+	/*ì¼ì • í‘œ*/
 	.eventList{
 		border-collapse: separate;
 		border: none;
 	}
-	/*º»¹®*/
+	/*ë³¸ë¬¸*/
 	#container{
 		margin: 2% 5%;
 		height: 100%;
 	}
-	/*¿À´Ã ³¯Â¥ Ç¥½Ã*/
+	/*ì˜¤ëŠ˜ ë‚ ì§œ í‘œì‹œ*/
 	#today{
 		background-color: #E8FFFF;
 	}
@@ -83,40 +84,125 @@
 </head>
 
 <body>
-<div id="container">
-	<form action="sCalendar" method="get">
-		
-		<script type="text/javascript">
+<div id="header">
+</div>
+<script type="text/javascript">
+		function showTitle(y,m){
 			var now = new Date();
-			var y = now.getFullYear();
-			var m = now.getMonth()+1;
-			//³â, ¿ù, ¹öÆ° Ãâ·Â
-			document.write("<button type='submit' value='"+m+"' name='back'> ¡ç </button>");
-			document.write("<div id='calendarTitle' style='text-align : center;'>  "+y+"³â "+m+"¿ù"+"  </div>");
-			document.write("<button type='submit' value='"+m+"' name='forward'> ¡æ </button>");
-		</script>
+			var year = now.getFullYear();
+			var month = now.getMonth()+1;
+			var input = "";
+			
+			y = (y != undefined)? y:year;
+			m = (m != undefined)? m:month;
+			
+			input += "<form>";
+			//ë…„, ì›”, ë²„íŠ¼ ì¶œë ¥
+			input += "<button class = 'btn btn-primary' id = 'backBtn' type='button' value='"+y+"' name='back'> â† </button>";
+			input += "<div id='calendarTitle' style='text-align : center;'>  "+y+"ë…„ "+m+"ì›”"+"  </div>";
+			input += "<button type='button' id = 'forwardBtn' value='"+m+"' name='forward'> â†’ </button>";
+			input += "</form>";
+			document.getElementById("header").innerHTML = input;
+		}
+		//showTitle();
+		//back ë²„íŠ¼
+		$(document).on('click','#backBtn',function(){
+			var year = $('#backBtn').val();
+			var month = $('#forwardBtn').val();
+			var postData = {'year' : month, 'month' : year};
+			month--;
+			if(month == 0){
+				year--;
+				month = 12;
+			}
+			$.ajax({
+				url:"getMonthlyCalendar?year="+year+"&month="+month,
+				type:'GET',
+				data:postData,
+				contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+				dataType:"json",
+				success:function(data){
+					console.log(data.length);
+					showTitle(year,month);
+					printCalendar(year,month-1,data);
+				},
+				error: function (XMLHttpRequest, textStatus, errorThrown){
+		        	alert(errorThrown);
+		        }
+			});
+		});
 		
-	</form>
-	
+		//forward ë²„íŠ¼
+		$(document).on('click','#forwardBtn',function(){
+			var year = $('#backBtn').val();
+			var month = $('#forwardBtn').val();
+			var postData = {'year' : month, 'month' : year};
+			month++;
+			if(month == 13){
+				year++;
+				month = 1;
+			}
+			$.ajax({
+				url:"getMonthlyCalendar?year="+year+"&month="+month,
+				type:'GET',
+				data:postData,
+				contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+				dataType:"json",
+				success:function(data){
+					console.log(data.length);
+					showTitle(year,month);
+					printCalendar(year,month-1,data);
+				},
+				error: function (XMLHttpRequest, textStatus, errorThrown){
+		        	alert(errorThrown);
+		        }
+			});
+		});
+</script>
+<div id="container">
+	<table id="monthlyCalendar">
+	</table>
+		
 	<script type="text/javascript">
-	//´Ş·Â Ãâ·Â
-	function printCalendar(y, m) {    
+		$(document).ready(function(){
+			getList();
+		});
+		function getList(){
+			$.ajax({
+		        url:'MonthlyCalendar',
+		        type:'GET',
+		        dataType : "json",
+		        success:function(data){
+		            console.log(data.length);
+					showTitle();
+		            year = $('#backBtn').val();
+		            month = $('#forwardBtn').val();
+		            printCalendar(year,month-1,data);
+		        }
+		    });
+		}
+		
+	</script>
+	<script type="text/javascript">
+	//ë‹¬ë ¥ ì¶œë ¥
+	function printCalendar(y, m,eventList) {    
 	   var now = new Date();
 	   var year = now.getFullYear();
 	   var month = now.getMonth();
-	   var date = now.getDate();	//ÇöÀç ³¯Â¥
+	   var date = now.getDate();	//í˜„ì¬ ë‚ ì§œ
 	
 	   y = (y != undefined)? y:year;
 	   m = (m != undefined)? m:month;
 	   
 	   var startDate = new Date(y,m,1);
-	   var startDay = startDate.getDay();	//½ÃÀÛ ¿äÀÏ
+	   var startDay = startDate.getDay();	//ì‹œì‘ ìš”ì¼
 	   
 		var lastDate = 31;
 		
 		m++;
+		month++;
 		
-		//¸¶Áö¸· ³¯Â¥ °è»ê
+		//ë§ˆì§€ë§‰ ë‚ ì§œ ê³„ì‚°
 		if((m%2 == 0 && m<= 6) || (m%2 == 1 && m>=9)){
 			lastDate = 30;
 		}
@@ -128,56 +214,50 @@
 	   
 		var row = Math.ceil((startDay+lastDate)/7);
 		
-		var table = "<table id='monthlyCalendar'>"+"<tr id='dayLine'>";
-		table+="<th>ÀÏ</th>";
-		table+="<th>¿ù</th>";
-		table+="<th>È­</th>";
-		table+="<th>¼ö</th>";
-		table+="<th>¸ñ</th>";
-		table+="<th>±İ</th>";
-		table+="<th>Åä</th>";
+		var table = "<tr id='dayLine'>";
+		table+="<th>ì¼</th>";
+		table+="<th>ì›”</th>";
+		table+="<th>í™”</th>";
+		table+="<th>ìˆ˜</th>";
+		table+="<th>ëª©</th>";
+		table+="<th>ê¸ˆ</th>";
+		table+="<th>í† </th>";
 		table+="</tr>";
+		
 		var dateNum = 1;
-		
-		var eventDateList = new Array();		//ÀÏÁ¤ ÀÖ´Â ³¯Â¥ ¹è¿­
-		var eventSummaryList = new Array();		//ÀÏÁ¤ Á¦¸ñ ¹è¿­
-		
-		<c:forEach items="${eventDate}" var="event">
-			eventDateList.push("${event}");
-		</c:forEach>
-		<c:forEach items="${eventSummary}" var="summary">
-			eventSummaryList.push("${summary}");
-		</c:forEach>
-		
 		var eventNum = 0;
-		var size = eventDateList.length;
-		
-		//´Ş·Â±×¸®±â
+		var size = eventList.length;
+		if(size > 0){
+			while( eventNum < size && eventList[eventNum].startTime[1] != m){
+				eventNum++;
+			}
+		}
+		//ë‹¬ë ¥ê·¸ë¦¬ê¸°
 		for(var i = 1; i<=row;i++){
 			table+="<tr class='dateLine'>";
-			if(i==1){// Ã¹¹øÂ° ÁÙ ¾Õ¿¡ ºñ¾îÀÖÀ» ¼ö ÀÖ±â ¶§¹®
+			if(i==1){// ì²«ë²ˆì§¸ ì¤„ ì•ì— ë¹„ì–´ìˆì„ ìˆ˜ ìˆê¸° ë•Œë¬¸
 				for(var j=0;j<7;j++){
 					if(j < startDay){
 						table+="<td class='date'>"+"   "+"</td>";
 					}else{
 						table+="<td class='date'onclick='javascript:alert("+dateNum+")'";
-						if(dateNum == date){
+						if(dateNum == date && m == month){
 							table+=" id = 'today'";
 						}
-						table += ">"+dateNum;	//³¯Â¥ Ãâ·Â
-						//ÀÏÁ¤ Ãâ·Â
-						if(size != 0 && dateNum == eventDateList[eventNum]){
+						table += ">"+dateNum;	//ë‚ ì§œ ì¶œë ¥
+						//ì¼ì • ì¶œë ¥
+						if(size != 0 && eventNum < size && dateNum == eventList[eventNum].startTime[2]){
 							table+="<table class='eventList'>";
-							while(dateNum == eventDateList[eventNum]){// ÀÏÁ¤ ¿©·¯°³ÀÏ °æ¿ì
-								table+="<tr><td class='event'>"+eventSummaryList[eventNum]+"</td></tr>";
+							while(dateNum == eventList[eventNum].startTime[2]){// ì¼ì • ì—¬ëŸ¬ê°œì¼ ê²½ìš°
+								table+="<tr><td class='event'>"+eventList[eventNum].summary+"</td></tr>";
 								eventNum++;
-								if(eventNum == eventDateList.length){
+								if(eventNum == size){
 									eventNum--;
 									break;
 								}
 							}
 							table+="</table>";
-							if(eventNum == eventDateList.length)
+							if(eventNum == size)
 								eventNum--;
 						}
 						table+="</td>";
@@ -190,22 +270,22 @@
 						table+="<td class='date'>"+"   "+"</td>";
 					}else{
 						table+="<td class='date'onclick='javascript:alert("+dateNum+")'";
-						if(dateNum == date){
+						if(dateNum == date && m == month){
 							table+=" id = 'today'";
 						}
 						table += ">"+dateNum;
-						if(size != 0 && dateNum == eventDateList[eventNum]){
+						if(size != 0 && eventNum < size && dateNum == eventList[eventNum].startTime[2]){
 							table+="<table class='eventList'>";
-							while(dateNum == eventDateList[eventNum]){
-								table+="<tr><td class='event'>"+eventSummaryList[eventNum]+"</td></tr>";
+							while(dateNum == eventList[eventNum].startTime[2]){
+								table+="<tr><td class='event'>"+eventList[eventNum].summary+"</td></tr>";
 								eventNum++;
-								if(eventNum == eventDateList.length){
+								if(eventNum == size){
 									eventNum--;
 									break;
 								}
 							}
 							table+="</table>";
-							if(eventNum == eventDateList.length)
+							if(eventNum == size)
 								eventNum--;
 						}
 						table+="</td>";
@@ -215,10 +295,8 @@
 			}
 			table+="</tr>";
 		}
-		document.write(table);
+		document.getElementById("monthlyCalendar").innerHTML = table;
 	}
-	
-	printCalendar();
 	</script>
 
 </div>

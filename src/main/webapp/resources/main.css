@@ -1,0 +1,72 @@
+@charset "EUC-KR";
+
+	html, body{
+		height:100%;
+		
+	}
+	table{
+		width:100%;
+		border: 1px solid #9EBEC4;
+		border-collapse: collapse;
+	}
+	th,td{
+		border: 1px solid #9EBEC4;
+	}
+	td{
+		width:14.2%;
+	}
+	form{
+		display: inline;
+		margin: 0 auto;
+	}
+	button{
+		background-color: white;
+		border: 1px solid white;
+		font-weight: bold;
+		font-size:20px;
+	}
+	/*요일 줄*/
+	#dayLine{
+		background-color:#C2E2E8;
+		height:3%;		
+	}
+	/*월별 캘린더 표*/
+	#monthlyCalendar{
+		margin: 25px auto;
+		height:80%;		
+	}
+	/*날짜 한 칸*/
+	.date{
+		vertical-align: top;
+	}
+	/*날짜 한 줄*/
+	.dateLine{
+		height:13%;
+	}
+	/*YYYY년 MM월*/
+	#calendarTitle{
+		display: inline;
+		font-weight: bold;
+		font-size: 20px;
+	}
+	/*일정 한 칸*/
+	.event{
+		background-color:#918EDB;
+		font-weight: bold;
+		color: white;
+		border: 1px solid #918EDB;
+	}
+	/*일정 표*/
+	.eventList{
+		border-collapse: separate;
+		border: none;
+	}
+	/*본문*/
+	#container{
+		margin: 2% 5%;
+		height: 100%;
+	}
+	/*오늘 날짜 표시*/
+	#today{
+		background-color: #E8FFFF;
+	}
