@@ -137,17 +137,22 @@ public class GoogleCalendarService {
             if (items.size() == 0) {
                 System.out.println("No upcoming events found.");
             } else {
-            	  System.out.println(now.toString());
+            	 System.out.println(now.toString());
                 System.out.println("Upcoming events");
                 for (Event event : items) {
                     DateTime start = event.getStart().getDateTime();
                     if (start == null) {
                         start = event.getStart().getDate();
                     }
-                    System.out.printf("%s (%s)\n", event.getSummary(), start);
+                    DateTime end = event.getEnd().getDateTime();
+                    if(end == null) {
+                    	end = event.getEnd().getDate();
+                    }
+                    System.out.printf("%s (%s)\n", event.getSummary(), end);
                     CalendarDTO tempDTO = new CalendarDTO();
                     tempDTO.setStart(start);
                     tempDTO.setSummary(event.getSummary());
+                    tempDTO.setEnd(end);
                     dto.add(tempDTO);
                 }
             }

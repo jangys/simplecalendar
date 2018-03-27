@@ -30,6 +30,7 @@ public class CalendarDTO {
 		this.start = start;
 		String strStart = start.toString();
 		startTime = new int[5];
+		
 		startTime[0] = Integer.parseInt(strStart.substring(0, 4));	//년
 		startTime[1] = Integer.parseInt(strStart.substring(5,7));	//월
 		startTime[2] = Integer.parseInt(strStart.substring(8,10));	//일
@@ -42,24 +43,32 @@ public class CalendarDTO {
 		}
 		
 	}
+
 	public void setEnd(DateTime end) {
 		this.end = end;
 		endTime = new int[5];
-		if(end != null) {
-			String strEnd = end.toString();
-			endTime[0] = Integer.parseInt(strEnd.substring(0, 4));
-			endTime[1] = Integer.parseInt(strEnd.substring(5,7));
-			endTime[2] = Integer.parseInt(strEnd.substring(8,10));
-			if(strEnd.length() >= 13) {//시간이 있는 경우
-				endTime[3] = Integer.parseInt(strEnd.substring(11,13));
-				endTime[4] = Integer.parseInt(strEnd.substring(14,16));
-				//System.out.println("hour : "+endTime[3]+" , min : "+endTime[4]);
-			}else {
-				endTime[3] = -1;
-			}
+		String strEnd = end.toString();
+		endTime[0] = Integer.parseInt(strEnd.substring(0, 4));
+		endTime[1] = Integer.parseInt(strEnd.substring(5,7));
+		endTime[2] = Integer.parseInt(strEnd.substring(8,10));
+		
+		if(strEnd.length() >= 13) {//시간이 있는 경우 
+			endTime[3] = Integer.parseInt(strEnd.substring(11,13));
+			endTime[4] = Integer.parseInt(strEnd.substring(14,16));
+			//System.out.println("hour : "+endTime[3]+" , min : "+endTime[4]);
 		}else {
-			endTime[0] = -1;
+			endTime[2]--;
+			if(endTime[2] == 0) {
+				endTime[1] --;
+				if(endTime[1] == 0) {
+					endTime[0] --;
+					endTime[1] = 12;
+				}
+				endTime[2] = new CalculateCalendar().getLastDay(endTime[0], endTime[1]);
+			}
+			endTime[3] = -1;
 		}
+		
 	}
 	public void setDescription(String description) {
 		this.description = description;

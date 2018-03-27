@@ -24,6 +24,7 @@
 	}
 	td{
 		width:14.2%;
+		height:12.5%;
 	}
 	form{
 		display: inline;
@@ -35,24 +36,35 @@
 		font-weight: bold;
 		font-size:20px;
 	}
+	/*요일 표*/
+	#week{
+		width:100%;
+		height:3%;
+	}
 	/*요일 줄*/
 	#dayLine{
 		background-color:#C2E2E8;
-		height:3%;		
+		height:100%;		
 	}
 	/*월별 캘린더 표*/
 	#monthlyCalendar{
-		margin: 25px auto;
+		/*margin: 25px auto;*/
+		width:100%;
 		height:80%;		
 	}
 	/*날짜 한 칸*/
 	.date{
 		vertical-align: top;
+		height:12.5%;
+	}
+	/*스켸쥴 표*/
+	#dates{
+		height:100%;
 	}
 	/*날짜 한 줄*/
 	.dateLine{
-		height:13%;
 	}
+
 	/*YYYY년 MM월*/
 	#calendarTitle{
 		display: inline;
@@ -61,10 +73,13 @@
 	}
 	/*일정 한 칸*/
 	.event{
+	/*
 		background-color:#918EDB;
 		font-weight: bold;
 		color: white;
 		border: 1px solid #918EDB;
+		*/
+		height:12.5%;
 	}
 	/*일정 표*/
 	.eventList{
@@ -79,6 +94,22 @@
 	/*오늘 날짜 표시*/
 	#today{
 		background-color: #E8FFFF;
+	}
+	/*날짜와 일정*/
+	.scheduleList{
+		height:100%;
+	}
+	/*4주일때*/
+	.week4{
+		height:25%;
+	}
+	/*5주일때*/
+	.week5{
+		height:20%;
+	}
+	/*6주일때*/
+	.week6{
+		height:16.6%;
 	}
 </style>
 </head>
@@ -168,8 +199,15 @@
 		});
 </script>
 <div id="container">
-	<table id="monthlyCalendar">
-	</table>
+	<div id="monthlyCalendar">
+		<table id="week">
+			<tr id="dayLine">
+				<th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th>
+			</tr>
+		</table>
+		<table id="dates">
+		</table>
+	</div>
 		
 	<script type="text/javascript">
 		$(document).ready(function(){
@@ -195,6 +233,7 @@
 		            }
 		            showTitle(year, month);
 		            printCalendar(year,month-1,data);
+		            
 		        }
 		    });
 		}
@@ -202,7 +241,7 @@
 	</script>
 	<script type="text/javascript">
 	//달력 출력
-	function printCalendar(y, m,eventList) {    
+	function printCalendar(y, m, data) {    
 	   var now = new Date();
 	   var year = now.getFullYear();
 	   var month = now.getMonth();
@@ -231,89 +270,81 @@
 	   
 		var row = Math.ceil((startDay+lastDate)/7);
 		
-		var table = "<tr id='dayLine'>";
-		table+="<th>일</th>";
-		table+="<th>월</th>";
-		table+="<th>화</th>";
-		table+="<th>수</th>";
-		table+="<th>목</th>";
-		table+="<th>금</th>";
-		table+="<th>토</th>";
-		table+="</tr>";
+		var table = "";
 		
 		var dateNum = 1;
-		var eventNum = 0;
-		var size = eventList.length;
-		if(size > 0){
-			while( eventNum < size && eventList[eventNum].startTime[1] != m){
-				eventNum++;
-			}
-		}
+	
 		//달력그리기
-		for(var i = 1; i<=row;i++){
-			table+="<tr class='dateLine'>";
-			if(i==1){// 첫번째 줄 앞에 비어있을 수 있기 때문
-				for(var j=0;j<7;j++){
-					if(j < startDay){
-						table+="<td class='date'>"+"   "+"</td>";
-					}else{
-						table+="<td class='date'onclick='javascript:alert("+dateNum+")'";
-						if(dateNum == date && m == month){
-							table+=" id = 'today'";
-						}
-						table += ">"+dateNum;	//날짜 출력
-						//일정 출력
-						if(size != 0 && eventNum < size && dateNum == eventList[eventNum].startTime[2]){
-							table+="<table class='eventList'>";
-							while(dateNum == eventList[eventNum].startTime[2]){// 일정 여러개일 경우
-								table+="<tr><td class='event'>"+eventList[eventNum].summary+"</td></tr>";
-								eventNum++;
-								if(eventNum == size){
-									eventNum--;
-									break;
-								}
-							}
-							table+="</table>";
-							if(eventNum == size)
-								eventNum--;
-						}
-						table+="</td>";
-						dateNum++;
-					}
-				}
-			}else{
-				for(var j=0;j<7;j++){
-					if(dateNum > lastDate){
-						table+="<td class='date'>"+"   "+"</td>";
-					}else{
-						table+="<td class='date'onclick='javascript:alert("+dateNum+")'";
-						if(dateNum == date && m == month){
-							table+=" id = 'today'";
-						}
-						table += ">"+dateNum;
-						if(size != 0 && eventNum < size && dateNum == eventList[eventNum].startTime[2]){
-							table+="<table class='eventList'>";
-							while(dateNum == eventList[eventNum].startTime[2]){
-								table+="<tr><td class='event'>"+eventList[eventNum].summary+"</td></tr>";
-								eventNum++;
-								if(eventNum == size){
-									eventNum--;
-									break;
-								}
-							}
-							table+="</table>";
-							if(eventNum == size)
-								eventNum--;
-						}
-						table+="</td>";
-						dateNum++;
-					}
-				}
+		for(var i = 0; i<row;i++){
+			table+="<tr class='dateLine ";
+			switch(row){
+			case 4:
+				table+="week4'>";
+				break;
+			case 5:
+				table+="week5'>";
+				break;
+			case 6:
+				table+="week6'>";
+				break;
 			}
-			table+="</tr>";
+			table+="<td colspan='7'><table class = 'scheduleList'>";
+			var start = i*7;
+			for(var j = 0;j < 8;j++){
+				table+="<tr>";
+				for(var x = 0; x < 7;x++){
+					if(j == 0){//show date
+						if(i == 0 && x < startDay){
+							table += "<td class='date'>"+"   "+"</td>";
+						}else{
+							table += "<td class='date'";
+							if(m == month && dateNum == date){
+								table+=" id = 'today'";
+							}
+							if(dateNum > lastDate){
+								table+="></td>";
+							}else{
+								table += ">"+dateNum+"</td>";
+								dateNum++;
+							}
+						}
+					}else{
+						table += "<td class='event' data-index="+(x+start)+"></td>";
+					}
+				}
+				table+="</tr>";
+			}
+			table+="</table></td></tr>";
 		}
-		document.getElementById("monthlyCalendar").innerHTML = table;
+		document.getElementById("dates").innerHTML = table;
+
+		printEvent(y, m, startDay, lastDate, data);
 	}
+	
+	function printEvent(year, month, startIndex, lastDate, data){
+		var eventNum = 0;
+		var dateIndex = startIndex;
+		//var dates = document.querySelectorAll("[data-index='0']");
+		var dates = $("[data-index='0']");
+		console.log(dates[0]);
+		 $("[data-index="+0+"]").each(function(index, item){
+			if(index == 0 ){
+				$(this).css('background-color','red');
+				$(this).text("aaa");
+				$(this).attr("colspan",2);
+				//그만큼 칸을 삭제해야함.
+				$("[data-index="+1+"]").each(function(index, item){
+					if(index == 0){
+						$(this).remove();
+					}
+				});
+			}
+		 });
+		for(var dateNum = 1; dateNum <= lastDate; dateNum++){
+			
+		}
+	}
+	
 	</script>
 
 </div>
