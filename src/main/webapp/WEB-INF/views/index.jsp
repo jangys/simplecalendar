@@ -50,7 +50,7 @@
 	#monthlyCalendar{
 		/*margin: 25px auto;*/
 		width:100%;
-		height:80%;		
+		height:100%;		
 	}
 	/*날짜 한 칸*/
 	.date{
@@ -89,7 +89,7 @@
 	/*본문*/
 	#container{
 		margin: 2% 5%;
-		height: 100%;
+		height: 85%;
 	}
 	/*오늘 날짜 표시*/
 	#today{
@@ -290,7 +290,7 @@
 			}
 			table+="<td colspan='7'><table class = 'scheduleList'>";
 			var start = i*7;
-			for(var j = 0;j < 8;j++){
+			for(var j = 0;j < 7;j++){
 				table+="<tr>";
 				for(var x = 0; x < 7;x++){
 					if(j == 0){//show date
@@ -309,7 +309,7 @@
 							}
 						}
 					}else{
-						table += "<td class='event' data-index="+(x+start)+"></td>";
+						table += "<td class='event' data-index='"+(x+start)+"' data-col="+j+"></td>";
 					}
 				}
 				table+="</tr>";
@@ -323,24 +323,83 @@
 	
 	function printEvent(year, month, startIndex, lastDate, data){
 		var eventNum = 0;
-		var dateIndex = startIndex;
-		//var dates = document.querySelectorAll("[data-index='0']");
-		var dates = $("[data-index='0']");
-		console.log(dates[0]);
-		 $("[data-index="+0+"]").each(function(index, item){
-			if(index == 0 ){
-				$(this).css('background-color','red');
-				$(this).text("aaa");
-				$(this).attr("colspan",2);
-				//그만큼 칸을 삭제해야함.
-				$("[data-index="+1+"]").each(function(index, item){
-					if(index == 0){
-						$(this).remove();
-					}
-				});
+		var dateIndex = startIndex-1;
+		 var size = data.length;
+		
+		for(var i = 0; i < size; i++){
+			var index=0;
+			var startDateIndex=0;
+			var endDateIndex=0;
+			if(data[i].startTime[1] < month || data[i].startTime[0] < year){//2017-12 ~ 2018-3
+				index = startIndex;
+			}else{
+				index = data[i].startTime[2] + startIndex -1;
 			}
-		 });
-		for(var dateNum = 1; dateNum <= lastDate; dateNum++){
+			startDateIndex = index;
+			if(data[i].endTime[1] > month || data[i].endTime[0] > year){
+				endDateIndex = lastDate + startIndex - 1;
+			}else{
+				endDateIndex = data[i].endTime[2] + startIndex -1;
+			}
+			
+			if(startDateIndex == endDateIndex){//하루 일정
+				$("[data-index="+startDateIndex+"]:eq(0)").text(data[i].summary);
+				$("[data-index="+startDateIndex+"]:eq(0)").css('background-color','#918EDB');
+				$("[data-index="+startDateIndex+"]:eq(0)").removeAttr("data-index");
+			}else{//이어지는 일정
+				var weekNum = 6;
+				var colspan = 0;
+				var isIn = 0;
+				for(var n = 0; n < 6;n++){
+					weekNum = 6 + 7*n;
+					if(startDateIndex <= weekNum && endDateIndex <= weekNum && isIn == 0){//한 주에 있는 경우
+						colspan = endDateIndex - startDateIndex +1;
+						$("[data-index="+startDateIndex+"]:eq(0)").text(data[i].summary);
+						$("[data-index="+startDateIndex+"]:eq(0)").css('background-color','#918EDB');
+						$("[data-index="+startDateIndex+"]:eq(0)").attr("colspan",colspan);
+						$("[data-index="+startDateIndex+"]:eq(0)").removeAttr("data-index");
+						index++;
+						while(index <= endDateIndex){
+							$("[data-index="+index+"]:eq(0)").remove();
+							index++;
+						}
+						break;
+					}else if(index <= weekNum && endDateIndex > weekNum){//주 넘어가는 경우
+						colspan = weekNum-index+1;
+						console.log(startDateIndex + " , "+endDateIndex+" , "+weekNum);
+						if(index == startDateIndex){
+							$("[data-index="+startDateIndex+"]:eq(0)").text(data[i].summary);
+							$("[data-index="+startDateIndex+"]:eq(0)").css('background-color','#918EDB');
+							$("[data-index="+startDateIndex+"]:eq(0)").attr("colspan",colspan);
+							$("[data-index="+startDateIndex+"]:eq(0)").removeAttr("data-index");
+						}else{
+							$("[data-index="+index+"]:eq(0)").css('background-color','#918EDB');
+							$("[data-index="+index+"]:eq(0)").attr("colspan",colspan);
+							$("[data-index="+index+"]:eq(0)").removeAttr("data-index");
+						}
+						index++;
+						while(index <= weekNum){
+							$("[data-index="+index+"]:eq(0)").remove();
+							index++;
+						}
+						index = weekNum+1;
+						isIn = 1;
+					}else if(index <= weekNum && endDateIndex <= weekNum){//마지막 주
+						console.log("last"+", "+endDateIndex);
+						colspan = endDateIndex - index +1;
+						$("[data-index="+index+"]:eq(0)").css('background-color','#918EDB');
+						$("[data-index="+index+"]:eq(0)").attr("colspan",colspan);
+						$("[data-index="+index+"]:eq(0)").removeAttr("data-index");
+						index++;
+						while(index <= endDateIndex){
+							$("[data-index="+index+"]:eq(0)").remove();
+							index++;
+						}
+						break;
+					}
+					
+				}//for-n
+			}
 			
 		}
 	}

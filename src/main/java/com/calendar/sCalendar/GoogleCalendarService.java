@@ -133,7 +133,6 @@ public class GoogleCalendarService {
             List<Event> items = events.getItems();
             
             dto = new ArrayList<CalendarDTO>();
-            
             if (items.size() == 0) {
                 System.out.println("No upcoming events found.");
             } else {
@@ -148,13 +147,14 @@ public class GoogleCalendarService {
                     if(end == null) {
                     	end = event.getEnd().getDate();
                     }
-                    System.out.printf("%s (%s)\n", event.getSummary(), end);
+                    System.out.printf("%s (%s)\n", end, Long.toString(end.getValue()));
                     CalendarDTO tempDTO = new CalendarDTO();
                     tempDTO.setStart(start);
                     tempDTO.setSummary(event.getSummary());
                     tempDTO.setEnd(end);
                     dto.add(tempDTO);
                 }
+                dto = new EventProcessing().arrangeOrder(dto, year, month);
             }
     }
 
