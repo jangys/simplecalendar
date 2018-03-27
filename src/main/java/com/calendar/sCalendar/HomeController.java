@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,10 +37,22 @@ public class HomeController {
 	public static int year;
 	public static int month;
 	
+	public static boolean in = false;
+	
 	//초기 화면
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	public String home(Locale locale, Model model) {
 		logger.info("Welcome home! The client locale is {}.", locale);
+		return "index";
+	}
+	@RequestMapping(value = "/{date}", method = RequestMethod.GET)
+	public String refreshPage(@PathVariable String date, Locale locale, Model model) {
+		System.out.println(date);
+		in = true;
+		String[] temp = date.split("-");
+		year = Integer.parseInt(temp[0]);
+		month = Integer.parseInt(temp[1]);
+		
 		return "index";
 	}
 	
@@ -48,9 +61,11 @@ public class HomeController {
 		ArrayList<CalendarDTO> eventList = new ArrayList<>();
 		GoogleCalendarService gcs = new GoogleCalendarService();
 		Date date = new Date();
-		if(year == 0 || month == 0) {
+		if(!in) {
 			year = date.getYear()+1900;
 			month = date.getMonth()+1;
+		}else {
+			in = false;
 		}
 		System.out.println(year+" , "+month);
 		try {
@@ -65,12 +80,13 @@ public class HomeController {
 	}
 	
 	//월 뷰 요청
-		@RequestMapping(value = "/getMonthlyCalendar")
-		public @ResponseBody ArrayList<CalendarDTO> getBackMonthEventList(@RequestParam("year") int y, @RequestParam("month") int m , Model model,HttpServletResponse response)throws Exception{
+		@RequestMapping(value = "/monthly/{year}/{month}/{date}")
+		public @ResponseBody ArrayList<CalendarDTO> getBackMonthEventList(@PathVariable int year,@PathVariable int month,@PathVariable int date, Model model,HttpServletResponse response)throws Exception{
+			System.out.println("CCC");
 			ArrayList<CalendarDTO> eventList = new ArrayList<>();
 			GoogleCalendarService gcs = new GoogleCalendarService();
-			month = m;
-			year = y;
+			this.year = year;
+			this.month = month;
 			try {
 				gcs.getEvent(year,month);
 			} catch (IOException e) {

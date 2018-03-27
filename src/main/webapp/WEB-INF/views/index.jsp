@@ -109,22 +109,26 @@
 		$(document).on('click','#backBtn',function(){
 			var year = $('#backBtn').val();
 			var month = $('#forwardBtn').val();
+			var date = 1;
 			var postData = {'year' : month, 'month' : year};
 			month--;
 			if(month == 0){
 				year--;
 				month = 12;
 			}
+			var pageUrl = "/"+year+"-"+month+"-"+date;
+			var baseUrl = "http://localhost:8080";
+	
 			$.ajax({
-				url:"getMonthlyCalendar?year="+year+"&month="+month,
+				url: baseUrl+"/monthly/"+year+"/"+month+"/"+date,
 				type:'GET',
-				data:postData,
 				contentType: "application/x-www-form-urlencoded; charset=UTF-8",
 				dataType:"json",
 				success:function(data){
 					console.log(data.length);
 					showTitle(year,month);
 					printCalendar(year,month-1,data);
+					history.replaceState(data,"SimpleCalendar",pageUrl);
 				},
 				error: function (XMLHttpRequest, textStatus, errorThrown){
 		        	alert(errorThrown);
@@ -136,22 +140,26 @@
 		$(document).on('click','#forwardBtn',function(){
 			var year = $('#backBtn').val();
 			var month = $('#forwardBtn').val();
+			var date = 1;
 			var postData = {'year' : month, 'month' : year};
 			month++;
 			if(month == 13){
 				year++;
 				month = 1;
 			}
+			var pageUrl = "/"+year+"-"+month+"-"+date;
+			var baseUrl = "http://localhost:8080";
+	
 			$.ajax({
-				url:"getMonthlyCalendar?year="+year+"&month="+month,
+				url: baseUrl+"/monthly/"+year+"/"+month+"/"+date,
 				type:'GET',
-				data:postData,
 				contentType: "application/x-www-form-urlencoded; charset=UTF-8",
 				dataType:"json",
 				success:function(data){
 					console.log(data.length);
 					showTitle(year,month);
 					printCalendar(year,month-1,data);
+					history.replaceState(data,"SimpleCalendar",pageUrl);
 				},
 				error: function (XMLHttpRequest, textStatus, errorThrown){
 		        	alert(errorThrown);
@@ -174,9 +182,18 @@
 		        dataType : "json",
 		        success:function(data){
 		            console.log(data.length);
-					showTitle();
-		            year = $('#backBtn').val();
-		            month = $('#forwardBtn').val();
+		            console.log(location.pathname);
+		            var path = location.pathname.split('/');
+		            var now = new Date();
+		            var year = now.getFullYear();
+		            var month = now.getMonth()+1;
+		            //url에서 현재 년,월 추출
+		            if(location.pathname != '/'){
+		            	var fullDate = path[1].split('-')
+		            	year = parseInt(fullDate[0]);
+		            	month = parseInt(fullDate[1]);
+		            }
+		            showTitle(year, month);
 		            printCalendar(year,month-1,data);
 		        }
 		    });
