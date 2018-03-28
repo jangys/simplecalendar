@@ -14,6 +14,7 @@ public class EventProcessing {
 		int end = -1;
 		System.out.println("-----------------------------");
 		for(int i=0;i<size-1;i++) {
+
 			//시작 날짜가 해당 월이 아닌 경우
 			if(dto.get(i).getStartTime()[1] < month || dto.get(i).getStartTime()[0] < year) {
 				if(start == -1) {

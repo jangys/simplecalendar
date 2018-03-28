@@ -33,71 +33,56 @@ public class HomeController {
 	/**
 	 * Simply selects the home view to render by returning its name.
 	 */
-	
-	public static int year;
-	public static int month;
-	
-	public static boolean in = false;
-	
 	//초기 화면
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	public String home(Locale locale, Model model) {
 		logger.info("Welcome home! The client locale is {}.", locale);
 		return "index";
 	}
-	@RequestMapping(value = "/{date}", method = RequestMethod.GET)
+	
+	@RequestMapping(value = "/m/{date}", method = RequestMethod.GET)
 	public String refreshPage(@PathVariable String date, Locale locale, Model model) {
-		System.out.println(date);
-		in = true;
-		String[] temp = date.split("-");
-		year = Integer.parseInt(temp[0]);
-		month = Integer.parseInt(temp[1]);
-		
 		return "index";
 	}
 	
-	@RequestMapping(value = "/MonthlyCalendar")
-	public @ResponseBody ArrayList<CalendarDTO> getEventList(Locale locale, Model model){
+	@RequestMapping(value = "/MonthlyCalendar/{date}")
+	public @ResponseBody ArrayList<CalendarDTO> getEventList(@PathVariable String date, Locale locale, Model model){
 		ArrayList<CalendarDTO> eventList = new ArrayList<>();
 		GoogleCalendarService gcs = new GoogleCalendarService();
-		Date date = new Date();
-		if(!in) {
-			year = date.getYear()+1900;
-			month = date.getMonth()+1;
+		Date curDate = new Date();
+		String[] temp = date.split("-");
+		int year = 0;
+		int month = 0;
+		if(date != null) {
+			year = Integer.parseInt(temp[0]);
+			month = Integer.parseInt(temp[1]);
 		}else {
-			in = false;
+			year = curDate.getYear()+1900;
+			month = curDate.getMonth()+1;
 		}
-		System.out.println(year+" , "+month);
+		//System.out.println(year+" , "+month);
 		try {
-			gcs.getEvent(year,month);
+			eventList = gcs.getEvent(year,month);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		eventList = gcs.dto;
-		
 		return eventList;
 	}
 	
 	//월 뷰 요청
 		@RequestMapping(value = "/monthly/{year}/{month}/{date}")
 		public @ResponseBody ArrayList<CalendarDTO> getBackMonthEventList(@PathVariable int year,@PathVariable int month,@PathVariable int date, Model model,HttpServletResponse response)throws Exception{
-			System.out.println("CCC");
 			ArrayList<CalendarDTO> eventList = new ArrayList<>();
 			GoogleCalendarService gcs = new GoogleCalendarService();
-			this.year = year;
-			this.month = month;
 			try {
-				gcs.getEvent(year,month);
+				eventList = gcs.getEvent(year,month);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			eventList = gcs.dto;
-			
 			return eventList;
-			
 		}
 		
-	
+
 }

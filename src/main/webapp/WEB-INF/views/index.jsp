@@ -6,7 +6,9 @@
 <head>
 <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<link rel="stylesheet" href="/bootstrap/css/bootstrap.css">
+<link rel="stylesheet" href="/resources/bootstrap/css/bootstrap.css" >
+<script src="/resources/bootstrap/js/bootstrap.min.js"></script>
+
 <title>Simple Calendar</title>
 
 <style type="text/css">
@@ -21,6 +23,9 @@
 	}
 	th,td{
 		border: 1px solid #9EBEC4;
+	}
+	th{
+		text-align: center;
 	}
 	td{
 		width:14.2%;
@@ -93,7 +98,7 @@
 	}
 	/*오늘 날짜 표시*/
 	#today{
-		background-color: #E8FFFF;
+		background-color: #FFE08C;
 	}
 	/*날짜와 일정*/
 	.scheduleList{
@@ -131,7 +136,7 @@
 			//년, 월, 버튼 출력
 			input += "<button class = 'btn btn-primary' id = 'backBtn' type='button' value='"+y+"' name='back'> ← </button>";
 			input += "<div id='calendarTitle' style='text-align : center;'>  "+y+"년 "+m+"월"+"  </div>";
-			input += "<button type='button' id = 'forwardBtn' value='"+m+"' name='forward'> → </button>";
+			input += "<button class = 'btn btn-primary' type='button' id = 'forwardBtn' value='"+m+"' name='forward'> → </button>";
 			input += "</form>";
 			document.getElementById("header").innerHTML = input;
 		}
@@ -147,7 +152,7 @@
 				year--;
 				month = 12;
 			}
-			var pageUrl = "/"+year+"-"+month+"-"+date;
+			var pageUrl = "/m/"+year+"-"+month+"-"+date;
 			var baseUrl = "http://localhost:8080";
 	
 			$.ajax({
@@ -156,7 +161,6 @@
 				contentType: "application/x-www-form-urlencoded; charset=UTF-8",
 				dataType:"json",
 				success:function(data){
-					console.log(data.length);
 					showTitle(year,month);
 					printCalendar(year,month-1,data);
 					history.replaceState(data,"SimpleCalendar",pageUrl);
@@ -178,7 +182,7 @@
 				year++;
 				month = 1;
 			}
-			var pageUrl = "/"+year+"-"+month+"-"+date;
+			var pageUrl = "/m/"+year+"-"+month+"-"+date;
 			var baseUrl = "http://localhost:8080";
 	
 			$.ajax({
@@ -187,7 +191,6 @@
 				contentType: "application/x-www-form-urlencoded; charset=UTF-8",
 				dataType:"json",
 				success:function(data){
-					console.log(data.length);
 					showTitle(year,month);
 					printCalendar(year,month-1,data);
 					history.replaceState(data,"SimpleCalendar",pageUrl);
@@ -214,26 +217,48 @@
 			getList();
 		});
 		function getList(){
+			var baseUrl = "http://localhost:8080";
+			var year;
+			var month;
+			var fullDate;
+			var path;
+			var requestURL;
+			var date;
+			if(location.pathname != '/'){
+				path = location.pathname.split('/');
+            	fullDate = path[2].split('-');
+            	year = parseInt(fullDate[0]);
+            	month = parseInt(fullDate[1]);
+            	date = parseInt(fullDate[2]);
+            }else{
+            	 var now = new Date();
+		         year = now.getFullYear();
+		         month = now.getMonth()+1;
+		         date = now.getDate();
+            }
+			requestURL = "/"+year.toString()+"-"+month.toString()+"-"+date.toString();
 			$.ajax({
-		        url:'MonthlyCalendar',
+		        url:baseUrl+"/MonthlyCalendar"+requestURL,
 		        type:'GET',
 		        dataType : "json",
 		        success:function(data){
-		            console.log(data.length);
-		            console.log(location.pathname);
-		            var path = location.pathname.split('/');
+		            //console.log(location.pathname);
+		            path = location.pathname.split('/');
 		            var now = new Date();
-		            var year = now.getFullYear();
-		            var month = now.getMonth()+1;
+		            year = now.getFullYear();
+		            month = now.getMonth()+1;
+		            date = now.getDate();
+		            var pageUrl = "/m/"+year+"-"+month+"-"+date;
 		            //url에서 현재 년,월 추출
 		            if(location.pathname != '/'){
-		            	var fullDate = path[1].split('-')
+		            	var fullDate = path[2].split('-');
 		            	year = parseInt(fullDate[0]);
 		            	month = parseInt(fullDate[1]);
+		            }else{
+		            	history.replaceState(data,"SimpleCalendar",pageUrl);
 		            }
 		            showTitle(year, month);
 		            printCalendar(year,month-1,data);
-		            
 		        }
 		    });
 		}
@@ -325,11 +350,13 @@
 		var eventNum = 0;
 		var dateIndex = startIndex-1;
 		 var size = data.length;
-		
+		var colorList = ["#B5B2FF","#B2CCFF","#B2EBF4","#B7F0B1","#CEFBC9","#D4F4FA","#FAED7D"];
+		var colorSize = colorList.length;
 		for(var i = 0; i < size; i++){
 			var index=0;
 			var startDateIndex=0;
 			var endDateIndex=0;
+			var colorCode = colorList[Math.floor(Math.random() * colorSize)]; 
 			if(data[i].startTime[1] < month || data[i].startTime[0] < year){//2017-12 ~ 2018-3
 				index = startIndex;
 			}else{
@@ -344,55 +371,63 @@
 			
 			if(startDateIndex == endDateIndex){//하루 일정
 				$("[data-index="+startDateIndex+"]:eq(0)").text(data[i].summary);
-				$("[data-index="+startDateIndex+"]:eq(0)").css('background-color','#918EDB');
+				$("[data-index="+startDateIndex+"]:eq(0)").css('background-color',colorCode);
 				$("[data-index="+startDateIndex+"]:eq(0)").removeAttr("data-index");
 			}else{//이어지는 일정
 				var weekNum = 6;
 				var colspan = 0;
 				var isIn = 0;
+				var col = 0;
+				
 				for(var n = 0; n < 6;n++){
 					weekNum = 6 + 7*n;
 					if(startDateIndex <= weekNum && endDateIndex <= weekNum && isIn == 0){//한 주에 있는 경우
 						colspan = endDateIndex - startDateIndex +1;
-						$("[data-index="+startDateIndex+"]:eq(0)").text(data[i].summary);
-						$("[data-index="+startDateIndex+"]:eq(0)").css('background-color','#918EDB');
-						$("[data-index="+startDateIndex+"]:eq(0)").attr("colspan",colspan);
-						$("[data-index="+startDateIndex+"]:eq(0)").removeAttr("data-index");
+						col = $("[data-index="+startDateIndex+"]:eq(0)").attr("data-col");
+						var lastCol = $("[data-index="+endDateIndex+"]:eq(0)").attr("data-col");
+						col = col > lastCol ? col:lastCol;
+						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").text(data[i].summary);
+						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").css('background-color',colorCode);
+						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").attr("colspan",colspan);
+						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").removeAttr("data-index");
 						index++;
 						while(index <= endDateIndex){
-							$("[data-index="+index+"]:eq(0)").remove();
+							$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").remove();
 							index++;
 						}
 						break;
 					}else if(index <= weekNum && endDateIndex > weekNum){//주 넘어가는 경우
 						colspan = weekNum-index+1;
-						console.log(startDateIndex + " , "+endDateIndex+" , "+weekNum);
 						if(index == startDateIndex){
-							$("[data-index="+startDateIndex+"]:eq(0)").text(data[i].summary);
-							$("[data-index="+startDateIndex+"]:eq(0)").css('background-color','#918EDB');
-							$("[data-index="+startDateIndex+"]:eq(0)").attr("colspan",colspan);
-							$("[data-index="+startDateIndex+"]:eq(0)").removeAttr("data-index");
+							col = $("[data-index="+startDateIndex+"]:eq(0)").attr("data-col");
+							var lastCol = $("[data-index="+weekNum+"]:eq(0)").attr("data-col");
+							col = col > lastCol ? col:lastCol;
+							$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").text(data[i].summary);
+							$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").css('background-color',colorCode);
+							$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").attr("colspan",colspan);
+							$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").removeAttr("data-index");
+							
 						}else{
-							$("[data-index="+index+"]:eq(0)").css('background-color','#918EDB');
-							$("[data-index="+index+"]:eq(0)").attr("colspan",colspan);
-							$("[data-index="+index+"]:eq(0)").removeAttr("data-index");
+							$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").css('background-color',colorCode);
+							$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").attr("colspan",colspan);
+							$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").removeAttr("data-index");
 						}
 						index++;
 						while(index <= weekNum){
-							$("[data-index="+index+"]:eq(0)").remove();
+							$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").remove();
 							index++;
 						}
 						index = weekNum+1;
 						isIn = 1;
 					}else if(index <= weekNum && endDateIndex <= weekNum){//마지막 주
-						console.log("last"+", "+endDateIndex);
+						//console.log("last"+", "+endDateIndex);
 						colspan = endDateIndex - index +1;
-						$("[data-index="+index+"]:eq(0)").css('background-color','#918EDB');
-						$("[data-index="+index+"]:eq(0)").attr("colspan",colspan);
-						$("[data-index="+index+"]:eq(0)").removeAttr("data-index");
+						$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").css('background-color',colorCode);
+						$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").attr("colspan",colspan);
+						$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").removeAttr("data-index");
 						index++;
 						while(index <= endDateIndex){
-							$("[data-index="+index+"]:eq(0)").remove();
+							$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").remove();
 							index++;
 						}
 						break;

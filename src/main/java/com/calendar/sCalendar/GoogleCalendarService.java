@@ -66,8 +66,6 @@ public class GoogleCalendarService {
      * @throws IOException
      */
     
-    public static ArrayList<CalendarDTO> dto;
-    
     //인증
     public static Credential authorize() throws IOException {
         // Load client secrets.
@@ -107,13 +105,13 @@ public class GoogleCalendarService {
 
     //@SuppressWarnings("deprecation")
     //year, month에 맞는 이벤트 ArrayList<CalendarDTO>로 저장
-	public static void getEvent(int year, int month) throws IOException{
+	public static ArrayList<CalendarDTO> getEvent(int year, int month) throws IOException{
     	com.google.api.services.calendar.Calendar service =
                 getCalendarService();
             // List the next 10 events from the primary calendar.
             //DateTime now = new DateTime(System.currentTimeMillis());
     		Date cur = new Date(year-1900, month-1, 1);
-
+    		ArrayList<CalendarDTO> dtoList = new ArrayList<CalendarDTO>();
     		Date nextDate;
     		if(month == 12) {
     			nextDate = new Date(year-1900 + 1,0,1);
@@ -131,8 +129,6 @@ public class GoogleCalendarService {
                 .setSingleEvents(true)
                 .execute();
             List<Event> items = events.getItems();
-            
-            dto = new ArrayList<CalendarDTO>();
             if (items.size() == 0) {
                 System.out.println("No upcoming events found.");
             } else {
@@ -152,13 +148,17 @@ public class GoogleCalendarService {
                     tempDTO.setStart(start);
                     tempDTO.setSummary(event.getSummary());
                     tempDTO.setEnd(end);
-                    dto.add(tempDTO);
+                    tempDTO.setDescription(event.getDescription());
+                    tempDTO.setEventID(event.getId());
+                    tempDTO.setLocation(event.getLocation());
+                    dtoList.add(tempDTO);
                 }
-                dto = new EventProcessing().arrangeOrder(dto, year, month);
+                dtoList = new EventProcessing().arrangeOrder(dtoList, year, month);
             }
+            
+            return dtoList;
     }
 
-    
 //    public static void main(String[] args) throws IOException {
 //        // Build a new authorized API client service.
 //        // Note: Do not confuse this class with the
@@ -172,7 +172,6 @@ public class GoogleCalendarService {
 //        for (CalendarListEntry calendarListEntry : items1) {
 //          System.out.println(calendarListEntry.getSummary());
 //          System.out.println(calendarListEntry.getId());
-//          System.out.println(calendarListEntry.getColorId());
 //        }
 //        pageToken = calendarList.getNextPageToken();
 //      } while (pageToken != null);
