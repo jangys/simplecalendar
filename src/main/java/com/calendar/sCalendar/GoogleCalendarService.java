@@ -158,7 +158,25 @@ public class GoogleCalendarService {
             
             return dtoList;
     }
+	public static ArrayList<CalendarListEntry> getCalendarList() throws IOException{
+		ArrayList<CalendarListEntry> result = new ArrayList<CalendarListEntry>();
+		
+		com.google.api.services.calendar.Calendar service = getCalendarService();
+		String pageToken = null;
+	      do {
+	        CalendarList calendarList = service.calendarList().list().setPageToken(pageToken).execute();
+	        List<CalendarListEntry> items = calendarList.getItems();
+	        for (CalendarListEntry calendarListEntry : items) {
+	          System.out.println(calendarListEntry.getSummary());
+	          System.out.println(calendarListEntry.getId());
+	          result.add(calendarListEntry);
+	        }
+	        pageToken = calendarList.getNextPageToken();
+	      } while (pageToken != null);
+	      
+	      return result;
 
+	}
 //    public static void main(String[] args) throws IOException {
 //        // Build a new authorized API client service.
 //        // Note: Do not confuse this class with the

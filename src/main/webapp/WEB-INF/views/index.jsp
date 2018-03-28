@@ -6,8 +6,8 @@
 <head>
 <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<link rel="stylesheet" href="/resources/bootstrap/css/bootstrap.css" >
-<script src="/resources/bootstrap/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="/bootstrap/css/bootstrap.css" >
+<script src="/bootstrap/js/bootstrap.min.js"></script>
 
 <title>Simple Calendar</title>
 
@@ -21,7 +21,7 @@
 		border: 1px solid #9EBEC4;
 		border-collapse: collapse;
 	}
-	th,td{
+	th{
 		border: 1px solid #9EBEC4;
 	}
 	th{
@@ -41,6 +41,10 @@
 		font-weight: bold;
 		font-size:20px;
 	}
+	/*제목 부분*/
+	#header{
+		margin: 1%;
+	}
 	/*요일 표*/
 	#week{
 		width:100%;
@@ -55,12 +59,14 @@
 	#monthlyCalendar{
 		/*margin: 25px auto;*/
 		width:100%;
-		height:100%;		
+		height:85%;
 	}
 	/*날짜 한 칸*/
 	.date{
 		vertical-align: top;
 		height:12.5%;
+		border-left: 1px solid #9EBEC4;
+		border-right: 1px solid #9EBEC4;
 	}
 	/*스켸쥴 표*/
 	#dates{
@@ -85,17 +91,38 @@
 		border: 1px solid #918EDB;
 		*/
 		height:12.5%;
+		border-left: 1px solid #9EBEC4;
+		border-right: 1px solid #9EBEC4;
 	}
 	/*일정 표*/
 	.eventList{
 		border-collapse: separate;
 		border: none;
 	}
+	/*사이드*/
+	#side{
+		border: 1px solid #918EDB;
+		padding : 3% 3%;
+	/*
+		margin: auto 1%;
+		width:5%;
+		border: 1px solid #918EDB;
+		float:left;
+		layout:fixed;
+		*/
+	}
 	/*본문*/
 	#container{
+		padding : 1% 1%;
+	/*
 		margin: 2% 5%;
 		height: 85%;
+		width: 80%;
+		float:left;
+		layout:fixed;
+		*/
 	}
+	
 	/*오늘 날짜 표시*/
 	#today{
 		background-color: #FFE08C;
@@ -120,7 +147,7 @@
 </head>
 
 <body>
-<div id="header">
+<div id="header" class = "col-sm-5">
 </div>
 <script type="text/javascript">
 		function showTitle(y,m){
@@ -132,11 +159,11 @@
 			y = (y != undefined)? y:year;
 			m = (m != undefined)? m:month;
 			
-			input += "<form>";
+			input += "<form id = 'title-form'>";
 			//년, 월, 버튼 출력
-			input += "<button class = 'btn btn-primary' id = 'backBtn' type='button' value='"+y+"' name='back'> ← </button>";
+			input += "<button class = 'btn btn-info' id = 'backBtn' type='button' value='"+y+"' name='back'> ← </button>";
 			input += "<div id='calendarTitle' style='text-align : center;'>  "+y+"년 "+m+"월"+"  </div>";
-			input += "<button class = 'btn btn-primary' type='button' id = 'forwardBtn' value='"+m+"' name='forward'> → </button>";
+			input += "<button class = 'btn btn-info' type='button' id = 'forwardBtn' value='"+m+"' name='forward'> → </button>";
 			input += "</form>";
 			document.getElementById("header").innerHTML = input;
 		}
@@ -201,17 +228,29 @@
 			});
 		});
 </script>
-<div id="container">
-	<div id="monthlyCalendar">
-		<table id="week">
-			<tr id="dayLine">
-				<th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th>
-			</tr>
-		</table>
-		<table id="dates">
-		</table>
+<div class = "row">
+	<div id = "side" class = "col-sm-2 form-horizontal">
+		<form>
+			<div class = "checkbox">
+				<label><input type="checkbox" value="1">Option1</label>
+			</div>
+			<input type="checkbox" name="chk1" value="1" />AAA
+			<input type="checkbox" name="chk1" value="2" />BBB
+			<input type="checkbox" name="chk1" value="3" />CCC
+		</form>
 	</div>
-		
+	<div id="container" class = "col-sm-10">
+		<div id="monthlyCalendar">
+			<table id="week">
+				<tr id="dayLine">
+					<th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th>
+				</tr>
+			</table>
+			<div id="dates">
+			</div>
+		</div>
+	</div>
+</div>
 	<script type="text/javascript">
 		$(document).ready(function(){
 			getList();
@@ -301,7 +340,7 @@
 	
 		//달력그리기
 		for(var i = 0; i<row;i++){
-			table+="<tr class='dateLine ";
+			table+="<div class='dateLine ";
 			switch(row){
 			case 4:
 				table+="week4'>";
@@ -313,7 +352,7 @@
 				table+="week6'>";
 				break;
 			}
-			table+="<td colspan='7'><table class = 'scheduleList'>";
+			table+="<table class = 'scheduleList'>";
 			var start = i*7;
 			for(var j = 0;j < 7;j++){
 				table+="<tr>";
@@ -339,7 +378,7 @@
 				}
 				table+="</tr>";
 			}
-			table+="</table></td></tr>";
+			table+="</table></div>";
 		}
 		document.getElementById("dates").innerHTML = table;
 
@@ -368,7 +407,9 @@
 			}else{
 				endDateIndex = data[i].endTime[2] + startIndex -1;
 			}
-			
+			if(data[i].endTime[3] == 0 && data[i].endTime[4] == 0){
+				endDateIndex --;
+			}
 			if(startDateIndex == endDateIndex){//하루 일정
 				$("[data-index="+startDateIndex+"]:eq(0)").text(data[i].summary);
 				$("[data-index="+startDateIndex+"]:eq(0)").css('background-color',colorCode);

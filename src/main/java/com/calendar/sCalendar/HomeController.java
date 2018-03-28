@@ -69,7 +69,6 @@ public class HomeController {
 		}
 		return eventList;
 	}
-	
 	//¿ù ºä ¿äÃ»
 		@RequestMapping(value = "/monthly/{year}/{month}/{date}")
 		public @ResponseBody ArrayList<CalendarDTO> getBackMonthEventList(@PathVariable int year,@PathVariable int month,@PathVariable int date, Model model,HttpServletResponse response)throws Exception{
@@ -83,6 +82,4 @@ public class HomeController {
 			}
 			return eventList;
 		}
-		
-
 }
