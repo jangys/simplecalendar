@@ -41,13 +41,25 @@ public class HomeController {
 	}
 	
 	@RequestMapping(value = "/m/{date}", method = RequestMethod.GET)
-	public String refreshPage(@PathVariable String date, Locale locale, Model model) {
+	public String refreshMonthPage(@PathVariable String date, Locale locale, Model model) {
+		return "index";
+	}
+	@RequestMapping(value = "/d/{date}", method = RequestMethod.GET)
+	public String refreshDayPage(@PathVariable String date, Locale locale, Model model) {
+		return "index";
+	}
+	@RequestMapping(value = "/w/{date}", method = RequestMethod.GET)
+	public String refreshWeekPage(@PathVariable String date, Locale locale, Model model) {
+		return "index";
+	}
+	@RequestMapping(value = "/l/{date}", method = RequestMethod.GET)
+	public String refreshListPage(@PathVariable String date, Locale locale, Model model) {
 		return "index";
 	}
 	
 	@RequestMapping(value = "/MonthlyCalendar/{date}")
-	public @ResponseBody ArrayList<CalendarDTO> getEventList(@PathVariable String date, Locale locale, Model model){
-		ArrayList<CalendarDTO> eventList = new ArrayList<>();
+	public @ResponseBody ArrayList<EventDTO> getEventList(@PathVariable String date, Locale locale, Model model,HttpServletRequest request){
+		ArrayList<EventDTO> eventList = new ArrayList<>();
 		GoogleCalendarService gcs = new GoogleCalendarService();
 		Date curDate = new Date();
 		String[] temp = date.split("-");
@@ -62,7 +74,7 @@ public class HomeController {
 		}
 		//System.out.println(year+" , "+month);
 		try {
-			eventList = gcs.getEvent(year,month);
+			eventList = gcs.getEvent_Month(new CalendarController().getCheckedCalendarList(request),year,month);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -71,11 +83,11 @@ public class HomeController {
 	}
 	//¿ù ºä ¿äÃ»
 		@RequestMapping(value = "/monthly/{year}/{month}/{date}")
-		public @ResponseBody ArrayList<CalendarDTO> getBackMonthEventList(@PathVariable int year,@PathVariable int month,@PathVariable int date, Model model,HttpServletResponse response)throws Exception{
-			ArrayList<CalendarDTO> eventList = new ArrayList<>();
+		public @ResponseBody ArrayList<EventDTO> getBackMonthEventList(@PathVariable int year,@PathVariable int month,@PathVariable int date, Model model,HttpServletResponse response,HttpServletRequest request)throws Exception{
+			ArrayList<EventDTO> eventList = new ArrayList<>();
 			GoogleCalendarService gcs = new GoogleCalendarService();
 			try {
-				eventList = gcs.getEvent(year,month);
+				eventList = gcs.getEvent_Month(new CalendarController().getCheckedCalendarList(request),year,month);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

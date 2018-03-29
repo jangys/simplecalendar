@@ -1,0 +1,67 @@
+
+
+function saveIsCheck(){
+	
+}
+sessionStorage.setItem("aa","bbb");
+function getCalendarList(){
+	var baseUrl = "http://localhost:8080";
+	$.ajax({
+		url:baseUrl+"/CalendarList",
+		type:'GET',
+		dataType :"json",
+		success:function(data){
+			printCalendarList(data);
+		}
+	});
+}
+//<label><input type="checkbox" value="1">Option1</label>
+function printCalendarList(data){
+	var checkList = "";
+	var size = data.length;
+	for(var i=0;i<size;i++){
+		checkList += "<label><input type='checkbox' value = '"+data[i].id+"' ";
+		if(data[i].check == true){
+			checkList +=" checked";
+		}
+		checkList +=" onClick='clickCheckbox(this)'>"+data[i].summary+"</label><br/>";
+	}
+	document.getElementById("checkboxList").innerHTML = checkList;
+}
+
+///check/{checkedId}/{calType}/{year}/{month}/{date}
+function clickCheckbox(box){
+	var path = location.pathname.split('/');
+	var year;
+	var month;
+	var date;
+	
+	$("#checkId").val(box.value);
+	if(location.pathname != '/'){
+      	var fullDate = path[2].split('-');
+      	year = parseInt(fullDate[0]);
+      	month = parseInt(fullDate[1]);
+      	date = parseInt(fullDate[2]);
+     }else{
+    	 var now = new Date();
+    	 year = now.getFullYear();
+    	 month = now.getMonth()+1;
+    	 date = now.getDate();
+     }
+	requestCheckCalendar(year,month,date,box);
+}
+function requestCheckCalendar(year,month,date,box){
+	var baseUrl = "http://localhost:8080";
+	//지금은 month만
+	if($("#checkId").val() == box.value){
+		$.ajax({
+			url:baseUrl+"/check"+"/m/"+year+"/"+month+"/"+date,
+			type:'GET',
+			dataType :"json",
+			contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+			success:function(data){
+				printCalendar(year,month-1,data);
+			}
+		});
+	}
+}

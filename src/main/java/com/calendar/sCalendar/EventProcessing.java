@@ -6,8 +6,8 @@ import java.util.Collections;
 import com.google.api.client.util.DateTime;
 
 public class EventProcessing {
-	public ArrayList<CalendarDTO> arrangeOrder(ArrayList<CalendarDTO> dto,int year, int month){
-		ArrayList<CalendarDTO> result = dto;
+	public ArrayList<EventDTO> arrangeOrder(ArrayList<EventDTO> dto,int year, int month){
+		ArrayList<EventDTO> result = dto;
 		int size = result.size();
 		
 		int start = -1;
@@ -76,7 +76,7 @@ public class EventProcessing {
 		}
 		return result;
 	}
-	public long getEndValue(CalendarDTO dto) {
+	public long getEndValue(EventDTO dto) {
 		long result = dto.getEnd().getValue();
 		long oneDay = 86400000;
 		

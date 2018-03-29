@@ -105,13 +105,15 @@ public class GoogleCalendarService {
 
     //@SuppressWarnings("deprecation")
     //year, month에 맞는 이벤트 ArrayList<CalendarDTO>로 저장
-	public static ArrayList<CalendarDTO> getEvent(int year, int month) throws IOException{
+	public static ArrayList<EventDTO> getEvent_Month(ArrayList<CalendarDTO> calendarList, int year, int month) throws IOException{
     	com.google.api.services.calendar.Calendar service =
                 getCalendarService();
             // List the next 10 events from the primary calendar.
             //DateTime now = new DateTime(System.currentTimeMillis());
     		Date cur = new Date(year-1900, month-1, 1);
-    		ArrayList<CalendarDTO> dtoList = new ArrayList<CalendarDTO>();
+    		ArrayList<EventDTO> dtoList = new ArrayList<EventDTO>();
+    		ArrayList<String> checkedCalId = new ArrayList<String>();
+    		
     		Date nextDate;
     		if(month == 12) {
     			nextDate = new Date(year-1900 + 1,0,1);
@@ -121,45 +123,49 @@ public class GoogleCalendarService {
 
             DateTime now = new DateTime(cur);
             DateTime next = new DateTime(nextDate);
+            checkedCalId = getCheckedCalendarId(calendarList);
             
-            Events events = service.events().list("primary")
-            	.setTimeMin(now)
-            	.setTimeMax(next)
-                .setOrderBy("startTime")
-                .setSingleEvents(true)
-                .execute();
-            List<Event> items = events.getItems();
-            if (items.size() == 0) {
-                System.out.println("No upcoming events found.");
-            } else {
-            	 System.out.println(now.toString());
-                System.out.println("Upcoming events");
-                for (Event event : items) {
-                    DateTime start = event.getStart().getDateTime();
-                    if (start == null) {
-                        start = event.getStart().getDate();
-                    }
-                    DateTime end = event.getEnd().getDateTime();
-                    if(end == null) {
-                    	end = event.getEnd().getDate();
-                    }
-                    System.out.printf("%s (%s)\n", end, Long.toString(end.getValue()));
-                    CalendarDTO tempDTO = new CalendarDTO();
-                    tempDTO.setStart(start);
-                    tempDTO.setSummary(event.getSummary());
-                    tempDTO.setEnd(end);
-                    tempDTO.setDescription(event.getDescription());
-                    tempDTO.setEventID(event.getId());
-                    tempDTO.setLocation(event.getLocation());
-                    dtoList.add(tempDTO);
-                }
-                dtoList = new EventProcessing().arrangeOrder(dtoList, year, month);
+            int size = checkedCalId.size();
+            for(int i=0;i<size;i++) {
+            	System.out.println(checkedCalId.get(i));
+	            Events events = service.events().list(checkedCalId.get(i))
+	            	.setTimeMin(now)
+	            	.setTimeMax(next)
+	                .setOrderBy("startTime")
+	                .setSingleEvents(true)
+	                .execute();
+	            List<Event> items = events.getItems();
+	            if (items.size() == 0) {
+	                System.out.println("No upcoming events found.");
+	            } else {
+	            	 System.out.println(now.toString());
+	                System.out.println("Upcoming events");
+	                for (Event event : items) {
+	                    DateTime start = event.getStart().getDateTime();
+	                    if (start == null) {
+	                        start = event.getStart().getDate();
+	                    }
+	                    DateTime end = event.getEnd().getDateTime();
+	                    if(end == null) {
+	                    	end = event.getEnd().getDate();
+	                    }
+	                    System.out.printf("%s (%s)\n", end, Long.toString(end.getValue()));
+	                    EventDTO tempDTO = new EventDTO();
+	                    tempDTO.setStart(start);
+	                    tempDTO.setSummary(event.getSummary());
+	                    tempDTO.setEnd(end);
+	                    tempDTO.setDescription(event.getDescription());
+	                    tempDTO.setEventID(event.getId());
+	                    tempDTO.setLocation(event.getLocation());
+	                    dtoList.add(tempDTO);
+	                }
+	                dtoList = new EventProcessing().arrangeOrder(dtoList, year, month);
+	            }
             }
-            
             return dtoList;
     }
-	public static ArrayList<CalendarListEntry> getCalendarList() throws IOException{
-		ArrayList<CalendarListEntry> result = new ArrayList<CalendarListEntry>();
+	public static ArrayList<CalendarDTO> getCalendarList() throws IOException{
+		ArrayList<CalendarDTO> result = new ArrayList<CalendarDTO>();
 		
 		com.google.api.services.calendar.Calendar service = getCalendarService();
 		String pageToken = null;
@@ -168,14 +174,27 @@ public class GoogleCalendarService {
 	        List<CalendarListEntry> items = calendarList.getItems();
 	        for (CalendarListEntry calendarListEntry : items) {
 	          System.out.println(calendarListEntry.getSummary());
-	          System.out.println(calendarListEntry.getId());
-	          result.add(calendarListEntry);
-	        }
+	          CalendarDTO tempDTO = new CalendarDTO();
+	          tempDTO.setId(calendarListEntry.getId());
+	          tempDTO.setSummary(calendarListEntry.getSummary());
+	          tempDTO.setDescription(calendarListEntry.getDescription());
+	          tempDTO.setCheck(true);
+	          result.add(tempDTO);
+	          }
 	        pageToken = calendarList.getNextPageToken();
 	      } while (pageToken != null);
 	      
 	      return result;
-
+	}
+	public static ArrayList<String> getCheckedCalendarId(ArrayList<CalendarDTO> dto){
+		ArrayList<String> result = new ArrayList<String>();
+		int size = dto.size();
+		for(int i=0;i<size;i++) {
+			if(dto.get(i).getCheck()) {
+				result.add(dto.get(i).getId());
+			}
+		}
+		return result;
 	}
 //    public static void main(String[] args) throws IOException {
 //        // Build a new authorized API client service.
