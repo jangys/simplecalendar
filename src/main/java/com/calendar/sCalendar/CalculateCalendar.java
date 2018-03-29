@@ -1,4 +1,4 @@
-package com.calendar.sCalendar;
+ package com.calendar.sCalendar;
 
 public class CalculateCalendar {
 	public int getLastDay(int year, int month) {

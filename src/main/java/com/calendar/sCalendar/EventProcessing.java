@@ -28,10 +28,10 @@ public class EventProcessing {
 				long max;
 				int maxIndex;
 				for(int x=start;x<end;x++) {
-					max = getEndValue(dto.get(x));
+					max = dto.get(x).getEnd();
 					maxIndex = x;
 					for(int y=x+1; y<=end; y++) {
-						long endValue = getEndValue(dto.get(y));
+						long endValue = dto.get(x).getEnd();
 						if(max <= endValue) {
 							max = endValue;
 							maxIndex = y;
@@ -56,10 +56,10 @@ public class EventProcessing {
 				long max;
 				int maxIndex;
 				for(int x=start;x<end;x++) {
-					max = getEndValue(dto.get(x));
+					max = dto.get(x).getEnd();
 					maxIndex = x;
 					for(int y=x+1; y<=end; y++) {
-						long endValue = getEndValue(dto.get(y));
+						long endValue = dto.get(x).getEnd();
 						if(max <= endValue) {
 							max = endValue;
 							maxIndex = y;
@@ -71,19 +71,12 @@ public class EventProcessing {
 				start = -1;
 			}
 		}
+		/*
 		for(int i=0;i<size;i++) {
 			System.out.println(result.get(i).getSummary());
 		}
+		*/
 		return result;
 	}
-	public long getEndValue(EventDTO dto) {
-		long result = dto.getEnd().getValue();
-		long oneDay = 86400000;
-		
-		if(dto.getEndTime()[3] == -1) {
-			result -= oneDay;
-		}
-		
-		return result;
-	}
+
 }

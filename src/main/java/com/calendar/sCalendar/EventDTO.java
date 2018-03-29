@@ -4,21 +4,15 @@ import com.google.api.client.util.DateTime;
 
 public class EventDTO {
 	private String calendarID;
-	private String calendarSummary;
 	private String eventID;
 	private String summary;
-	private DateTime start;
+	private long start;
 	private int[] startTime;
-	private DateTime end;
+	private long end;
 	private int[] endTime;
-	private String description;
-	private String location;
 
 	public void setCalendarID(String calendarID) {
 		this.calendarID = calendarID;
-	}
-	public void setCalendarSummary(String calendarSummary) {
-		this.calendarSummary = calendarSummary;
 	}
 	public void setEventID(String eventID) {
 		this.eventID = eventID;
@@ -26,11 +20,10 @@ public class EventDTO {
 	public void setSummary(String summary) {
 		this.summary = summary;
 	}
-	public void setStart(DateTime start) {
+	public void setStart(long start) {
 		this.start = start;
-		String strStart = start.toString();
+		String strStart = new DateTime(start).toString();
 		startTime = new int[5];
-		
 		startTime[0] = Integer.parseInt(strStart.substring(0, 4));	//³â
 		startTime[1] = Integer.parseInt(strStart.substring(5,7));	//¿ù
 		startTime[2] = Integer.parseInt(strStart.substring(8,10));	//ÀÏ
@@ -41,13 +34,12 @@ public class EventDTO {
 		}else {
 			startTime[3] = -1;
 		}
-		
 	}
 
-	public void setEnd(DateTime end) {
+	public void setEnd(long end) {
 		this.end = end;
 		endTime = new int[5];
-		String strEnd = end.toString();
+		String strEnd = new DateTime(end).toString();
 		endTime[0] = Integer.parseInt(strEnd.substring(0, 4));
 		endTime[1] = Integer.parseInt(strEnd.substring(5,7));
 		endTime[2] = Integer.parseInt(strEnd.substring(8,10));
@@ -70,17 +62,8 @@ public class EventDTO {
 		}
 		
 	}
-	public void setDescription(String description) {
-		this.description = description;
-	}
-	public void setLocation(String location) {
-		this.location = location;
-	}
 	public String getCalendarID() {
 		return calendarID;
-	}
-	public String getCalendarSummary() {
-		return calendarSummary;
 	}
 	public String getEventID() {
 		return eventID;
@@ -88,22 +71,16 @@ public class EventDTO {
 	public String getSummary() {
 		return summary;
 	}
-	public DateTime getStart() {
+	public long getStart() {
 		return start;
 	}
 	public int[] getStartTime() {
 		return startTime;
 	}
-	public DateTime getEnd() {
+	public long getEnd() {
 		return end;
 	}
 	public int[] getEndTime() {
 		return endTime;
-	}
-	public String getDescription() {
-		return description;
-	}
-	public String getLocation() {
-		return location;
 	}
 }

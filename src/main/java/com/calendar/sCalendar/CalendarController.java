@@ -43,6 +43,20 @@ public class CalendarController {
 				result.get(i).setCheck(check);
 			}
 		}
+		Enumeration en = session.getAttributeNames();
+		while(en.hasMoreElements()) {
+			String id = en.nextElement().toString();
+			boolean exist = false;
+			for(int i=0; i< size;i++) {
+				if(id.equals(result.get(i).getId())) {
+					exist = true;
+				}
+			}//for
+			if(!exist) {
+				System.out.println("remove : "+id);
+				session.removeAttribute(id);
+			}
+		}
 		return result;
 	}
 	@RequestMapping(value = "/check/{calType}/{year}/{month}/{date}", method = RequestMethod.GET)
@@ -57,25 +71,30 @@ public class CalendarController {
 		check = check == true ? false:true;
 		session.setAttribute(checkedId,check);
 		System.out.println(checkedId + " - "+(boolean)session.getAttribute(checkedId));
-		GoogleCalendarService gcs = new GoogleCalendarService();
-		ArrayList<CalendarDTO> calendarList = gcs.getCalendarList();
-		int size = calendarList.size();
-		for(int i=0;i<size;i++) {
-			calendarList.get(i).setCheck((boolean)session.getAttribute(calendarList.get(i).getId()));
+		ArrayList<CalendarDTO> calendarList = new ArrayList<CalendarDTO>();
+		Enumeration en = session.getAttributeNames();
+		while(en.hasMoreElements()) {
+			String id = en.nextElement().toString();
+			CalendarDTO dto = new CalendarDTO();
+			dto.setId(id);
+			dto.setCheck((boolean)session.getAttribute(id));
+			calendarList.add(dto);
 		}
-		result = gcs.getEvent_Month(calendarList, year, month);
+		result = new GoogleCalendarService().getEvent_Month(calendarList, year, month);
 		return result;
 	}
 	
 	//session 정보 따라 달력 체크 여부를 바꿔줘서 전송.
 	public ArrayList<CalendarDTO> getCheckedCalendarList(HttpServletRequest request) throws IOException{
 		HttpSession session = request.getSession();
-		GoogleCalendarService gcs = new GoogleCalendarService();
-		ArrayList<CalendarDTO> calendarList = gcs.getCalendarList();
-		int size = calendarList.size();
-		for(int i=0;i<size;i++) {
-			calendarList.get(i).setCheck((boolean)session.getAttribute(calendarList.get(i).getId()));
-			System.out.println("check : "+calendarList.get(i).getCheck());
+		ArrayList<CalendarDTO> calendarList = new ArrayList<CalendarDTO>();
+		Enumeration en = session.getAttributeNames();
+		while(en.hasMoreElements()) {
+			String id = en.nextElement().toString();
+			CalendarDTO dto = new CalendarDTO();
+			dto.setId(id);
+			dto.setCheck((boolean)session.getAttribute(id));
+			calendarList.add(dto);
 		}
 		return calendarList;
 	}

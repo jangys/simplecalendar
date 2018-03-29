@@ -102,9 +102,7 @@ function printEvent(year, month, startIndex, lastDate, data){
 		}else{
 			endDateIndex = data[i].endTime[2] + startIndex -1;
 		}
-		if(data[i].endTime[3] == 0 && data[i].endTime[4] == 0){
-			endDateIndex --;
-		}
+
 		if(startDateIndex == endDateIndex){//하루 일정
 			$("[data-index="+startDateIndex+"]:eq(0)").text(data[i].summary);
 			$("[data-index="+startDateIndex+"]:eq(0)").css('background-color',colorCode);

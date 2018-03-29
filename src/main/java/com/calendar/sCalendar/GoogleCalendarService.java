@@ -127,7 +127,7 @@ public class GoogleCalendarService {
             
             int size = checkedCalId.size();
             for(int i=0;i<size;i++) {
-            	System.out.println(checkedCalId.get(i));
+            	//System.out.println(checkedCalId.get(i));
 	            Events events = service.events().list(checkedCalId.get(i))
 	            	.setTimeMin(now)
 	            	.setTimeMax(next)
@@ -138,7 +138,7 @@ public class GoogleCalendarService {
 	            if (items.size() == 0) {
 	                System.out.println("No upcoming events found.");
 	            } else {
-	            	 System.out.println(now.toString());
+	            	// System.out.println(now.toString());
 	                System.out.println("Upcoming events");
 	                for (Event event : items) {
 	                    DateTime start = event.getStart().getDateTime();
@@ -149,19 +149,23 @@ public class GoogleCalendarService {
 	                    if(end == null) {
 	                    	end = event.getEnd().getDate();
 	                    }
-	                    System.out.printf("%s (%s)\n", end, Long.toString(end.getValue()));
+	                    //System.out.printf("%s (%s)\n", end, Long.toString(end.getValue()));
 	                    EventDTO tempDTO = new EventDTO();
-	                    tempDTO.setStart(start);
+	                    tempDTO.setCalendarID(checkedCalId.get(i));
+	                    tempDTO.setStart(start.getValue());
 	                    tempDTO.setSummary(event.getSummary());
-	                    tempDTO.setEnd(end);
-	                    tempDTO.setDescription(event.getDescription());
+	                    if(end.isDateOnly()) {
+	                    	tempDTO.setEnd(end.getValue()-86400000);
+	                    }else {
+	                    	tempDTO.setEnd(end.getValue());
+	                    }
+	                    
 	                    tempDTO.setEventID(event.getId());
-	                    tempDTO.setLocation(event.getLocation());
 	                    dtoList.add(tempDTO);
 	                }
-	                dtoList = new EventProcessing().arrangeOrder(dtoList, year, month);
 	            }
             }
+            dtoList = new EventProcessing().arrangeOrder(dtoList, year, month);
             return dtoList;
     }
 	public static ArrayList<CalendarDTO> getCalendarList() throws IOException{
@@ -173,7 +177,7 @@ public class GoogleCalendarService {
 	        CalendarList calendarList = service.calendarList().list().setPageToken(pageToken).execute();
 	        List<CalendarListEntry> items = calendarList.getItems();
 	        for (CalendarListEntry calendarListEntry : items) {
-	          System.out.println(calendarListEntry.getSummary());
+	          //System.out.println(calendarListEntry.getSummary());
 	          CalendarDTO tempDTO = new CalendarDTO();
 	          tempDTO.setId(calendarListEntry.getId());
 	          tempDTO.setSummary(calendarListEntry.getSummary());
