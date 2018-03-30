@@ -35,8 +35,6 @@ function clickCheckbox(box){
 	var year;
 	var month;
 	var date;
-	
-	$("#checkId").val(box.value);
 	if(location.pathname != '/'){
       	var fullDate = path[2].split('-');
       	year = parseInt(fullDate[0]);
@@ -52,16 +50,25 @@ function clickCheckbox(box){
 }
 function requestCheckCalendar(year,month,date,box){
 	var baseUrl = "http://localhost:8080";
+	console.log(box.value);
+	var data = {
+			"id" : box.value,
+			"year" : year,
+			"month" : month,
+			"date" : date
+	};
+	$.ajax({
+		url:baseUrl+"/check"+"/m",
+		type:'GET',
+		data : data,
+		dataType :"json",
+		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+		success:function(data){
+			printCalendar(year,month-1,data);
+		}
+	});
 	//지금은 month만
 	if($("#checkId").val() == box.value){
-		$.ajax({
-			url:baseUrl+"/check"+"/m/"+year+"/"+month+"/"+date,
-			type:'GET',
-			dataType :"json",
-			contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-			success:function(data){
-				printCalendar(year,month-1,data);
-			}
-		});
+		
 	}
 }

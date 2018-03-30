@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -59,28 +60,28 @@ public class CalendarController {
 		}
 		return result;
 	}
-	@RequestMapping(value = "/check/{calType}/{year}/{month}/{date}", method = RequestMethod.GET)
-	public @ResponseBody ArrayList<EventDTO> getCheckedCalendarEventList(@PathVariable String calType,@PathVariable int year,
-			@PathVariable int month,@PathVariable int date,HttpServletRequest request) throws IOException{
+	@RequestMapping(value = "/check/m", method = RequestMethod.GET)
+	public @ResponseBody ArrayList<EventDTO> getCheckedCalendarEventList(CheckedCalendarDTO checkedCal, HttpServletRequest request) throws IOException{
 		ArrayList<EventDTO> result;
 		HttpSession session = request.getSession();
-		String checkedId = request.getParameter("checkId");
-		System.out.println(checkedId);
-		boolean check = (boolean)session.getAttribute(checkedId);
-		session.removeAttribute(checkedId);
+		boolean check = (boolean)session.getAttribute(checkedCal.getId());
+		session.removeAttribute(checkedCal.getId());
 		check = check == true ? false:true;
-		session.setAttribute(checkedId,check);
-		System.out.println(checkedId + " - "+(boolean)session.getAttribute(checkedId));
+		session.setAttribute(checkedCal.getId(),check);
+		System.out.println(checkedCal.getId() + " - "+(boolean)session.getAttribute(checkedCal.getId()));
 		ArrayList<CalendarDTO> calendarList = new ArrayList<CalendarDTO>();
 		Enumeration en = session.getAttributeNames();
 		while(en.hasMoreElements()) {
 			String id = en.nextElement().toString();
+			boolean checkAtt = (boolean)session.getAttribute(id);
+			if(checkAtt) {
 			CalendarDTO dto = new CalendarDTO();
 			dto.setId(id);
-			dto.setCheck((boolean)session.getAttribute(id));
+			dto.setCheck(checkAtt);
 			calendarList.add(dto);
+			}
 		}
-		result = new GoogleCalendarService().getEvent_Month(calendarList, year, month);
+		result = new GoogleCalendarService().getEvent_Month(calendarList, checkedCal.getYear(), checkedCal.getMonth());
 		return result;
 	}
 	
@@ -92,9 +93,12 @@ public class CalendarController {
 		while(en.hasMoreElements()) {
 			String id = en.nextElement().toString();
 			CalendarDTO dto = new CalendarDTO();
-			dto.setId(id);
-			dto.setCheck((boolean)session.getAttribute(id));
-			calendarList.add(dto);
+			boolean check = (boolean)session.getAttribute(id);
+			if(check) {
+				dto.setId(id);
+				dto.setCheck(true);
+				calendarList.add(dto);
+			}
 		}
 		return calendarList;
 	}

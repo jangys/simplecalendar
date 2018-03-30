@@ -112,8 +112,6 @@ public class GoogleCalendarService {
             //DateTime now = new DateTime(System.currentTimeMillis());
     		Date cur = new Date(year-1900, month-1, 1);
     		ArrayList<EventDTO> dtoList = new ArrayList<EventDTO>();
-    		ArrayList<String> checkedCalId = new ArrayList<String>();
-    		
     		Date nextDate;
     		if(month == 12) {
     			nextDate = new Date(year-1900 + 1,0,1);
@@ -123,12 +121,12 @@ public class GoogleCalendarService {
 
             DateTime now = new DateTime(cur);
             DateTime next = new DateTime(nextDate);
-            checkedCalId = getCheckedCalendarId(calendarList);
             
-            int size = checkedCalId.size();
+            int size = calendarList.size();
             for(int i=0;i<size;i++) {
             	//System.out.println(checkedCalId.get(i));
-	            Events events = service.events().list(checkedCalId.get(i))
+            	String id = calendarList.get(i).getId();
+	            Events events = service.events().list(id)
 	            	.setTimeMin(now)
 	            	.setTimeMax(next)
 	                .setOrderBy("startTime")
@@ -151,7 +149,7 @@ public class GoogleCalendarService {
 	                    }
 	                    //System.out.printf("%s (%s)\n", end, Long.toString(end.getValue()));
 	                    EventDTO tempDTO = new EventDTO();
-	                    tempDTO.setCalendarID(checkedCalId.get(i));
+	                    tempDTO.setCalendarID(id);
 	                    tempDTO.setStart(start.getValue());
 	                    tempDTO.setSummary(event.getSummary());
 	                    if(end.isDateOnly()) {
@@ -159,7 +157,6 @@ public class GoogleCalendarService {
 	                    }else {
 	                    	tempDTO.setEnd(end.getValue());
 	                    }
-	                    
 	                    tempDTO.setEventID(event.getId());
 	                    dtoList.add(tempDTO);
 	                }
@@ -181,7 +178,6 @@ public class GoogleCalendarService {
 	          CalendarDTO tempDTO = new CalendarDTO();
 	          tempDTO.setId(calendarListEntry.getId());
 	          tempDTO.setSummary(calendarListEntry.getSummary());
-	          tempDTO.setDescription(calendarListEntry.getDescription());
 	          tempDTO.setCheck(true);
 	          result.add(tempDTO);
 	          }
@@ -190,16 +186,16 @@ public class GoogleCalendarService {
 	      
 	      return result;
 	}
-	public static ArrayList<String> getCheckedCalendarId(ArrayList<CalendarDTO> dto){
-		ArrayList<String> result = new ArrayList<String>();
-		int size = dto.size();
-		for(int i=0;i<size;i++) {
-			if(dto.get(i).getCheck()) {
-				result.add(dto.get(i).getId());
-			}
-		}
-		return result;
-	}
+//	public static ArrayList<String> getCheckedCalendarId(ArrayList<CalendarDTO> dto){
+//		ArrayList<String> result = new ArrayList<String>();
+//		int size = dto.size();
+//		for(int i=0;i<size;i++) {
+//			if(dto.get(i).getCheck()) {
+//				result.add(dto.get(i).getId());
+//			}
+//		}
+//		return result;
+//	}
 //    public static void main(String[] args) throws IOException {
 //        // Build a new authorized API client service.
 //        // Note: Do not confuse this class with the
