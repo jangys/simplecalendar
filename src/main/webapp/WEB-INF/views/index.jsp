@@ -46,6 +46,9 @@
 		font-weight: bold;
 		font-size:20px;
 	}
+	a{
+		color:white;
+	}
 	/*제목 부분*/
 	#title{
 		padding-left: 3%;
@@ -132,7 +135,6 @@
 	}
 	/*사이드*/
 	#side{
-		border: 1px solid #918EDB;
 		padding-top : 3%;
 		padding-left : 2%;
 	/*
@@ -150,6 +152,7 @@
 	/*본문*/
 	#container{
 		padding : 1% 1%;
+		position : relative;
 	/*
 		margin: 2% 5%;
 		height: 85%;
@@ -158,9 +161,36 @@
 		layout:fixed;
 		*/
 	}
-	
+	/*일정 요약 보여주는 작은 창*/
+	#showEventSummary{
+		position : absolute;
+		width : 450px;
+		height : 250px;
+		top : 30%;
+		left : 30%;
+		background-color: white;
+		padding : 1% 1%;
+		display: none;
+	}
+	/*일정 요약 header*/
+	#eventSummary_Header{
+		width:100%;
+		height:15%;
+		margin: 0% 0%;
+	}
+	/*일정 요약 contents*/
+	#eventSummary_Contents{
+		width:100%;
+		height:70%;
+	}
+	/*일정 요약 footer*/
+	#eventSummary_Footer{
+		width:100%;
+		height:15%;
+		text-align: center;
+	}
 	/*오늘 날짜 표시*/
-	#today{
+	.today{
 		background-color: #FFE08C;
 	}
 	/*날짜와 일정*/
@@ -182,6 +212,10 @@
 	/*캘린더 버튼 눌렀을 시*/
 	.pushCalendarBtn{
 		background-color:black;
+	}
+	/*일정 시간 부분*/
+	.eventTime{
+		display:inline;
 	}
 </style>
 </head>
@@ -219,6 +253,19 @@
 		<div id="weekCalendar">
 		</div>
 		<div id="listCalendar">
+		</div>
+		<div id="showEventSummary" style="border: 1px solid black">
+			<div class = "row" id="eventSummary_Header">
+				<div class = "col-sm-8" id="eventSummary_CalTitle"></div>
+				<div class="col-sm-4" style="text-align: right; padding: 0% 0%;">
+					<button class='btn btn-info' type='button' value='closeEventSummary' name='close' onclick="$('#showEventSummary').css('display','none'); $('#eventSummary_Contents').html('');">X</button>
+				</div>
+			</div>
+			<div id="eventSummary_Contents"></div>
+			<div id="eventSummary_Footer">
+				<button class='btn btn-info' type='button' value='deleteEvent' name='delete'>삭제</button>
+				<button class='btn btn-info' type='button' value='showEventDetail' name='show'>상세보기</button>
+			</div>
 		</div>
 	</div>
 </div>

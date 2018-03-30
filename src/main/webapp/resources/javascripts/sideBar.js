@@ -12,6 +12,7 @@ function getCalendarList(){
 		dataType :"json",
 		success:function(data){
 			printCalendarList(data);
+			getList();
 		}
 	});
 }
@@ -19,12 +20,14 @@ function getCalendarList(){
 function printCalendarList(data){
 	var checkList = "";
 	var size = data.length;
+	var colorList = ["#B5B2FF","#B2CCFF","#B2EBF4","#B7F0B1","#CEFBC9","#D4F4FA","#FAED7D"];
 	for(var i=0;i<size;i++){
-		checkList += "<label><input type='checkbox' value = '"+data[i].id+"' ";
+		var colorCode = colorList[parseInt(data[i].colorId)%colorList.length];
+		checkList += "<label"+" style='color:"+colorCode+"'><input type='checkbox' value = '"+data[i].id+"' ";
 		if(data[i].check == true){
 			checkList +=" checked";
 		}
-		checkList +=" onClick='clickCheckbox(this)'>"+data[i].summary+"</label><br/>";
+		checkList +=" onClick='clickCheckbox(this)' data-colorCode = '"+colorCode+"'>"+data[i].summary+"</label><br/>";
 	}
 	document.getElementById("checkboxList").innerHTML = checkList;
 }
@@ -68,7 +71,4 @@ function requestCheckCalendar(year,month,date,box){
 		}
 	});
 	//지금은 month만
-	if($("#checkId").val() == box.value){
-		
-	}
 }

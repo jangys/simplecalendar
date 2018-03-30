@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.google.api.services.calendar.model.Event;
+
 
 /**
  * Handles requests for the application home page.
@@ -93,5 +95,18 @@ public class HomeController {
 				e.printStackTrace();
 			}
 			return eventList;
+		}
+		
+	//이벤트 디테일 요청
+		@RequestMapping(value = "/showEventDetail")
+		public @ResponseBody EventDetailDTO getEventDetail(CalendarAndEventIdDTO dto) {
+			EventDetailDTO result = new EventDetailDTO();
+			try {
+				result = new GoogleCalendarService().getEventDetail(dto.getCalendarId(), dto.getEventId());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return result;
 		}
 }

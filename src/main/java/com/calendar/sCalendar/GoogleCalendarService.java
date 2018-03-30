@@ -121,7 +121,7 @@ public class GoogleCalendarService {
 
             DateTime now = new DateTime(cur);
             DateTime next = new DateTime(nextDate);
-            
+           
             int size = calendarList.size();
             for(int i=0;i<size;i++) {
             	//System.out.println(checkedCalId.get(i));
@@ -150,13 +150,9 @@ public class GoogleCalendarService {
 	                    //System.out.printf("%s (%s)\n", end, Long.toString(end.getValue()));
 	                    EventDTO tempDTO = new EventDTO();
 	                    tempDTO.setCalendarID(id);
-	                    tempDTO.setStart(start.getValue());
+	                    tempDTO.setStart(start.getValue(),start.isDateOnly());
 	                    tempDTO.setSummary(event.getSummary());
-	                    if(end.isDateOnly()) {
-	                    	tempDTO.setEnd(end.getValue()-86400000);
-	                    }else {
-	                    	tempDTO.setEnd(end.getValue());
-	                    }
+	                    tempDTO.setEnd(end.getValue(),end.isDateOnly());
 	                    tempDTO.setEventID(event.getId());
 	                    dtoList.add(tempDTO);
 	                }
@@ -165,6 +161,7 @@ public class GoogleCalendarService {
             dtoList = new EventProcessing().arrangeOrder(dtoList, year, month);
             return dtoList;
     }
+	
 	public static ArrayList<CalendarDTO> getCalendarList() throws IOException{
 		ArrayList<CalendarDTO> result = new ArrayList<CalendarDTO>();
 		
@@ -179,12 +176,35 @@ public class GoogleCalendarService {
 	          tempDTO.setId(calendarListEntry.getId());
 	          tempDTO.setSummary(calendarListEntry.getSummary());
 	          tempDTO.setCheck(true);
+	          tempDTO.setColorId(calendarListEntry.getColorId());
 	          result.add(tempDTO);
 	          }
 	        pageToken = calendarList.getNextPageToken();
 	      } while (pageToken != null);
 	      
 	      return result;
+	}
+	
+	public static EventDetailDTO getEventDetail(String calendarId, String eventId) throws IOException {
+		EventDetailDTO result = new EventDetailDTO();
+		com.google.api.services.calendar.Calendar service = getCalendarService();
+		Event event = service.events().get(calendarId, eventId).execute();
+		result.setSummary(event.getSummary());
+		DateTime start = event.getStart().getDateTime();
+        if (start == null) {
+            start = event.getStart().getDate();
+        }
+        DateTime end = event.getEnd().getDateTime();
+        if(end == null) {
+        	end = event.getEnd().getDate();
+        }
+        result.setStart(start.getValue(), start.isDateOnly());
+        result.setEnd(end.getValue(), end.isDateOnly());
+        result.setLocation(event.getLocation());
+		result.setDescription(event.getDescription());
+		result.setRecurrence(event.getRecurrence());
+		
+		return result;
 	}
 //	public static ArrayList<String> getCheckedCalendarId(ArrayList<CalendarDTO> dto){
 //		ArrayList<String> result = new ArrayList<String>();

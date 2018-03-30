@@ -2,26 +2,22 @@ package com.calendar.sCalendar;
 
 import com.google.api.client.util.DateTime;
 
-public class EventDTO {
-	private String calendarID;
-	private String eventID;
+public class EventDetailDTO {
+	private String calendarSummary;
 	private String summary;
-	private long start;
 	private int[] startTime;
-	private long end;
 	private int[] endTime;
-
-	public void setCalendarID(String calendarID) {
-		this.calendarID = calendarID;
-	}
-	public void setEventID(String eventID) {
-		this.eventID = eventID;
+	private String description;
+	private String location;
+	private java.util.List<java.lang.String> recurrence;
+	
+	public void setCalendarSummary(String calendarSummary) {
+		this.calendarSummary = calendarSummary;
 	}
 	public void setSummary(String summary) {
 		this.summary = summary;
 	}
 	public void setStart(long start, boolean isDateOnly) {
-		this.start = start;
 		String strStart = new DateTime(start).toString();
 		startTime = new int[5];
 		startTime[0] = Integer.parseInt(strStart.substring(0, 4));	//년
@@ -37,7 +33,6 @@ public class EventDTO {
 	}
 
 	public void setEnd(long end, boolean isDateOnly) {
-		this.end = end;
 		endTime = new int[5];
 		String strEnd = new DateTime(end).toString();
 		endTime[0] = Integer.parseInt(strEnd.substring(0, 4));
@@ -50,7 +45,6 @@ public class EventDTO {
 			//System.out.println("hour : "+endTime[3]+" , min : "+endTime[4]);
 		}else {
 			endTime[2]--;
-			this.end -= 86400000;
 			if(endTime[2] == 0) {
 				endTime[1] --;
 				if(endTime[1] == 0) {
@@ -63,25 +57,40 @@ public class EventDTO {
 		}
 		
 	}
-	public String getCalendarID() {
-		return calendarID;
+	public void setDescription(String description) {
+		this.description = description;
+		if(description == null) {
+			this.description = "없음";
+		}
 	}
-	public String getEventID() {
-		return eventID;
+	public void setLocation(String location) {
+		this.location = location;
+		if(location == null) {
+			this.location = "없음";
+		}
+	}
+	public void setRecurrence(java.util.List<java.lang.String> recurrence) {
+		this.recurrence = recurrence;
+	}
+	public String getCalendarSummary() {
+		return calendarSummary;
 	}
 	public String getSummary() {
 		return summary;
 	}
-	public long getStart() {
-		return start;
-	}
 	public int[] getStartTime() {
 		return startTime;
 	}
-	public long getEnd() {
-		return end;
-	}
 	public int[] getEndTime() {
 		return endTime;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public String getLocation() {
+		return location;
+	}
+	public java.util.List<java.lang.String> getRecurrence(){
+		return recurrence;
 	}
 }

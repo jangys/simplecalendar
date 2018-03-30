@@ -56,19 +56,23 @@ function printCalendar(y, m, data) {
 					if(i == 0 && x < startDay){
 						table += "<td class='date'>"+"   "+"</td>";
 					}else{
-						table += "<td class='date'";
+						table += "<td class='date";
 						if(m == month && dateNum == date){
-							table+=" id = 'today'";
+							table+=" today";
 						}
 						if(dateNum > lastDate){
-							table+="></td>";
+							table+="'></td>";
 						}else{
-							table += ">"+dateNum+"</td>";
+							table += "'>"+dateNum+"</td>";
 							dateNum++;
 						}
 					}
 				}else{
-					table += "<td class='event' data-index='"+(x+start)+"' data-col="+j+"></td>";
+					table += "<td class='event";
+					if(m == month && x+start == date+startDay-1){
+						table += " today";
+					}
+					table += "' data-index='"+(x+start)+"' data-col="+j+"></td>";
 				}
 			}
 			table+="</tr>";
@@ -79,18 +83,23 @@ function printCalendar(y, m, data) {
 
 	printEvent(y, m, startDay, lastDate, data);
 }
-
+//이벤트 출력
 function printEvent(year, month, startIndex, lastDate, data){
 	var eventNum = 0;
 	var dateIndex = startIndex-1;
 	 var size = data.length;
-	var colorList = ["#B5B2FF","#B2CCFF","#B2EBF4","#B7F0B1","#CEFBC9","#D4F4FA","#FAED7D"];
-	var colorSize = colorList.length;
 	for(var i = 0; i < size; i++){
 		var index=0;
 		var startDateIndex=0;
 		var endDateIndex=0;
-		var colorCode = colorList[Math.floor(Math.random() * colorSize)]; 
+		var colorCode;
+		var calendarListSize = $("[type='checkbox']").size();
+		for(var j=0; j < calendarListSize;j++){
+			if($("[type='checkbox']").eq(j).val() == data[i].calendarID){
+				colorCode = $("[type='checkbox']").eq(j).attr('data-colorCode');
+				break;
+			}
+		}
 		if(data[i].startTime[1] < month || data[i].startTime[0] < year){//2017-12 ~ 2018-3
 			index = startIndex;
 		}else{
@@ -102,10 +111,17 @@ function printEvent(year, month, startIndex, lastDate, data){
 		}else{
 			endDateIndex = data[i].endTime[2] + startIndex -1;
 		}
-
+		var title = "<p class='eventTime'>";
+		if(data[i].startTime[0] == year && data[i].startTime[1] == month && data[i].startTime[3] != -1){
+			var hour = data[i].startTime[3];
+			var min = data[i].startTime[4];
+			title += changeTimeForm(hour, min)+" </p>";
+		}
+		title += "<a title='"+data[i].summary+"' onClick ='clickEventTitle(this)' href='#' data-eventId ="+data[i].eventID+" data-calendarId = "+data[i].calendarID+">"+data[i].summary+"</a>";
 		if(startDateIndex == endDateIndex){//하루 일정
-			$("[data-index="+startDateIndex+"]:eq(0)").text(data[i].summary);
+			$("[data-index="+startDateIndex+"]:eq(0)").html(title);
 			$("[data-index="+startDateIndex+"]:eq(0)").css('background-color',colorCode);
+			$("[data-index="+startDateIndex+"]:eq(0)").css('border-bottom','1px solid white');
 			$("[data-index="+startDateIndex+"]:eq(0)").removeAttr("data-index");
 		}else{//이어지는 일정
 			var weekNum = 6;
@@ -120,8 +136,9 @@ function printEvent(year, month, startIndex, lastDate, data){
 					col = $("[data-index="+startDateIndex+"]:eq(0)").attr("data-col");
 					var lastCol = $("[data-index="+endDateIndex+"]:eq(0)").attr("data-col");
 					col = col > lastCol ? col:lastCol;
-					$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").text(data[i].summary);
+					$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").html(title);
 					$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").css('background-color',colorCode);
+					$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").css('border-bottom','1px solid white');
 					$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").attr("colspan",colspan);
 					$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").removeAttr("data-index");
 					index++;
@@ -136,13 +153,16 @@ function printEvent(year, month, startIndex, lastDate, data){
 						col = $("[data-index="+startDateIndex+"]:eq(0)").attr("data-col");
 						var lastCol = $("[data-index="+weekNum+"]:eq(0)").attr("data-col");
 						col = col > lastCol ? col:lastCol;
-						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").text(data[i].summary);
+						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").html(title);
 						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").css('background-color',colorCode);
+						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").css('border-bottom','1px solid white');
 						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").attr("colspan",colspan);
 						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").removeAttr("data-index");
 						
 					}else{
+						$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").html(title);
 						$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").css('background-color',colorCode);
+						$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").css('border-bottom','1px solid white');
 						$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").attr("colspan",colspan);
 						$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").removeAttr("data-index");
 					}
@@ -156,7 +176,9 @@ function printEvent(year, month, startIndex, lastDate, data){
 				}else if(index <= weekNum && endDateIndex <= weekNum){//마지막 주
 					//console.log("last"+", "+endDateIndex);
 					colspan = endDateIndex - index +1;
+					$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").html(title);
 					$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").css('background-color',colorCode);
+					$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").css('border-bottom','1px solid white');
 					$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").attr("colspan",colspan);
 					$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").removeAttr("data-index");
 					index++;
@@ -169,6 +191,73 @@ function printEvent(year, month, startIndex, lastDate, data){
 				
 			}//for-n
 		}
-		
 	}
+}
+
+function clickEventTitle(event){
+	var baseUrl = "http://localhost:8080";
+	var data={
+		"calendarId" : event.getAttribute('data-calendarId'),
+		"eventId" : event.getAttribute('data-eventId')
+	};
+	$.ajax({
+		url:baseUrl+"/showEventDetail",
+		type:'GET',
+		data : data,
+		dataType :"json",
+		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+		success:function(data){
+			var contents = "<p> 제목 : "+data.summary+"</p>";
+			contents += "<p> 일시 : "+data.startTime[0]+"."+addZero(data.startTime[1])+"."+addZero(data.startTime[2]);
+			var check = -1;
+			for(var i = 0;i<5;i++){
+				if(data.startTime[i] != data.endTime[i]){
+					check = i;
+					break;
+				}
+			}
+			var endTimeString;
+			if(check == -1){
+				contents += "</p>";
+			}else{
+				endTimeString = data.endTime[0]+"."+addZero(data.endTime[1])+"."+addZero(data.endTime[2]);
+				if(data.startTime[3] != -1){//시간이 있는 경우
+					contents += " " +changeTimeForm(data.startTime[3],data.startTime[4]) + " ~ ";
+					if(check != 3){//같은 날이 아닌 경우
+						contents += endTimeString;
+					}
+					contents += " " +changeTimeForm(data.endTime[3],data.endTime[4]);	//시간 추가
+				}else{//시간이 없는 경우
+					contents += " ~ "+endTimeString;
+				}
+				contents += "</p>";
+			}
+			
+			contents += "<p> 내용 : "+data.description+"</p>";
+			contents += "<p> 장소 : "+data.location+"</p>";
+			$('#eventSummary_Contents').html(contents);
+		}
+	});
+	$('#showEventSummary').css('display','block');
+}
+
+function addZero(data){
+	var result = "";
+	if(data < 10){
+		result +="0";
+	}
+	result += data;
+	return result;
+}
+function changeTimeForm(hour, min){
+	var result = "";
+	if(hour < 12){
+		result += "오전 ";
+		
+	}else{
+		result += "오후 ";
+		hour -= 12;
+	}
+	result+=addZero(hour)+":"+addZero(min);
+	return result;
 }

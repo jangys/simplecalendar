@@ -114,6 +114,7 @@ function requestMonthlyCalendar(year,month,date){
 	var baseUrl = "http://localhost:8080";
 	var pageUrl = "/m/"+year+"-"+month+"-"+date;
 	console.log("request");
+	history.replaceState(null,"SimpleCalendar",pageUrl);				//데이터 요청이 느리니 먼저 url을 바꾸자
 	$.ajax({
 		url: baseUrl+"/monthly/"+year+"/"+month+"/"+date,
 		type:'GET',
@@ -168,7 +169,7 @@ function changeStyle(button){
 //처음 
 $(document).ready(function(){
 	getCalendarList();
-	getList();
+	//getList();
 });
 function getList(){
 	var baseUrl = "http://localhost:8080";
