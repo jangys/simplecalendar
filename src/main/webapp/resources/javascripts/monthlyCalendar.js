@@ -28,10 +28,11 @@ function printCalendar(y, m, data) {
 	}
    
 	var row = Math.ceil((startDay+lastDate)/7);
-	
 	var table = "";
-	
 	var dateNum = 1;
+	
+	//높이에 따른 세로 갯수
+	var colNum = 6;	//0번째 줄은 무조건 날짜
 
 	//달력그리기
 	for(var i = 0; i<row;i++){
@@ -49,7 +50,7 @@ function printCalendar(y, m, data) {
 		}
 		table+="<table class = 'scheduleList'>";
 		var start = i*7;
-		for(var j = 0;j < 7;j++){
+		for(var j = 0;j < colNum;j++){
 			table+="<tr>";
 			for(var x = 0; x < 7;x++){
 				if(j == 0){//show date
@@ -72,7 +73,15 @@ function printCalendar(y, m, data) {
 					if(m == month && x+start == date+startDay-1){
 						table += " today";
 					}
-					table += "' data-index='"+(x+start)+"' data-col="+j+"></td>";
+					if(j == colNum -1){
+						table += " moreEvent";
+					}
+					table += "' data-index='"+(x+start)+"' data-col='"+j+"'";
+					
+					if(j == colNum -1){
+						table+= " data-add=0";
+					}
+					table +="></td>";
 				}
 			}
 			table+="</tr>";
@@ -81,10 +90,41 @@ function printCalendar(y, m, data) {
 	}
 	document.getElementById("dates").innerHTML = table;
 
-	printEvent(y, m, startDay, lastDate, data);
+	printEvent(y, m, startDay, lastDate, data, colNum);
+	$(".showMoreEvent").click(function(){
+		console.log(data[0].summary);
+		var index = $(this).parent().attr('data-index');
+		var clickDate = index-startDay+1;
+		var top = $(this).offset().top;
+		var left = $(this).offset().left;
+		var div = $("#showMoreEventDiv");
+		
+		$("#showMoreEvent_Title").html(m+"월 "+clickDate+"일");
+		
+		var d = new Date(y,m-1,clickDate,0,0,0,0);
+		clickDate = d.getTime();
+		var clickDateMax = clickDate + 86400000;
+		div.css('display','block');
+		div.css('top',top-200);
+		div.css('left',left-500);	//스크린 width따라 위치 조정
+		
+		var list = $("#moreEventList");
+		var text = "";
+		var size = data.length;
+		
+		for(var i=0;i<size;i++){
+			if(data[i].start < clickDateMax && data[i].end >= clickDate){//확인
+				text+="<li><a style='color:black;' title='"+data[i].summary+"' onClick ='clickEventTitle(this)' href='#' data-eventId ="+
+				data[i].eventID+" data-calendarId = "+data[i].calendarID+">"+data[i].summary+"</a></li>";
+			}else if(data[i].start >= clickDateMax && data[i].end > clickDateMax){
+				break;
+			}
+		}
+		list.html(text);
+	});
 }
 //이벤트 출력
-function printEvent(year, month, startIndex, lastDate, data){
+function printEvent(year, month, startIndex, lastDate, data, colNum){
 	var eventNum = 0;
 	var dateIndex = startIndex-1;
 	 var size = data.length;
@@ -111,18 +151,27 @@ function printEvent(year, month, startIndex, lastDate, data){
 		}else{
 			endDateIndex = data[i].endTime[2] + startIndex -1;
 		}
-		var title = "<p class='eventTime'>";
+		var title = "<div class='eventTitleLink'><p class='eventTime'>";
 		if(data[i].startTime[0] == year && data[i].startTime[1] == month && data[i].startTime[3] != -1){
 			var hour = data[i].startTime[3];
 			var min = data[i].startTime[4];
 			title += changeTimeForm(hour, min)+" </p>";
 		}
-		title += "<a title='"+data[i].summary+"' onClick ='clickEventTitle(this)' href='#' data-eventId ="+data[i].eventID+" data-calendarId = "+data[i].calendarID+">"+data[i].summary+"</a>";
+		title += "<a title='"+data[i].summary+"' onClick ='clickEventTitle(this)' href='#' data-eventId ="+data[i].eventID+" data-calendarId = "+data[i].calendarID+">"+data[i].summary+"</a></div>";
 		if(startDateIndex == endDateIndex){//하루 일정
-			$("[data-index="+startDateIndex+"]:eq(0)").html(title);
-			$("[data-index="+startDateIndex+"]:eq(0)").css('background-color',colorCode);
-			$("[data-index="+startDateIndex+"]:eq(0)").css('border-bottom','1px solid white');
-			$("[data-index="+startDateIndex+"]:eq(0)").removeAttr("data-index");
+			var col = $("[data-index="+startDateIndex+"]:eq(0)").attr("data-col");
+			if(col == colNum -1){//마지막줄인 경우
+				var add = parseInt($("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").attr("data-add")) + 1;
+				$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").attr("data-add",add);
+				var temp = "<a class='showMoreEvent' title='더보기' href='#' style='color:black;'>+"+add+"</a>";
+				$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").html(temp);
+				//$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").addClass('moreEvent');
+			}else{
+				$("[data-index="+startDateIndex+"]:eq(0)").html(title);
+				$("[data-index="+startDateIndex+"]:eq(0)").css('background-color',colorCode);
+				$("[data-index="+startDateIndex+"]:eq(0)").css('border-bottom','1px solid white');
+				$("[data-index="+startDateIndex+"]:eq(0)").removeAttr("data-index");
+			}
 		}else{//이어지는 일정
 			var weekNum = 6;
 			var colspan = 0;
@@ -136,29 +185,85 @@ function printEvent(year, month, startIndex, lastDate, data){
 					col = $("[data-index="+startDateIndex+"]:eq(0)").attr("data-col");
 					var lastCol = $("[data-index="+endDateIndex+"]:eq(0)").attr("data-col");
 					col = col > lastCol ? col:lastCol;
-					$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").html(title);
-					$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").css('background-color',colorCode);
-					$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").css('border-bottom','1px solid white');
-					$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").attr("colspan",colspan);
-					$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").removeAttr("data-index");
-					index++;
-					while(index <= endDateIndex){
-						$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").remove();
-						index++;
-					}
-					break;
-				}else if(index <= weekNum && endDateIndex > weekNum){//주 넘어가는 경우
-					colspan = weekNum-index+1;
-					if(index == startDateIndex){
-						col = $("[data-index="+startDateIndex+"]:eq(0)").attr("data-col");
-						var lastCol = $("[data-index="+weekNum+"]:eq(0)").attr("data-col");
-						col = col > lastCol ? col:lastCol;
+					
+					if(col == colNum - 1){//마지막 줄인 경우
+						var td = $("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)");
+						var add = parseInt(td.attr("data-add")) +1;
+						td.attr("data-add",add);
+						var temp = "<a class='showMoreEvent' title='더보기' href='#' style='color:black;'>+"+add+"</a>";
+						td.html(temp);
+					}else{
 						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").html(title);
 						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").css('background-color',colorCode);
 						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").css('border-bottom','1px solid white');
 						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").attr("colspan",colspan);
 						$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").removeAttr("data-index");
-						
+					}
+					index++;
+					while(index <= endDateIndex){
+						if(col == colNum - 1){
+							td = $("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)");
+							add = parseInt(td.attr("data-add")) +1;
+							td.attr("data-add",add);
+							temp = "<a class='showMoreEvent' title='더보기' href='#' style='color:black;'>+"+add+"</a>";
+							td.html(temp);
+						}else{
+							$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").remove();
+						}
+						index++;
+					}
+					break;
+				}else if(index <= weekNum && endDateIndex > weekNum){//주 넘어가는 경우
+					colspan = weekNum-index+1;
+					col = $("[data-index="+startDateIndex+"]:eq(0)").attr("data-col");
+					var lastCol = $("[data-index="+weekNum+"]:eq(0)").attr("data-col");
+					col = col > lastCol ? col:lastCol;
+					if(col == colNum-1){
+						var td = $("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)");
+						var add = parseInt(td.attr("data-add")) +1;
+						td.attr("data-add",add);
+						var temp = "<a class='showMoreEvent' title='더보기' href='#' style='color:black;'>+"+add+"</a>";
+						td.html(temp);
+					}else{
+						if(index == startDateIndex){
+							$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").html(title);
+							$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").css('background-color',colorCode);
+							$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").css('border-bottom','1px solid white');
+							$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").attr("colspan",colspan);
+							$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").removeAttr("data-index");
+							
+						}else{
+							$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").html(title);
+							$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").css('background-color',colorCode);
+							$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").css('border-bottom','1px solid white');
+							$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").attr("colspan",colspan);
+							$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").removeAttr("data-index");
+						}
+					}
+					index++;
+					while(index <= weekNum){
+						if(col == colNum - 1){
+							td = $("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)");
+							add = parseInt(td.attr("data-add")) +1;
+							td.attr("data-add",add);
+							temp = "<a class='showMoreEvent' title='더보기' href='#' style='color:black;'>+"+add+"</a>";
+							td.html(temp);
+						}else{
+							$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").remove();
+						}
+						index++;
+					}
+					index = weekNum+1;
+					isIn = 1;
+				}else if(index <= weekNum && endDateIndex <= weekNum){//마지막 주
+					//console.log("last"+", "+endDateIndex);
+					colspan = endDateIndex - index +1;
+					if(col == colNum-1){
+						var td = $("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)");
+						var add = parseInt(td.attr("data-add")) +1;
+						td.attr("data-add",add);
+						var temp = "<a class='showMoreEvent' title='더보기' href='#' style='color:black;'>+"+add+"</a>";
+						td.html(temp);
 					}else{
 						$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").html(title);
 						$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").css('background-color',colorCode);
@@ -167,23 +272,16 @@ function printEvent(year, month, startIndex, lastDate, data){
 						$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").removeAttr("data-index");
 					}
 					index++;
-					while(index <= weekNum){
-						$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").remove();
-						index++;
-					}
-					index = weekNum+1;
-					isIn = 1;
-				}else if(index <= weekNum && endDateIndex <= weekNum){//마지막 주
-					//console.log("last"+", "+endDateIndex);
-					colspan = endDateIndex - index +1;
-					$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").html(title);
-					$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").css('background-color',colorCode);
-					$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").css('border-bottom','1px solid white');
-					$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").attr("colspan",colspan);
-					$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").removeAttr("data-index");
-					index++;
 					while(index <= endDateIndex){
-						$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").remove();
+						if(col == colNum - 1){
+							td = $("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)");
+							add = parseInt(td.attr("data-add")) +1;
+							td.attr("data-add",add);
+							temp = "<a class='showMoreEvent' title='더보기' href='#' style='color:black;'>+"+add+"</a>";
+							td.html(temp);
+						}else{
+							$("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)").remove();
+						}
 						index++;
 					}
 					break;
@@ -240,7 +338,6 @@ function clickEventTitle(event){
 	});
 	$('#showEventSummary').css('display','block');
 }
-
 function addZero(data){
 	var result = "";
 	if(data < 10){

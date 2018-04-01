@@ -33,6 +33,7 @@
 		text-align: center;
 	}
 	td{
+	
 		width:14.2%;
 		height:12.5%;
 	}
@@ -153,6 +154,7 @@
 	#container{
 		padding : 1% 1%;
 		position : relative;
+		min-width: 930px;
 	/*
 		margin: 2% 5%;
 		height: 85%;
@@ -171,6 +173,18 @@
 		background-color: white;
 		padding : 1% 1%;
 		display: none;
+	}
+	/*일정 더 보여주는 작은 창*/
+	#showMoreEventDiv{
+		position : absolute;
+		width : 200px;
+		height : 200px;
+		top : 30%;
+		left : 30%;
+		background-color: white;
+		padding : 1% 1%;
+		text-align:right;
+		display:none;
 	}
 	/*일정 요약 header*/
 	#eventSummary_Header{
@@ -196,6 +210,7 @@
 	/*날짜와 일정*/
 	.scheduleList{
 		height:100%;
+		table-layout: fixed;
 	}
 	/*4주일때*/
 	.week4{
@@ -217,11 +232,20 @@
 	.eventTime{
 		display:inline;
 	}
+	/*일정 제목 링크 부분*/
+	.eventTitleLink{
+		overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+	}
+	/*일정 더보기 링크 부분*/
+	.moreEvent{
+		color:black;
+		text-align: right;
+	}
 </style>
 </head>
 
 <body>
-<div id = "header" class = "row">
+<div id = "header" class = "row" style="min-width: 930px;flex-wrap: nowrap;">
 	<div id="title" class = "col-sm-3">
 	</div>
 	<div id = "btnList" class = "col-sm-5">
@@ -231,7 +255,7 @@
 		<button class = 'btn btn-info' id = 'listBtn' type='button' value='list' name='list'>목록</button>
 	</div>
 </div>
-<div id = "contents" class = "row">
+<div id = "contents" class = "row" style="flex-wrap: nowrap;">
 	<div id = "side" class = "col-sm-2 form-horizontal">
 		<form>
 			<div id = "checkboxList">
@@ -267,9 +291,23 @@
 				<button class='btn btn-info' type='button' value='showEventDetail' name='show'>상세보기</button>
 			</div>
 		</div>
+		<div id="showMoreEventDiv" style="border: 1px solid black;">
+				<span id="showMoreEvent_Title"></span><button type='button' value='closeMoreEvent' name='close' onclick="clickCloseMoreEvent()" style="font-size: 12px;">X</button>
+			<div id="showMoreEvent_Contents" style="overflow-y: scroll;height:89%;text-align:left;">
+				<ul id="moreEventList" style="list-style: none;padding:0% 0%;">
+				</ul>
+			</div>
+		</div>
 	</div>
 </div>
 
 </div>
+<script type="text/javascript">
+	function clickCloseMoreEvent(){
+		$('#moreEventList').html('');
+		$("#showMoreEvent_Contents").scrollTop(0);
+		$('#showMoreEventDiv').css('display','none');
+	}
+</script>
 </body>
 </html>
