@@ -206,6 +206,20 @@ public class GoogleCalendarService {
 		
 		return result;
 	}
+	
+	public static Event getEvent(String calendarId, String eventId) {
+		Event event = new Event();
+		com.google.api.services.calendar.Calendar service;
+		try {
+			service = getCalendarService();
+			event = service.events().get(calendarId, eventId).execute();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return event;
+	}
+	
 //	public static ArrayList<String> getCheckedCalendarId(ArrayList<CalendarDTO> dto){
 //		ArrayList<String> result = new ArrayList<String>();
 //		int size = dto.size();

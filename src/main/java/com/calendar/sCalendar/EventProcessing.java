@@ -42,7 +42,7 @@ public class EventProcessing {
 				i=end+1;
 				start = -1;
 			}//if - 해당 월이 아닌 경우
-			if(dto.get(i).getStartTime()[2] == dto.get(i+1).getStartTime()[2]) {
+			if(i+1 < size && dto.get(i).getStartTime()[2] == dto.get(i+1).getStartTime()[2]) {
 				//System.out.println(i);
 				if(start == -1) {
 					start = i;
@@ -52,20 +52,26 @@ public class EventProcessing {
 					index += 1;
 				}
 				end = index;
-				//System.out.println(end);
 				long max;
 				int maxIndex;
 				for(int x=start;x<end;x++) {
-					max = dto.get(x).getEnd();
-					maxIndex = x;
-					for(int y=x+1; y<=end; y++) {
-						long endValue = dto.get(x).getEnd();
-						if(max <= endValue) {
-							max = endValue;
-							maxIndex = y;
+					max = -1;
+					maxIndex = -1;
+					for(int y=x; y<=end; y++) {
+						long endValue = dto.get(y).getEnd();
+						if(dto.get(y).getStartTime()[0] == dto.get(y).getEndTime()[0] && dto.get(y).getStartTime()[1] == dto.get(y).getEndTime()[1] 
+								&& dto.get(y).getStartTime()[2] == dto.get(y).getEndTime()[2]) {//하루 스켸쥴인 경우는 시작 날짜 빠른 순이므로 패스
+							//
+						}else {
+							if(max <= endValue) {
+								max = endValue;
+								maxIndex = y;
+							}
 						}
 					}
-					Collections.swap(result, x, maxIndex);
+					if(maxIndex != -1) {
+						Collections.swap(result, x, maxIndex);
+					}
 				}
 				i=end+1;
 				start = -1;

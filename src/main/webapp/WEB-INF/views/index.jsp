@@ -172,6 +172,7 @@
 		left : 30%;
 		background-color: white;
 		padding : 1% 1%;
+		z-index: 2;
 		display: none;
 	}
 	/*일정 더 보여주는 작은 창*/
@@ -184,6 +185,7 @@
 		background-color: white;
 		padding : 1% 1%;
 		text-align:right;
+		z-index: 1;
 		display:none;
 	}
 	/*일정 요약 header*/
@@ -287,8 +289,10 @@
 			</div>
 			<div id="eventSummary_Contents"></div>
 			<div id="eventSummary_Footer">
-				<button class='btn btn-info' type='button' value='deleteEvent' name='delete'>삭제</button>
-				<button class='btn btn-info' type='button' value='showEventDetail' name='show'>상세보기</button>
+				<button id='btnDeleteEvent'class='btn btn-info' type='button' value='deleteEvent' name='delete'>삭제</button>
+				<form id ='showEvent_Form'action="http://localhost:8080/showEventPage" method="GET">
+					<button id='btnShowEvent' class='btn btn-info' type='submit'>상세보기</button>
+				</form>
 			</div>
 		</div>
 		<div id="showMoreEventDiv" style="border: 1px solid black;">
@@ -308,6 +312,7 @@
 		$("#showMoreEvent_Contents").scrollTop(0);
 		$('#showMoreEventDiv').css('display','none');
 	}
+	
 </script>
 </body>
 </html>

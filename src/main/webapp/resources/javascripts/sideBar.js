@@ -3,7 +3,6 @@
 function saveIsCheck(){
 	
 }
-sessionStorage.setItem("aa","bbb");
 function getCalendarList(){
 	var baseUrl = "http://localhost:8080";
 	$.ajax({
@@ -53,7 +52,7 @@ function clickCheckbox(box){
 }
 function requestCheckCalendar(year,month,date,box){
 	var baseUrl = "http://localhost:8080";
-	console.log(box.value);
+	//console.log(box.value);
 	var data = {
 			"id" : box.value,
 			"year" : year,

@@ -99,16 +99,5 @@ public class HomeController {
 			return eventList;
 		}
 		
-	//이벤트 디테일 요청
-		@RequestMapping(value = "/showEventDetail")
-		public @ResponseBody EventDetailDTO getEventDetail(CalendarAndEventIdDTO dto) {
-			EventDetailDTO result = new EventDetailDTO();
-			try {
-				result = new GoogleCalendarService().getEventDetail(dto.getCalendarId(), dto.getEventId());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			return result;
-		}
+
 }
