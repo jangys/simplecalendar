@@ -48,7 +48,7 @@ public class GoogleCalendarService {
      * at ~/.credentials/calendar-java-quickstart
      */
     private static final List<String> SCOPES =
-        Arrays.asList(CalendarScopes.CALENDAR_READONLY);
+        Arrays.asList(CalendarScopes.CALENDAR);	//READ_ONLY가 붙으면 읽는 기능 밖에 못함.. 변경후 삭제
 
     static {
         try {
@@ -70,7 +70,7 @@ public class GoogleCalendarService {
     public static Credential authorize() throws IOException {
         // Load client secrets.
         InputStream in =
-            GoogleCalendarService.class.getResourceAsStream("/client-secret.json");
+            GoogleCalendarService.class.getResourceAsStream("/client_secret_1.json");
         GoogleClientSecrets clientSecrets =
             GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 

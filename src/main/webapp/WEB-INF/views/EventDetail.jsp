@@ -47,28 +47,29 @@
 <div id="container">
 	<h4 id="eventDateTitle"></h4>
 	<div id="contents">
-		<form action="updateEvent" method="post">
-			<span>제목</span><input id="summary" class="form-control" type="text" name="title"><br><br>
-			<span>일시</span><input id="startDatePicker" class="form-control datePick" type="date" name="startDate" ><input id="startTimePicker" class="form-control timePick" type="time" name="startDate"><span>
-			 - </span><input id="endDatePicker" class="form-control datePick" type="date" name="endDate"><input id="endTimePicker" class="form-control timePick" type="time" name="endDate"><br/><br/>
-			<span>장소</span><input id="location" class="form-control" type="text" name="location"><br/><br>
-			<span>메모</span><textarea id="description" class="form-control" rows="5" id="memo" style="display:block; width:84%;"></textarea> <br/><br>
+		<form action="updateEvent" method="post" accept-charset="UTF-8">
+			<span>제목</span><input id="summary" class="form-control" type="text" name="summary"><br><br>
+			<span>일시</span><input id="startDatePicker" class="form-control datePick" type="date" name="startDate" ><input id="startTimePicker" class="form-control timePick" type="time" name="startDateTime"><span>
+			 - </span><input id="endDatePicker" class="form-control datePick" type="date" name="endDate"><input id="endTimePicker" class="form-control timePick" type="time" name="endDateTime"><br/><br/>
+			<span>장소</span><input id="location" class="form-control" type="text" name="location" ><br/><br>
+			<span>메모</span><textarea id="description" class="form-control" rows="5" id="memo" style="display:block; width:84%;" name="description"></textarea> <br/><br>
 			<span>캘린더</span><select id="calendarList" name="calendars">
 			</select>
+			<input id="eventId" type="text" style="display:none;" value=${eventId} name="eventId">
+			<input id="calendarId" type="text" style="display:none;"value=${calendarId} name="calendarId">
 			<br/><br/>
 			<button id="btnSave" class="btn btn-info" type="submit" name="save" value="true">저장</button>
 			<button id="btnCancel" class="btn btn-info" type="button" onclick="history.back();">취소</button>
 		</form>
 		
 	</div>
-	<p id="eventId" style="display:none;">${eventId}</p>
-	<p id="calendarId" style="display:none;">${calendarId}</p>
+	
 </div>
 </body>
 <script type="text/javascript">
 //처음 
 $(document).ready(function(){
-	if($("#eventId").text() != ''){
+	if($("#eventId").attr('value') != ''){
 		getEvent();
 	}else{//그냥 삽입인 경우
 		var date = new Date();
@@ -90,7 +91,7 @@ function getCalendarList(){
 			var text = "";
 			for(var i=0;i<size;i++){
 				text += "<option value='"+data[i].id+"'";
-				if(data[i].id == $("#calendarId").text()){
+				if(data[i].id == $("#calendarId").attr('value')){
 					text += "selected";
 				}
 				text += ">"+data[i].summary+"</option>";
@@ -105,8 +106,8 @@ function getEvent(){
 	console.log($("#eventId").text());
 	var baseUrl = "http://localhost:8080";
 	var data={
-			"calendarId" : $("#calendarId").text(),
-			"eventId" : $("#eventId").text()
+			"calendarId" : $("#calendarId").attr('value'),
+			"eventId" : $("#eventId").attr('value')
 		};
 	console.log(data.calendarId);
 	$.ajax({

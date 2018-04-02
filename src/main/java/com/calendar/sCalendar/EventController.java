@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.Calendar.Events.Get;
 import com.google.api.services.calendar.model.Event;
 
 @Controller
@@ -65,4 +67,24 @@ public class EventController {
 		return result;
 	}
 	
+	//¼öÁ¤
+	@RequestMapping(value="/updateEvent",method = RequestMethod.POST)
+	public String updateEvent(HttpServletRequest request, Model model) {
+		GoogleCalendarService gcs = new GoogleCalendarService();
+		Calendar service;
+		String calendarId = request.getParameter("calendarId");
+		String eventId = request.getParameter("eventId");
+		try {
+			service = gcs.getCalendarService();
+			Event event = service.events().get(calendarId, eventId).execute();
+			event.setSummary(request.getParameter("summary"))
+			.setLocation(request.getParameter("location"))
+			.setDescription(request.getParameter("description"));
+			Event updatedEvent = service.events().update(calendarId, event.getId(), event).execute();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "redirect:/m/2018-4-2";
+	}
 }

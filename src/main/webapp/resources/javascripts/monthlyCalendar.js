@@ -334,9 +334,9 @@ function clickEventTitle(event){
 				}
 				contents += "</p>";
 			}
-			
-			contents += "<p> 내용 : "+data.description+"</p>";
 			contents += "<p> 장소 : "+data.location+"</p>";
+			contents += "<p> 내용 : "+data.description+"</p>";
+			
 			$('#eventSummary_Contents').html(contents);
 			var text = "<input type='text' name='calendarId' style='display:none' value='"+event.getAttribute('data-calendarId')+"' />";
 			text += "<input type='text' name='eventId' style='display:none' value='"+event.getAttribute('data-eventId')+"' />";
