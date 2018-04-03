@@ -18,10 +18,13 @@ import com.google.api.services.calendar.model.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 public class GoogleCalendarService {
     /** Application name. */
@@ -150,15 +153,20 @@ public class GoogleCalendarService {
 	                    //System.out.printf("%s (%s)\n", end, Long.toString(end.getValue()));
 	                    EventDTO tempDTO = new EventDTO();
 	                    tempDTO.setCalendarID(id);
-	                    tempDTO.setStart(start.getValue(),start.isDateOnly());
 	                    tempDTO.setSummary(event.getSummary());
+	                    tempDTO.setStart(start.getValue(),start.isDateOnly());
 	                    tempDTO.setEnd(end.getValue(),end.isDateOnly());
 	                    tempDTO.setEventID(event.getId());
 	                    dtoList.add(tempDTO);
 	                }
 	            }
             }
+            Collections.sort(dtoList,new comparator());
+            for(int i=0;i<dtoList.size();i++) {
+            	System.out.println(dtoList.get(i).getSummary());
+            }
             dtoList = new EventProcessing().arrangeOrder(dtoList, year, month);
+            
             return dtoList;
     }
 	

@@ -92,13 +92,11 @@ function printCalendar(y, m, data) {
 
 	printEvent(y, m, startDay, lastDate, data, colNum);
 	$(".showMoreEvent").click(function(){
-		console.log(data[0].summary);
 		var index = $(this).parent().attr('data-index');
 		var clickDate = index-startDay+1;
 		var top = $(this).offset().top;
 		var left = $(this).offset().left;
 		var div = $("#showMoreEventDiv");
-		
 		$("#showMoreEvent_Title").html(m+"월 "+clickDate+"일");
 		
 		var d = new Date(y,m-1,clickDate,0,0,0,0);
@@ -111,13 +109,10 @@ function printCalendar(y, m, data) {
 		var list = $("#moreEventList");
 		var text = "";
 		var size = data.length;
-		
 		for(var i=0;i<size;i++){
 			if(data[i].start < clickDateMax && data[i].end >= clickDate){//확인
 				text+="<li><a style='color:black;' title='"+data[i].summary+"' onClick ='clickEventTitle(this)' href='#' data-eventId ="+
 				data[i].eventID+" data-calendarId = "+data[i].calendarID+">"+data[i].summary+"</a></li>";
-			}else if(data[i].start >= clickDateMax && data[i].end > clickDateMax){
-				break;
 			}
 		}
 		list.html(text);
@@ -218,8 +213,19 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 					colspan = weekNum-index+1;
 					if(index == startDateIndex){
 						col = $("[data-index="+startDateIndex+"]:eq(0)").attr("data-col");
-						var lastCol = $("[data-index="+weekNum+"]:eq(0)").attr("data-col");
-						col = col > lastCol ? col:lastCol;
+						var tempWeekNum = 0;
+						var tempIndex = index;
+						for(var a=0;a<6;a++){
+							tempWeekNum = 6+7*a;
+							if(index <= tempWeekNum && endDateIndex > tempWeekNum){
+								var last = $("[data-index="+tempWeekNum+"]:eq(0)").attr("data-col");
+								col = col > last ? col:last; 
+							}else if(endDateIndex <= tempWeekNum){//마지막 주
+								var last = $("[data-index="+endDateIndex+"]:eq(0)").attr("data-col");
+								col = col > last ? col:last; 
+								break;
+							}	
+						}
 					}
 					if(col == colNum-1){
 						var td = $("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)");
@@ -297,7 +303,6 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 
 function clickEventTitle(event){
 	var baseUrl = "http://localhost:8080";
-	var count = 0;
 	var data={
 		"calendarId" : event.getAttribute('data-calendarId'),
 		"eventId" : event.getAttribute('data-eventId')
@@ -341,45 +346,48 @@ function clickEventTitle(event){
 			var text = "<input type='text' name='calendarId' style='display:none' value='"+event.getAttribute('data-calendarId')+"' />";
 			text += "<input type='text' name='eventId' style='display:none' value='"+event.getAttribute('data-eventId')+"' />";
 			text += "<button id='btnShowEvent' class='btn btn-info' type='submit'>상세보기</button>";
+			$('#btnDeleteEvent').attr('data-calendarId',event.getAttribute('data-calendarId'));
+			$('#btnDeleteEvent').attr('data-eventId',event.getAttribute('data-eventId'));
 			$('#showEvent_Form').html(text);
 		}
 	});
 	$('#showEventSummary').css('display','block');
-	$('#btnDeleteEvent').click(function(){
-		count++;
-		$(this).attr('disabled',true);
-		var result;
-		if($(this).attr('disabled') && count == 1){
-			result= confirm('정말 삭제하시겠습니까?');
-			if(result == true){
-				console.log("delete");
-				$.ajax({
-					url:baseUrl+"/deleteEvent",
-					type:'GET',
-					data : data,
-					dataType :"json",
-					contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-					success:function(data){
-						if(data == true){
-							alert('삭제가 완료되었습니다.');
-							$(this).attr('disabled',false);
-							location.reload();
-							count=0;
-						}
-						else{
-							alert('삭제 오류');
-							$(this).attr('disabled',false);
-							count=0;
-						}
-					}
-				});
-			}else{
-				alert('취소 되었습니다.');
-				$(this).attr('disabled',false);
-				count=0;
+}
+function clickDeleteEvent(button){
+	var result;
+	var baseUrl = "http://localhost:8080";
+	var data={
+			"calendarId" : button.getAttribute('data-calendarId'),
+			"eventId" : button.getAttribute('data-eventId')
+		};
+	result= confirm('정말 삭제하시겠습니까?');
+	if(result == true){
+		console.log("delete");
+		$.ajax({
+			url:baseUrl+"/deleteEvent",
+			type:'GET',
+			data : data,
+			dataType :"json",
+			contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+			success:function(data){
+				if(data == true){
+					alert('삭제가 완료되었습니다.');
+					$(this).attr('disabled',false);
+					location.reload();
+					count=0;
+				}
+				else{
+					alert('삭제 오류');
+					$(this).attr('disabled',false);
+					count=0;
+				}
 			}
-		}
-	});
+		});
+	}else{
+		alert('취소 되었습니다.');
+		$(this).attr('disabled',false);
+		count=0;
+	}
 }
 function addZero(data){
 	var result = "";

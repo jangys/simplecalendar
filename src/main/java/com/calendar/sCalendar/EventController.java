@@ -1,6 +1,9 @@
 package com.calendar.sCalendar;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
@@ -14,9 +17,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.Calendar.Events.Get;
 import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.EventDateTime;
 
 @Controller
 public class EventController {
@@ -74,17 +79,56 @@ public class EventController {
 		Calendar service;
 		String calendarId = request.getParameter("calendarId");
 		String eventId = request.getParameter("eventId");
+		EventDateTime start = new EventDateTime();
+		EventDateTime end = new EventDateTime();
+		if(request.getParameter("startDateTime") == "") {
+			Date startD;
+			try {
+				startD = new SimpleDateFormat("yyyy-MM-dd").parse(request.getParameter("startDate"));
+				System.out.println(startD.toString());
+				start.setDate(new DateTime(startD)).setTimeZone("Asia/Seoul");
+			} catch (ParseException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}else {
+			String strStart = request.getParameter("startDate")+"T"+request.getParameter("startDateTime");
+			DateTime startDate = new DateTime(strStart);
+			start.setDate(startDate).setTimeZone("Asia/Seoul");
+		}
+		if(request.getParameter("endDateTime") == "") {
+			Date endD;
+			try {
+				endD = new SimpleDateFormat("yyyy-MM-dd").parse(request.getParameter("endDate"));
+				System.out.println(endD.toString());
+				end.setDate(new DateTime(endD)).setTimeZone("Asia/Seoul");
+			} catch (ParseException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}else {
+			String strEnd = request.getParameter("endDate")+"T"+request.getParameter("endDateTime");
+			DateTime endDate = new DateTime(strEnd);
+			end.setDateTime(endDate).setTimeZone("Asia/Seoul");
+		}
+		System.out.println(start.toString());
+		System.out.println(end.toString());
+		//System.out.println(startDate.toString());
+		//String[] strStartDateTime = request.getParameter("startDateTime").split(":");
 		try {
 			service = gcs.getCalendarService();
 			Event event = service.events().get(calendarId, eventId).execute();
 			event.setSummary(request.getParameter("summary"))
 			.setLocation(request.getParameter("location"))
-			.setDescription(request.getParameter("description"));
+			.setDescription(request.getParameter("description"))
+			.setStart(start)
+			.setEnd(end)
+			;
 			Event updatedEvent = service.events().update(calendarId, event.getId(), event).execute();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return "redirect:/m/2018-4-2";
+		return "redirect:/m/"+request.getParameter("startDate");
 	}
 }

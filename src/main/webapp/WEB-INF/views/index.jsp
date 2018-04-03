@@ -289,7 +289,7 @@
 			</div>
 			<div id="eventSummary_Contents"></div>
 			<div id="eventSummary_Footer">
-				<button id='btnDeleteEvent'class='btn btn-info' type='button' value='deleteEvent' name='delete'>삭제</button>
+				<button id='btnDeleteEvent'class='btn btn-info' type='button' value='deleteEvent' name='delete' onclick="clickDeleteEvent(this)">삭제</button>
 				<form id ='showEvent_Form'action="http://localhost:8080/showEventPage" method="GET">
 					<button id='btnShowEvent' class='btn btn-info' type='submit'>상세보기</button>
 				</form>
