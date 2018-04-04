@@ -33,7 +33,7 @@ public class EventDTO {
 			//System.out.println("hour : "+startTime[3]+" , min : "+startTime[4]);
 		}else {
 			startTime[3] = -1;
-			this.start -= 9*3600000;
+			this.start -= 9*3600000;	//오전 12시에서 1밀리초 뺌. 
 			this.start -= 1;
 		}
 		

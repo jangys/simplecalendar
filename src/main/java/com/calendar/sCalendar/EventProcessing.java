@@ -3,13 +3,15 @@ package com.calendar.sCalendar;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import com.google.api.client.util.DateTime;
 
 public class EventProcessing {
 	public ArrayList<EventDTO> arrangeOrder(ArrayList<EventDTO> dto,int year, int month){
-		ArrayList<EventDTO> result = dto;
-		int size = result.size();
+		ArrayList<EventDTO> list = dto;
+		List<EventDTO> temp = new ArrayList<>();
+		int size = dto.size();
 		
 		int start = -1;
 		int end = -1;
@@ -26,6 +28,9 @@ public class EventProcessing {
 					index++;
 				}
 				end = index-1;
+				temp = dto.subList(start, end+1);
+				Collections.sort(temp,new comparatorEndDesc());
+				/*
 				long max;
 				int maxIndex;
 				for(int x=start;x<end;x++) {
@@ -40,9 +45,16 @@ public class EventProcessing {
 					}
 					Collections.swap(result, x, maxIndex);
 				}
+				*/
 				i=end;
-				start = -1;
+				break;
 			}//if - 해당 월이 아닌 경우
+		}//for
+		List<EventDTO> temp1 = dto.subList(end+1, dto.size());
+		Collections.sort(temp1,new comparatorSameDate());
+		ArrayList<EventDTO> result = new ArrayList<EventDTO>(temp);
+		result.addAll(temp1);
+			/*
 			if(i+1 < size && dto.get(i).getStartTime()[2] == dto.get(i+1).getStartTime()[2]) {
 				//System.out.println(i);
 				//System.out.println(dto.get(i).getSummary());
@@ -87,11 +99,11 @@ public class EventProcessing {
 				start = -1;
 			}
 		}
-		/*
-		for(int i=0;i<size;i++) {
-			System.out.println(result.get(i).getSummary());
-		}
 		*/
+//		for(int i=0;i<size;i++) {
+//			System.out.println(result.get(i).getSummary());
+//		}
+		
 		return result;
 	}
 

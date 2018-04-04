@@ -110,7 +110,8 @@ function printCalendar(y, m, data) {
 		var text = "";
 		var size = data.length;
 		for(var i=0;i<size;i++){
-			if(data[i].start < clickDateMax && data[i].end >= clickDate){//확인
+			if(data[i].start < clickDateMax && data[i].end >= clickDate && data[i].start != clickDateMax -1){//확인 종일 일정인 경우에는 오전 12시에서 -1밀리초 만큼 빼서 다음날 일정은 포함 안되게
+				console.log(data[i].summary + " , "+data[i].start);
 				text+="<li><a style='color:black;' title='"+data[i].summary+"' onClick ='clickEventTitle(this)' href='#' data-eventId ="+
 				data[i].eventID+" data-calendarId = "+data[i].calendarID+">"+data[i].summary+"</a></li>";
 			}

@@ -86,7 +86,7 @@ public class EventController {
 			try {
 				startD = new SimpleDateFormat("yyyy-MM-dd").parse(request.getParameter("startDate"));
 				System.out.println(startD.toString());
-				start.setDate(new DateTime(startD)).setTimeZone("Asia/Seoul");
+				start.setDateTime(new DateTime(startD)).setTimeZone("Asia/Seoul");
 			} catch (ParseException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -94,14 +94,15 @@ public class EventController {
 		}else {
 			String strStart = request.getParameter("startDate")+"T"+request.getParameter("startDateTime");
 			DateTime startDate = new DateTime(strStart);
-			start.setDate(startDate).setTimeZone("Asia/Seoul");
+			System.out.println(startDate.toString());
+			start.setDateTime(startDate).setTimeZone("Asia/Seoul");
 		}
 		if(request.getParameter("endDateTime") == "") {
 			Date endD;
 			try {
 				endD = new SimpleDateFormat("yyyy-MM-dd").parse(request.getParameter("endDate"));
 				System.out.println(endD.toString());
-				end.setDate(new DateTime(endD)).setTimeZone("Asia/Seoul");
+				end.setDateTime(new DateTime(endD)).setTimeZone("Asia/Seoul");
 			} catch (ParseException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -110,6 +111,7 @@ public class EventController {
 			String strEnd = request.getParameter("endDate")+"T"+request.getParameter("endDateTime");
 			DateTime endDate = new DateTime(strEnd);
 			end.setDateTime(endDate).setTimeZone("Asia/Seoul");
+			System.out.println("end : "+end.toString());
 		}
 		System.out.println(start.toString());
 		System.out.println(end.toString());
