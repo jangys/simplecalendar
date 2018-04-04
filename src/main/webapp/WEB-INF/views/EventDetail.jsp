@@ -33,7 +33,7 @@
 	}
 	/*날짜 선택*/
 	.datePick{
-		width:23%;
+		width:22%;
 		marigin-right:1%;
 	}
 	/*시간 선택*/
@@ -49,8 +49,14 @@
 	<div id="contents">
 		<form action="updateEvent" method="post" accept-charset="UTF-8">
 			<span>제목</span><input id="summary" class="form-control" type="text" name="summary"><br><br>
-			<span>일시</span><input id="startDatePicker" class="form-control datePick" type="date" name="startDate" ><input id="startTimePicker" class="form-control timePick" type="time" name="startDateTime"><span>
-			 - </span><input id="endDatePicker" class="form-control datePick" type="date" name="endDate"><input id="endTimePicker" class="form-control timePick" type="time" name="endDateTime"><br/><br/>
+			<span>일시</span>
+				<input id="startDatePicker" class="form-control datePick" type="date" name="startDate" required onblur="checkDate();">
+				 <input id="startTimePicker" class="form-control timePick" type="time" name="startDateTime" onclick="resetTimePicker();" onblur="checkTime();">
+				<span> - </span>
+				<input id="endDatePicker" class="form-control datePick" type="date" name="endDate" required onblur="checkDate();">
+				 <input id="endTimePicker" class="form-control timePick" type="time" name="endDateTime" onclick="resetTimePicker();"  onblur="checkTime();">
+			 <label><input id="allDayCheckBox" type='checkbox' name="allDay" onclick="resetTimePicker();"> 종일</label>
+			 <br/><br/>
 			<span>장소</span><input id="location" class="form-control" type="text" name="location" ><br/><br>
 			<span>메모</span><textarea id="description" class="form-control" rows="5" id="memo" style="display:block; width:84%;" name="description"></textarea> <br/><br>
 			<span>캘린더</span><select id="calendarList" name="calendars">
@@ -61,7 +67,6 @@
 			<button id="btnSave" class="btn btn-info" type="submit" name="save" value="true">저장</button>
 			<button id="btnCancel" class="btn btn-info" type="button" onclick="history.back();">취소</button>
 		</form>
-		
 	</div>
 	
 </div>
@@ -69,16 +74,24 @@
 <script type="text/javascript">
 //처음 
 $(document).ready(function(){
-	if($("#eventId").attr('value') != ''){
-		getEvent();
-	}else{//그냥 삽입인 경우
+	if($('#eventId').attr('value') == "addEvent"){//그냥 삽입인 경우
 		var date = new Date();
 		document.getElementById('startDatePicker').valueAsDate = date;
 		document.getElementById('endDatePicker').valueAsDate = date;
+		$("#allDayCheckBox").attr('value',false);
+		document.getElementById('startTimePicker').value = makeTimeForm(date.getHours(),0,0);
+		if(date.getHours() == 23){
+			document.getElementById('endTimePicker').value = makeTimeForm(date.getHours(),30,0);
+		}else{
+			document.getElementById('endTimePicker').value = makeTimeForm(date.getHours()+1,0,0);
+		}
 		getCalendarList();
+	}else{
+		getEvent();
 	}
 	//getList();
 });
+
 //캘린더 목록 추가
 function getCalendarList(){
 	var baseUrl = "http://localhost:8080";
@@ -90,11 +103,19 @@ function getCalendarList(){
 			var size = data.length;
 			var text = "";
 			for(var i=0;i<size;i++){
-				text += "<option value='"+data[i].id+"'";
-				if(data[i].id == $("#calendarId").attr('value')){
-					text += "selected";
+				if(data[i].accessRole == "writer" || data[i].accessRole == "owner"){
+					text += "<option value='"+data[i].id+"'";
+					if($("#calendarId").attr('value')=="addEvent"){
+						if(data[i].primary){
+							text += "selected";
+						}
+					}else{
+						if(data[i].id == $("#calendarId").attr('value')){
+							text += "selected";
+						}
+					}
+					text += ">"+data[i].summary+"</option>";
 				}
-				text += ">"+data[i].summary+"</option>";
 			}
 			$("#calendarList").html(text);
 		}
@@ -127,10 +148,13 @@ function showEvent(data){
 	var date;
 	if(data.start.date != null){
 		date = new Date(data.start.date.value);
+		$("#allDayCheckBox").attr('checked',true);
+		$("#allDayCheckBox").attr('value',true);
+		resetTimePicker();
 	}else{
 		console.log(new Date(data.start.dateTime.value));
 		date = new Date(data.start.dateTime.value);	
-		document.getElementById('startTimePicker').value = makeTimeForm(date.getHours(),date.getMinutes(),date.getSeconds());
+		document.getElementById('startTimePicker').value = makeTimeForm(date.getHours(),date.getMinutes(),0);
 	}
 	
 	document.getElementById('startDatePicker').valueAsDate = new Date(date.getFullYear(),date.getMonth(),date.getDate(),12);
@@ -143,7 +167,7 @@ function showEvent(data){
 	}else{
 		end = data.end.dateTime.value;
 		date = new Date(end);
-		document.getElementById('endTimePicker').value = makeTimeForm(date.getHours(),date.getMinutes(),date.getSeconds());
+		document.getElementById('endTimePicker').value = makeTimeForm(date.getHours(),date.getMinutes(),0);
 	}
 	date = new Date(end);
 	document.getElementById('endDatePicker').valueAsDate = new Date(date.getFullYear(),date.getMonth(),date.getDate(),12);
@@ -172,6 +196,60 @@ function makeTimeForm(hour, min, sec){
 	result+=sec;
 	
 	return result;
+}
+//종일 일정 체크 여부에 따른 리셋
+function resetTimePicker(){
+	if($("#allDayCheckBox").prop('checked')){
+		$('#startTimePicker').css('display','none');
+		$('#endTimePicker').css('display','none');
+		$("#allDayCheckBox").attr('value',true);
+		var date=  new Date();
+		document.getElementById('startTimePicker').value = makeTimeForm(date.getHours(),0,0);
+		if(date.getHours() == 23){
+			document.getElementById('endTimePicker').value = makeTimeForm(date.getHours(),30,0);
+		}else{
+			document.getElementById('endTimePicker').value = makeTimeForm(date.getHours()+1,0,0);
+		}
+	} else{
+		$('#startTimePicker').css('display','inline');
+		$('#endTimePicker').css('display','inline');
+		$("#allDayCheckBox").attr('value',false);
+	}
+}
+//날짜 유효성 체크. 시작 날짜 기준으로 맞춤
+function checkDate(){
+	var startDate = new Date($("#startDatePicker").val());
+	var endDate = new Date($("#endDatePicker").val());
+	if(startDate.getTime() > endDate.getTime()){
+		document.getElementById('endDatePicker').valueAsDate = new Date(startDate.getTime());
+	}
+}
+//시간 유효성 체크. 시작 시간 기준으로 맞춤
+function checkTime(){
+	console.log($('#startTimePicker').val());
+	if($('#startTimePicker').val() == ''){
+		document.getElementById('startTimePicker').value = makeTimeForm(0,0,0);
+	}
+	if($('#endTimePicker').val() == ''){
+		document.getElementById('endTimePicker').value = makeTimeForm(0,0,0);
+	}
+	var startTime = $('#startTimePicker').val().split(":");
+	var endTime = $('#endTimePicker').val().split(":");
+	var startH = parseInt(startTime[0]);
+	var endH =  parseInt(endTime[0]);
+	var startM = parseInt(startTime[1]);
+	var endM = parseInt(endTime[1]);
+	if(startH > endH || (startH == endH && startM >= endM)){
+		if(startH == 23){
+			if(startM < 30){
+				document.getElementById('endTimePicker').value = makeTimeForm(startH,startM+30,0);
+			}else{
+				document.getElementById('endTimePicker').value = makeTimeForm(startH,startM,0);
+			}
+		}else{
+			document.getElementById('endTimePicker').value = makeTimeForm(startH+1,startM,0);
+		}
+	}
 }
 	//document.getElementById('startTimePicker').value = "15:21:00";
 	

@@ -64,6 +64,13 @@ public class EventController {
 		return "EventDetail";
 	}
 
+	@RequestMapping(value = "/showAddEventPage")
+	public String showAddEventPage(HttpServletRequest requset, Locale locale, Model model) {
+		model.addAttribute("eventId", "addEvent");
+		model.addAttribute("calendarId","addEvent");
+		return "EventDetail";
+	}
+	
 	@RequestMapping(value = "/getEvent",method = RequestMethod.GET)
 	public @ResponseBody Event getEventObject(CalendarAndEventIdDTO dto, Model model){
 		Event result = new Event();
@@ -81,55 +88,75 @@ public class EventController {
 		String eventId = request.getParameter("eventId");
 		EventDateTime start = new EventDateTime();
 		EventDateTime end = new EventDateTime();
-		if(request.getParameter("startDateTime") == "") {
+		String[] strStartDate = request.getParameter("startDate").split("-");
+		String[] strEndDate = request.getParameter("endDate").split("-");
+		System.out.println(request.getParameter("allDay"));
+		if(request.getParameter("allDay") != null) {
 			Date startD;
-			try {
-				startD = new SimpleDateFormat("yyyy-MM-dd").parse(request.getParameter("startDate"));
-				System.out.println(startD.toString());
-				start.setDateTime(new DateTime(startD)).setTimeZone("Asia/Seoul");
-			} catch (ParseException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]),9,0);	//timezone만큼 시간 설정해야함.
+			System.out.println(startD.toString());
+			start.setDate(new DateTime(true,startD.getTime(),startD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+			
 		}else {
-			String strStart = request.getParameter("startDate")+"T"+request.getParameter("startDateTime");
-			DateTime startDate = new DateTime(strStart);
-			System.out.println(startDate.toString());
-			start.setDateTime(startDate).setTimeZone("Asia/Seoul");
+			String[] strStartDateTime = request.getParameter("startDateTime").split(":");
+			System.out.println(request.getParameter("startDateTime"));
+			Date startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]), 
+					Integer.parseInt(strStartDateTime[0]), Integer.parseInt(strStartDateTime[1]));
+			start.setDateTime(new DateTime(startD)).setTimeZone("Asia/Seoul");
 		}
-		if(request.getParameter("endDateTime") == "") {
+		if(request.getParameter("allDay") != null) {
 			Date endD;
-			try {
-				endD = new SimpleDateFormat("yyyy-MM-dd").parse(request.getParameter("endDate"));
-				System.out.println(endD.toString());
-				end.setDateTime(new DateTime(endD)).setTimeZone("Asia/Seoul");
-			} catch (ParseException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2])+1,9,0);
+			DateTime endDate = new DateTime(endD);
+			
+			end.setDate(new DateTime(true,endD.getTime(),endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+			
 		}else {
-			String strEnd = request.getParameter("endDate")+"T"+request.getParameter("endDateTime");
-			DateTime endDate = new DateTime(strEnd);
-			end.setDateTime(endDate).setTimeZone("Asia/Seoul");
-			System.out.println("end : "+end.toString());
+			String[] strEndDateTime = request.getParameter("endDateTime").split(":");
+			Date endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]), 
+					Integer.parseInt(strEndDateTime[0]), Integer.parseInt(strEndDateTime[1]));
+			end.setDateTime(new DateTime(endD)).setTimeZone("Asia/Seoul");
 		}
 		System.out.println(start.toString());
 		System.out.println(end.toString());
 		//System.out.println(startDate.toString());
 		//String[] strStartDateTime = request.getParameter("startDateTime").split(":");
-		try {
-			service = gcs.getCalendarService();
-			Event event = service.events().get(calendarId, eventId).execute();
-			event.setSummary(request.getParameter("summary"))
-			.setLocation(request.getParameter("location"))
-			.setDescription(request.getParameter("description"))
-			.setStart(start)
-			.setEnd(end)
-			;
-			Event updatedEvent = service.events().update(calendarId, event.getId(), event).execute();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if(calendarId.equals(request.getParameter("calendars"))) {
+			try {
+				service = gcs.getCalendarService();
+				Event event = service.events().get(calendarId, eventId).execute();
+				event.setSummary(request.getParameter("summary"))
+				.setLocation(request.getParameter("location"))
+				.setDescription(request.getParameter("description"))
+				.setStart(start)
+				.setEnd(end)
+				;
+				Event updatedEvent = service.events().update(calendarId, event.getId(), event).execute();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}else if(!calendarId.equals(request.getParameter("calendars"))){//calendar Id를 수정한 경우나 일정을 입력한 경우
+			try {
+				service = gcs.getCalendarService();
+				
+				if(!calendarId.equals("addEvent")) {
+					service.events().delete(calendarId, eventId).execute();
+				}
+				Event event = new Event()
+						.setSummary(request.getParameter("summary"))
+						.setLocation(request.getParameter("location"))
+						.setDescription(request.getParameter("description"))
+						.setStart(start)
+						.setEnd(end)
+						;
+				String newCalendarId = request.getParameter("calendars");
+				service.events().insert(newCalendarId, event).execute();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
 		return "redirect:/m/"+request.getParameter("startDate");
 	}

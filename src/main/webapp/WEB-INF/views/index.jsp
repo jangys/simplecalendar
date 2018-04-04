@@ -30,7 +30,7 @@
 		border: 1px solid #9EBEC4;
 	}
 	th{
-		text-align: center;
+		text-align: left;
 	}
 	td{
 	
@@ -175,7 +175,7 @@
 		z-index: 2;
 		display: none;
 	}
-	/*일정 더 보여주는 작은 창*/
+	/*일정 더보기 작은 창*/
 	#showMoreEventDiv{
 		position : absolute;
 		width : 200px;
@@ -263,6 +263,10 @@
 			<div id = "checkboxList">
 			</div>
 		</form>
+		<br><br>
+		<form action="http://localhost:8080/showAddEventPage" method="get">
+			<button class='btn btn-info' id='addBtn' type='submit'>일정 추가</button> 
+		</form>
 	</div>
 	<div id="container" class = "col-sm-10">
 		<div id="monthCalendar">
@@ -284,14 +288,14 @@
 			<div class = "row" id="eventSummary_Header">
 				<div class = "col-sm-8" id="eventSummary_CalTitle"></div>
 				<div class="col-sm-4" style="text-align: right; padding: 0% 0%;">
-					<button class='btn btn-info' type='button' value='closeEventSummary' name='close' onclick="$('#showEventSummary').css('display','none'); $('#eventSummary_Contents').html('');">X</button>
+					<button class='btn btn-info' type='button' value='closeEventSummary' name='close' onclick="clickCloseEventSummary()">X</button>
 				</div>
 			</div>
 			<div id="eventSummary_Contents"></div>
 			<div id="eventSummary_Footer">
-				<button id='btnDeleteEvent'class='btn btn-info' type='button' value='deleteEvent' name='delete' onclick="clickDeleteEvent(this)">삭제</button>
+				<button id='btnDeleteEvent'class='btn btn-info' type='button' value='deleteEvent' name='delete' onclick="clickDeleteEvent(this)"  style="display: none;">삭제</button>
 				<form id ='showEvent_Form'action="http://localhost:8080/showEventPage" method="GET">
-					<button id='btnShowEvent' class='btn btn-info' type='submit'>상세보기</button>
+					<button id='btnShowEvent' class='btn btn-info' type='submit' style="display: none;">상세보기</button>
 				</form>
 			</div>
 		</div>
@@ -312,7 +316,12 @@
 		$("#showMoreEvent_Contents").scrollTop(0);
 		$('#showMoreEventDiv').css('display','none');
 	}
-	
+	function clickCloseEventSummary(){
+		$('#showEventSummary').css('display','none');
+		$('#btnShowEvent').css('display','none');
+		$('#btnDeleteEvent').css('display','none');
+		$('#eventSummary_Contents').html('');
+	}
 </script>
 </body>
 </html>

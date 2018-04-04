@@ -10,6 +10,7 @@ public class EventDTO {
 	private int[] startTime;
 	private long end;
 	private int[] endTime;
+	
 
 	public void setCalendarID(String calendarID) {
 		this.calendarID = calendarID;

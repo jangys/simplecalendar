@@ -22,11 +22,11 @@ function printCalendarList(data){
 	var colorList = ["#B5B2FF","#B2CCFF","#B2EBF4","#B7F0B1","#CEFBC9","#D4F4FA","#FAED7D"];
 	for(var i=0;i<size;i++){
 		var colorCode = colorList[parseInt(data[i].colorId)%colorList.length];
-		checkList += "<label"+" style='color:"+colorCode+"'><input type='checkbox' value = '"+data[i].id+"' ";
+		checkList += "<label"+" style='color:"+colorCode+"'><input type='checkbox' value = '"+data[i].id+"' data-originalCalendarId = '"+data[i].id+"'";
 		if(data[i].check == true){
 			checkList +=" checked";
 		}
-		checkList +=" onClick='clickCheckbox(this)' data-colorCode = '"+colorCode+"'>"+data[i].summary+"</label><br/>";
+		checkList +=" onClick='clickCheckbox(this)' data-colorCode = '"+colorCode+"' data-accessRole = '"+data[i].accessRole+"'>"+data[i].summary+"</label><br/>";
 	}
 	document.getElementById("checkboxList").innerHTML = checkList;
 }

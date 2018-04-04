@@ -150,7 +150,7 @@ public class GoogleCalendarService {
 	                    if(end == null) {
 	                    	end = event.getEnd().getDate();
 	                    }
-	                    //System.out.printf("%s (%s)\n", end, Long.toString(end.getValue()));
+	                   // System.out.printf("%s (%s)\n", event.getSummary(), start.toString());
 	                    EventDTO tempDTO = new EventDTO();
 	                    tempDTO.setCalendarID(id);
 	                    tempDTO.setSummary(event.getSummary());
@@ -162,11 +162,8 @@ public class GoogleCalendarService {
 	            }
             }
             Collections.sort(dtoList,new comparator());
-            for(int i=0;i<dtoList.size();i++) {
-            	System.out.println(dtoList.get(i).getSummary());
-            }
             dtoList = new EventProcessing().arrangeOrder(dtoList, year, month);
-            
+
             return dtoList;
     }
 	
@@ -185,6 +182,12 @@ public class GoogleCalendarService {
 	          tempDTO.setSummary(calendarListEntry.getSummary());
 	          tempDTO.setCheck(true);
 	          tempDTO.setColorId(calendarListEntry.getColorId());
+	          boolean primary = true;
+	          if(calendarListEntry.getPrimary() == null) {
+	        	  primary = false;
+	          }
+	          tempDTO.setPrimary(primary);
+	          tempDTO.setAccessRole(calendarListEntry.getAccessRole());
 	          result.add(tempDTO);
 	          }
 	        pageToken = calendarList.getNextPageToken();
