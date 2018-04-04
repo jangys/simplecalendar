@@ -106,10 +106,10 @@ public class EventController {
 		}
 		if(request.getParameter("allDay") != null) {
 			Date endD;
-			endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2])+1,9,0);
+			endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]),9,0);
 			DateTime endDate = new DateTime(endD);
 			
-			end.setDate(new DateTime(true,endD.getTime(),endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+			end.setDate(new DateTime(true,endD.getTime()+86400000l,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
 			
 		}else {
 			String[] strEndDateTime = request.getParameter("endDateTime").split(":");
