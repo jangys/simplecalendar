@@ -49,6 +49,10 @@
 	}
 	a{
 		color:white;
+		
+	}
+	li{
+		overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 	}
 	/*제목 부분*/
 	#title{
@@ -187,6 +191,7 @@
 		text-align:right;
 		z-index: 1;
 		display:none;
+		flex-wrap:nowrap
 	}
 	/*일정 요약 header*/
 	#eventSummary_Header{
@@ -242,6 +247,10 @@
 	.moreEvent{
 		color:black;
 		text-align: right;
+	}
+	/*일정 요약 보여주는 작은 창에 있는 태그 p*/
+	.eventSummaryContents_p{
+		overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 	}
 </style>
 </head>

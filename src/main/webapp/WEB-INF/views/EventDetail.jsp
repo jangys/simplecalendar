@@ -226,6 +226,11 @@ function checkDate(){
 }
 //시간 유효성 체크. 시작 시간 기준으로 맞춤
 function checkTime(){
+	var startDate = new Date($("#startDatePicker").val());
+	var endDate = new Date($("#endDatePicker").val());
+	if(startDate != endDate){//시작 날짜와 끝 날짜가 다르면 시간 체크는 안해도 됨
+		return;
+	}
 	console.log($('#startTimePicker').val());
 	if($('#startTimePicker').val() == ''){
 		document.getElementById('startTimePicker').value = makeTimeForm(0,0,0);

@@ -82,7 +82,7 @@ public class GoogleCalendarService {
                 new GoogleAuthorizationCodeFlow.Builder(
                         HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
                 .setDataStoreFactory(DATA_STORE_FACTORY)
-                .setAccessType("online")	//request online access
+                .setAccessType("offline")	//request online access
                 .build();
         Credential credential = new AuthorizationCodeInstalledApp(
             flow, new LocalServerReceiver()).authorize("user");
@@ -132,7 +132,7 @@ public class GoogleCalendarService {
 	            Events events = service.events().list(id)
 	            	.setTimeMin(now)
 	            	.setTimeMax(next)
-	                .setOrderBy("startTime")
+	                .setOrderBy("startTime")	//이걸 사용하려면 setSingleEvents가 true로 되어 있어야함.
 	                .setSingleEvents(true)
 	                .execute();
 	            List<Event> items = events.getItems();
@@ -171,27 +171,24 @@ public class GoogleCalendarService {
 		ArrayList<CalendarDTO> result = new ArrayList<CalendarDTO>();
 		
 		com.google.api.services.calendar.Calendar service = getCalendarService();
-		String pageToken = null;
-	      do {
-	        CalendarList calendarList = service.calendarList().list().setPageToken(pageToken).execute();
-	        List<CalendarListEntry> items = calendarList.getItems();
-	        for (CalendarListEntry calendarListEntry : items) {
-	          //System.out.println(calendarListEntry.getSummary());
-	          CalendarDTO tempDTO = new CalendarDTO();
-	          tempDTO.setId(calendarListEntry.getId());
-	          tempDTO.setSummary(calendarListEntry.getSummary());
-	          tempDTO.setCheck(true);
-	          tempDTO.setColorId(calendarListEntry.getColorId());
-	          boolean primary = true;
-	          if(calendarListEntry.getPrimary() == null) {
-	        	  primary = false;
-	          }
-	          tempDTO.setPrimary(primary);
-	          tempDTO.setAccessRole(calendarListEntry.getAccessRole());
-	          result.add(tempDTO);
-	          }
-	        pageToken = calendarList.getNextPageToken();
-	      } while (pageToken != null);
+        CalendarList calendarList = service.calendarList().list().execute();
+       // System.out.println(pageToken);
+        List<CalendarListEntry> items = calendarList.getItems();
+        for (CalendarListEntry calendarListEntry : items) {
+          //System.out.println(calendarListEntry.getSummary());
+          CalendarDTO tempDTO = new CalendarDTO();
+          tempDTO.setId(calendarListEntry.getId());
+          tempDTO.setSummary(calendarListEntry.getSummary());
+          tempDTO.setCheck(true);
+          tempDTO.setColorId(calendarListEntry.getColorId());
+          boolean primary = true;
+          if(calendarListEntry.getPrimary() == null) {
+        	  primary = false;
+          }
+          tempDTO.setPrimary(primary);
+          tempDTO.setAccessRole(calendarListEntry.getAccessRole());
+          result.add(tempDTO);
+        }
 	      
 	      return result;
 	}

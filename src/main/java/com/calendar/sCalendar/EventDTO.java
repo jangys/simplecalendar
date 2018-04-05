@@ -64,7 +64,7 @@ public class EventDTO {
 				endTime[2] = new CalculateCalendar().getLastDay(endTime[0], endTime[1]);
 			}
 			endTime[3] = -1;
-			this.end += 53940001;	//23시 59분 1밀리초가 되게
+			//this.end += 53940001;	//23시 59분 1밀리초가 되게
 		}
 		
 	}

@@ -118,8 +118,7 @@ function printCalendar(y, m, data) {
 		for(var i=0;i<size;i++){
 			//console.log(data[i].summary + " , "+data[i].start+" , "+clickDateMax + " , "+data[i].end+" , "+clickDate);
 			if(data[i].start < clickDateMax && data[i].end >= clickDate && data[i].start != clickDateMax -1){//확인 종일 일정인 경우에는 오전 12시에서 -1밀리초 만큼 빼서 다음날 일정은 포함 안되게
-				text+="<li><a style='color:black;' title='"+isNull(data[i].summary)+"' onClick ='clickEventTitle(this); return false;' href='#' data-eventId ="+
-				data[i].eventID+" data-calendarId = "+data[i].calendarID+">"+isNull(data[i].summary)+"</a></li>";
+				text+="<li>"+makeEventTitleForm(data[i],"black")+"</li>";
 			}
 			if(data[i].start > clickDateMax){
 				break;
@@ -129,7 +128,16 @@ function printCalendar(y, m, data) {
 		return false;	//버튼 누를시 스크롤바 이동 방지
 	});
 }
-
+function makeEventTitleForm(data,color){
+	var text = "<span class='eventTime'>";
+	if(data.startTime[3] != -1){
+		var hour = data.startTime[3];
+		var min = data.startTime[4];
+		text += changeTimeForm(hour, min);
+	}
+	text +=" </span><a title='"+isNull(data.summary)+"'style='color:"+color+"' onClick ='clickEventTitle(this); return false;' href='#' data-eventId ="+data.eventID+" data-calendarId = "+data.calendarID+">"+isNull(data.summary)+"</a>";
+	return text;
+}
 function isNull(text){
 	if(text == null){
 		return "없음";
@@ -164,13 +172,8 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 		}else{
 			endDateIndex = data[i].endTime[2] + startIndex -1;
 		}
-		var title = "<div class='eventTitleLink' onclick='clickEvent(this);'><p class='eventTime'>";
-		if(data[i].startTime[0] == year && data[i].startTime[1] == month && data[i].startTime[3] != -1){
-			var hour = data[i].startTime[3];
-			var min = data[i].startTime[4];
-			title += changeTimeForm(hour, min)+" </p>";
-		}
-		title += "<a title='"+isNull(data[i].summary)+"' onClick ='clickEventTitle(this)' href='#' data-eventId ="+data[i].eventID+" data-calendarId = "+data[i].calendarID+">"+isNull(data[i].summary)+"</a></div>";
+		var title = "<div class='eventTitleLink' onclick='clickEvent(this);'>"+makeEventTitleForm(data[i],"white");
+		
 		if(startDateIndex == endDateIndex){//하루 일정
 			var col = $("[data-index="+startDateIndex+"]:eq(0)").attr("data-col");
 			if(col == colNum -1){//마지막줄인 경우
@@ -333,8 +336,8 @@ function clickEventTitle(title){
 		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
 		success:function(data){
 			var calendar = $("[data-originalCalendarId = '"+title.getAttribute('data-calendarId')+"']");
-			var contents = "<p> 제목 : "+isNull(data.summary)+"</p>";
-			contents += "<p> 일시 : "+data.startTime[0]+"."+addZero(data.startTime[1])+"."+addZero(data.startTime[2]);
+			var contents = "<p class='eventSummaryContents_p'> 제목 : "+isNull(data.summary)+"</p>";
+			contents += "<p class='eventSummaryContents_p'> 일시 : "+data.startTime[0]+"."+addZero(data.startTime[1])+"."+addZero(data.startTime[2]);
 			var check = -1;
 			for(var i = 0;i<5;i++){
 				if(data.startTime[i] != data.endTime[i]){
@@ -358,8 +361,8 @@ function clickEventTitle(title){
 				}
 				contents += "</p>";
 			}
-			contents += "<p> 장소 : "+data.location+"</p>";
-			contents += "<p> 내용 : "+data.description+"</p>";
+			contents += "<p class='eventSummaryContents_p'> 장소 : "+data.location+"</p>";
+			contents += "<p class='eventSummaryContents_p'> 내용 : "+data.description+"</p>";
 			
 			$('#eventSummary_Contents').html(contents);
 			if(calendar.attr('data-accessRole') == "owner" || calendar.attr('data-accessRole') == "writer"){

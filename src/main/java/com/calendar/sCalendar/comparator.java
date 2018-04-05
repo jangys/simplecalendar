@@ -45,6 +45,12 @@ class comparatorSameDate implements Comparator<EventDTO>{
 					ret = -1;
 				}else if( dto1.getStart() > dto2.getStart()) {
 					ret = 1;
+				}else {//같은 경우
+					if(dto1.getEnd() > dto2.getEnd()) {
+						ret = -1;
+					}else {
+						ret = 1;
+					}
 				}
 			}else {
 				if(dto1.getEnd() > dto2.getEnd()) {
