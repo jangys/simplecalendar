@@ -76,6 +76,7 @@
 	/*월별 캘린더 표*/
 	#monthCalendar{
 		/*margin: 25px auto;*/
+		position:relative;
 		width:100%;
 		height:85%;
 	}
@@ -113,6 +114,7 @@
 	}
 	/*날짜 한 줄*/
 	.dateLine{
+		position:relative;
 	}
 
 	/*YYYY년 MM월*/
@@ -132,6 +134,21 @@
 		height:12.5%;
 		border-left: 1px solid #9EBEC4;
 		border-right: 1px solid #9EBEC4;
+		position:relative;
+		z-index:1;
+	}
+	/*날짜 부분*/
+	.date{
+		position:relative;
+		z-index:1;
+	}
+	/*일정이 들어간 칸*/
+	.eventFill{
+		height:12.5%;
+		border-left: 1px solid #9EBEC4;
+		border-right: 1px solid #9EBEC4;
+		position:relative;
+		z-index:4;
 	}
 	/*일정 표*/
 	.eventList{
@@ -176,7 +193,7 @@
 		left : 30%;
 		background-color: white;
 		padding : 1% 1%;
-		z-index: 2;
+		z-index: 10;
 		display: none;
 	}
 	/*일정 더보기 작은 창*/
@@ -189,7 +206,7 @@
 		background-color: white;
 		padding : 1% 1%;
 		text-align:right;
-		z-index: 1;
+		z-index: 9;
 		display:none;
 		flex-wrap:nowrap
 	}
@@ -219,6 +236,17 @@
 		height:100%;
 		table-layout: fixed;
 	}
+	/*날짜 전체 칸*/
+	.dayList{
+		height:100%;
+		table-layout: fixed;
+		position:absolute;
+		top:0;
+		left:0;
+		z-index:2;
+		border:none;
+	}
+	
 	/*4주일때*/
 	.week4{
 		height:25%;
@@ -252,6 +280,16 @@
 	.eventSummaryContents_p{
 		overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 	}
+	/*날짜 칸 눌렀을때*/
+	.clickDate{
+		background-color:#FFFFD2;
+		opacity: 0.5;
+	}
+	/*더보기 링크가 있는 칸*/
+	.moreEvent{
+		position: relative;
+		z-index:4;
+	}
 </style>
 </head>
 
@@ -273,8 +311,9 @@
 			</div>
 		</form>
 		<br><br>
-		<form action="http://localhost:8080/showAddEventPage" method="get">
-			<button class='btn btn-info' id='addBtn' type='submit'>일정 추가</button> 
+		<form action="http://localhost:8080/showAddEventPage" method="get" id="addForm">
+			<input type="text" id="addEventDate" style="display: none;" name="addEventDate">
+			<button class='btn btn-info' id='addBtn' type='submit' name='addBtn' value='0' onclick="$('#addEventDate').attr('value',0);">일정 추가</button> 
 		</form>
 	</div>
 	<div id="container" class = "col-sm-10">

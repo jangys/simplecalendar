@@ -107,7 +107,7 @@ public class GoogleCalendarService {
     }
 
     //@SuppressWarnings("deprecation")
-    //year, month에 맞는 이벤트 ArrayList<CalendarDTO>로 저장
+    //year, month에 맞는 이벤트 ArrayList<EventDTO>로 저장
 	public static ArrayList<EventDTO> getEvent_Month(ArrayList<CalendarDTO> calendarList, int year, int month) throws IOException{
     	com.google.api.services.calendar.Calendar service =
                 getCalendarService();
@@ -157,6 +157,8 @@ public class GoogleCalendarService {
 	                    tempDTO.setStart(start.getValue(),start.isDateOnly());
 	                    tempDTO.setEnd(end.getValue(),end.isDateOnly());
 	                    tempDTO.setEventID(event.getId());
+//	                    if(event.getReminders() != null)
+//	                    	System.out.println(event.getSummary()+" , "+event.getReminders().toPrettyString());
 	                    dtoList.add(tempDTO);
 	                }
 	            }
@@ -167,15 +169,15 @@ public class GoogleCalendarService {
             return dtoList;
     }
 	
+	//캘린더 목록 받아오기
 	public static ArrayList<CalendarDTO> getCalendarList() throws IOException{
 		ArrayList<CalendarDTO> result = new ArrayList<CalendarDTO>();
 		
 		com.google.api.services.calendar.Calendar service = getCalendarService();
         CalendarList calendarList = service.calendarList().list().execute();
-       // System.out.println(pageToken);
         List<CalendarListEntry> items = calendarList.getItems();
+        
         for (CalendarListEntry calendarListEntry : items) {
-          //System.out.println(calendarListEntry.getSummary());
           CalendarDTO tempDTO = new CalendarDTO();
           tempDTO.setId(calendarListEntry.getId());
           tempDTO.setSummary(calendarListEntry.getSummary());

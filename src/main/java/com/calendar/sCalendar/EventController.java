@@ -67,7 +67,9 @@ public class EventController {
 	@RequestMapping(value = "/showAddEventPage")
 	public String showAddEventPage(HttpServletRequest requset, Locale locale, Model model) {
 		model.addAttribute("eventId", "addEvent");
-		model.addAttribute("calendarId","addEvent");
+		System.out.println(requset.getParameter("addEventDate"));
+		model.addAttribute("calendarId",requset.getParameter("addEventDate"));
+		
 		return "EventDetail";
 	}
 	
@@ -140,7 +142,7 @@ public class EventController {
 			try {
 				service = gcs.getCalendarService();
 				
-				if(!calendarId.equals("addEvent")) {
+				if(!eventId.equals("addEvent")) {
 					service.events().delete(calendarId, eventId).execute();
 				}
 				Event event = new Event()

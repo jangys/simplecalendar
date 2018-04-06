@@ -76,15 +76,31 @@
 $(document).ready(function(){
 	if($('#eventId').attr('value') == "addEvent"){//그냥 삽입인 경우
 		var date = new Date();
-		document.getElementById('startDatePicker').valueAsDate = date;
-		document.getElementById('endDatePicker').valueAsDate = date;
-		$("#allDayCheckBox").attr('value',false);
-		document.getElementById('startTimePicker').value = makeTimeForm(date.getHours(),0,0);
-		if(date.getHours() == 23){
-			document.getElementById('endTimePicker').value = makeTimeForm(date.getHours(),30,0);
+		if($('#calendarId').attr('value') == "0"){
+			document.getElementById('startDatePicker').valueAsDate = date;
+			document.getElementById('endDatePicker').valueAsDate = date;
+			
+			document.getElementById('startTimePicker').value = makeTimeForm(date.getHours(),0,0);
+			if(date.getHours() == 23){
+				document.getElementById('endTimePicker').value = makeTimeForm(date.getHours(),30,0);
+			}else{
+				document.getElementById('endTimePicker').value = makeTimeForm(date.getHours()+1,0,0);
+			}
+			
 		}else{
-			document.getElementById('endTimePicker').value = makeTimeForm(date.getHours()+1,0,0);
+			var str = $('#calendarId').attr('value').split("/");
+			var strStartDate = str[0].split("-");
+			var strEndDate = str[1].split("-");
+			var startDate = new Date(parseInt(strStartDate[0]),parseInt(strStartDate[1])-1,parseInt(strStartDate[2]),12);
+			var endDate = new Date(parseInt(strEndDate[0]),parseInt(strEndDate[1])-1,parseInt(strEndDate[2]),12);
+			document.getElementById('startDatePicker').valueAsDate = startDate;
+			document.getElementById('endDatePicker').valueAsDate = endDate;
+			document.getElementById('startTimePicker').value = makeTimeForm(date.getHours(),0,0);
+			document.getElementById('endTimePicker').value = makeTimeForm(date.getHours(),0,0);
 		}
+		
+		$("#allDayCheckBox").attr('value',false);
+		
 		getCalendarList();
 	}else{
 		getEvent();
@@ -105,7 +121,7 @@ function getCalendarList(){
 			for(var i=0;i<size;i++){
 				if(data[i].accessRole == "writer" || data[i].accessRole == "owner"){
 					text += "<option value='"+data[i].id+"'";
-					if($("#calendarId").attr('value')=="addEvent"){
+					if($("#eventId").attr('value')=="addEvent"){
 						if(data[i].primary){
 							text += "selected";
 						}
