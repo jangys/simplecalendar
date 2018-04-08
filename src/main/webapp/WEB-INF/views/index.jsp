@@ -1,7 +1,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ page language="java" contentType="text/html; charset=EUC-KR"
     pageEncoding="UTF-8"%>
-<!DOCTYPE>
+ <!DOCTYPE>
 <html>
 <head>
 <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
@@ -11,6 +11,7 @@
 <script src="/javascripts/monthlyCalendar.js" charset="utf-8"></script>
 <script src="/javascripts/sideBar.js" charset="utf-8"></script>
 <script src="/javascripts/commonContents.js" charset="utf-8"></script>
+<script src="/javascripts/listCalendar.js" charset="utf-8"></script>
 
 <title>Simple Calendar</title>
 
@@ -18,22 +19,23 @@
 	@import url(//fonts.googleapis.com/earlyaccess/nanumgothic.css);
 	html, body{
 		height:100%;
+		margin:0;
 		font-family: Nanum Gothic;
-		
 	}
 	table{
 		width:100%;
-		border: 1px solid #9EBEC4;
 		border-collapse: collapse;
+		border-bottom: 1px solid #9EBEC4;
 	}
 	th{
-		border: 1px solid #9EBEC4;
-	}
-	th{
+	/*
+		border-top: 1px solid #9EBEC4;
+		border-left: 1px solid #9EBEC4;
+		border-right: 1px solid #9EBEC4;
+		*/
 		text-align: left;
 	}
 	td{
-	
 		width:14.2%;
 		height:12.5%;
 	}
@@ -54,6 +56,7 @@
 	li{
 		overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 	}
+
 	/*제목 부분*/
 	#title{
 		padding-left: 3%;
@@ -78,7 +81,8 @@
 		/*margin: 25px auto;*/
 		position:relative;
 		width:100%;
-		height:85%;
+		height:100%;
+		display:none;
 	}
 	/*일별 캘린더*/
 	#dayCalendar{
@@ -96,10 +100,9 @@
 	}
 	/*목록 캘린더*/
 	#listCalendar{
+		border-top: 1px solid #c3c3c3;
 		display:none;
 		width:100%;
-		height:85%;
-		border:1px solid black;
 	}
 	/*날짜 한 칸*/
 	.date{
@@ -110,7 +113,7 @@
 	}
 	/*스켸쥴 표*/
 	#dates{
-		height:100%;
+		height:97%;
 	}
 	/*날짜 한 줄*/
 	.dateLine{
@@ -159,6 +162,9 @@
 	#side{
 		padding-top : 3%;
 		padding-left : 2%;
+		width:20%;
+		display:inline-block;
+		vertical-align:top;
 	/*
 		margin: auto 1%;
 		width:5%;
@@ -176,6 +182,8 @@
 		padding : 1% 1%;
 		position : relative;
 		min-width: 930px;
+		width:75%;
+		display:inline-block;
 	/*
 		margin: 2% 5%;
 		height: 85%;
@@ -246,7 +254,6 @@
 		z-index:2;
 		border:none;
 	}
-	
 	/*4주일때*/
 	.week4{
 		height:25%;
@@ -290,22 +297,64 @@
 		position: relative;
 		z-index:4;
 	}
+	
+	/*List Calendar*/
+	/*일정 들어가는 한 날짜(여러줄)*/
+	.listRowGroup{
+		border-bottom: 1px solid #c3c3c3;
+	}
+	/*일정 한 줄*/
+	.listRow{
+		width:100%;
+		margin-top:10px;
+		margin-bottom:10px;
+	}
+	/*일정 날짜*/
+	.listDate{
+		display: inline-block;
+		width:100px;
+		margint-right:10px;
+	}
+	/*일정 캘린더 색*/
+	.listCalendar{
+		display: inline-block;
+		width:20px;
+		margin-right:10px;
+	}
+	/*원*/
+	.calendarCircle{
+		width:10px;
+		height:10px;
+		-webkit-border-radius:5px;
+		-moz-border-radius:5px;
+	}
+	/*일정 시간*/
+	.listTime{
+		display:inline-block;
+		width:185px;
+		margin-right:10px;
+	}
+	/*일정 제목*/
+	.listSummary{
+		display:inline-block;
+		width:60%;
+	}
 </style>
 </head>
 
 <body>
-<div id = "header" class = "row" style="min-width: 930px;flex-wrap: nowrap;">
+<div id = "header" class = "row" style="min-width: 930px;flex-wrap: nowrap; width:90%;margin-left:0;">
 	<div id="title" class = "col-sm-3">
 	</div>
 	<div id = "btnList" class = "col-sm-5">
 		<button class = 'btn btn-info' id = 'dayBtn' type='button' value='day' name='date'>일</button>
 		<button class = 'btn btn-info' id = 'weekBtn' type='button' value='week' name='week'>주</button>
-		<button class = 'btn btn-info pushCalendarBtn' id = 'monthBtn' type='button' value='month' name='month'>월</button>
+		<button class = 'btn btn-info' id = 'monthBtn' type='button' value='month' name='month'>월</button>
 		<button class = 'btn btn-info' id = 'listBtn' type='button' value='list' name='list'>목록</button>
 	</div>
 </div>
-<div id = "contents" class = "row" style="flex-wrap: nowrap;">
-	<div id = "side" class = "col-sm-2 form-horizontal">
+<div id = "contents"  style="width:100%; min-width: 1200px; height:90%;">
+	<div id = "side" class = "form-horizontal">
 		<form>
 			<div id = "checkboxList">
 			</div>
@@ -316,7 +365,7 @@
 			<button class='btn btn-info' id='addBtn' type='submit' name='addBtn' value='0' onclick="$('#addEventDate').attr('value',0);">일정 추가</button> 
 		</form>
 	</div>
-	<div id="container" class = "col-sm-10">
+	<div id="container" style="height:100%;">
 		<div id="monthCalendar">
 			<table id="week">
 				<tr id="dayLine">
@@ -332,7 +381,7 @@
 		</div>
 		<div id="listCalendar">
 		</div>
-		<div id="showEventSummary" style="border: 1px solid black">
+		<div id="showEventSummary" style="border: 1px solid #c3c3c3">
 			<div class = "row" id="eventSummary_Header">
 				<div class = "col-sm-8" id="eventSummary_CalTitle"></div>
 				<div class="col-sm-4" style="text-align: right; padding: 0% 0%;">
@@ -342,12 +391,12 @@
 			<div id="eventSummary_Contents"></div>
 			<div id="eventSummary_Footer">
 				<button id='btnDeleteEvent'class='btn btn-info' type='button' value='deleteEvent' name='delete' onclick="clickDeleteEvent(this)"  style="display: none;">삭제</button>
-				<form id ='showEvent_Form'action="http://localhost:8080/showEventPage" method="GET">
+				<form id ='showEvent_Form'action="http://localhost:8080/showEventPage" method='get'>
 					<button id='btnShowEvent' class='btn btn-info' type='submit' style="display: none;">상세보기</button>
 				</form>
 			</div>
 		</div>
-		<div id="showMoreEventDiv" style="border: 1px solid black;">
+		<div id="showMoreEventDiv" style="border: 1px solid #c3c3c3;">
 				<span id="showMoreEvent_Title"></span><button type='button' value='closeMoreEvent' name='close' onclick="clickCloseMoreEvent()" style="font-size: 12px;">X</button>
 			<div id="showMoreEvent_Contents" style="overflow-y: scroll;height:89%;text-align:left;">
 				<ul id="moreEventList" style="list-style: none;padding:0% 0%;">

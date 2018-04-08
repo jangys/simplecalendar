@@ -16,7 +16,7 @@ function printCalendar(y, m, data) {
 	var lastDate = 31;
 	m++;
 	month++;
-
+	
 	//마지막 날짜 계산
 	if((m%2 == 0 && m<= 6) || (m%2 == 1 && m>=9)){
 		lastDate = 30;
@@ -33,7 +33,7 @@ function printCalendar(y, m, data) {
 	var tempDateNum = 1;
 	//높이에 따른 세로 갯수
 	var colNum = 6;	//0번째 줄은 무조건 날짜
-
+	
 	//달력그리기
 	for(var i = 0; i<row;i++){
 		table+="<div class='dateLine ";
@@ -119,12 +119,13 @@ function printCalendar(y, m, data) {
 		clickDate = d.getTime();
 		var clickDateMax = clickDate + 86400000;
 		div.css('display','block');
-		var leftPosition = left-$("#container").width()*0.32;
-		if(leftPosition > $("#container").width()-201){
-			leftPosition = $("#container").width()-201;
+		var leftPosition = left-$("#container").offset().left*1.5;
+	
+		console.log(leftPosition + " , "+$("#container").offset().left);
+		if(leftPosition > $("#container").width()-190){
+			leftPosition = $("#container").width()-190;
 		}
-		console.log(leftPosition + " , "+$("#container").width());
-		div.css('top',top-$("#container").height()*0.25);
+		div.css('top',top-$("#container").offset().top*4);
 		div.css('left',leftPosition);	//스크린 width따라 위치 조정
 		
 		var list = $("#moreEventList");
@@ -208,7 +209,7 @@ function makeEventTitleForm(data,color){
 		var min = data.startTime[4];
 		text += changeTimeForm(hour, min);
 	}
-	text +=" </span><a title='"+isNull(data.summary)+"'style='color:"+color+"' onClick ='clickEventTitle(this); return false;' href='#' data-eventId ="+data.eventID+" data-calendarId = "+data.calendarID+">"+isNull(data.summary)+"</a>";
+	text +=" </span><a title='"+isNull(data.summary)+"'style='color:"+color+"' onClick ='clickEventTitle(this,false); return false;' href='#' data-eventId ="+data.eventID+" data-calendarId = "+data.calendarID+">"+isNull(data.summary)+"</a>";
 	return text;
 }
 function isNull(text){
@@ -369,7 +370,7 @@ function setAddTd(index, col){
 	td.html(temp);
 }
 
-function clickEventTitle(title){
+function clickEventTitle(title,scroll){
 	var baseUrl = "http://localhost:8080";
 	var data={
 		"calendarId" : title.getAttribute('data-calendarId'),
@@ -427,21 +428,30 @@ function clickEventTitle(title){
 			}
 		}
 	});
-	var top = $(title).offset().top;
-	var left = $(title).offset().left;
-	console.log("width : "+(event.pageX-$('#container').width()*0.3) + " , "+"height : "+(event.pageY-$('#container').height()*0.1)+" / "+$('#container').width()+" , "+$('#container').height());
-	
 	var div = $('#showEventSummary');
-	var topPosition = event.pageY-$('#container').height()*0.1;
-	var leftPosition = event.pageX-$('#container').width()*0.3;
+	var topPosition = event.pageY;
+	if(scroll){
+		topPosition -=$('#container').offset().top*5.5;
+	}else{
+		topPosition -=$('#container').offset().top*4;
+	}
+	var leftPosition = event.pageX-$('#container').offset().left*1.5;
+	var scrollHeight = $(document).scrollTop();
 	
 	if(leftPosition > $('#container').width()-430){
 		leftPosition = $('#container').width()-430;
 	}
-	if(topPosition > $('#container').height()-215.5){
-		topPosition = $('#container').height()-215.5;
+	if(topPosition < -5.7){//화면이 위로 넘어가지 않게
+		topPosition = -5.7;
 	}
-	
+	if(topPosition < scrollHeight && scrollHeight != 0){//스크롤이 아래로 내력갔을때 계산한 값이 스크롤 위치보다 작으면
+		console.log("top : "+topPosition);
+		topPosition += 200;	//위치에서 이벤트 요약정보 창 높이 만큼 더하기
+	}
+	if(topPosition >  $('#container').height()-230){
+		topPosition =  $('#container').height()-230;
+	}
+//	console.log("width : "+(leftPosition) + " , "+"height : "+(topPosition)+" / "+$('#container').width()+" , "+$('#container').height());
 	div.css('top',topPosition);
 	div.css('left',leftPosition);	//스크린 width따라 위치 조정
 	div.css('display','block');
@@ -506,8 +516,8 @@ function changeTimeForm(hour, min){
 }
 function clickEvent(event){
 	if(event.childNodes.length == 2){
-		clickEventTitle(event.childNodes[1]);
+		clickEventTitle(event.childNodes[1],false);
 	}else{
-		clickEventTitle(event.childNodes[0].childNodes[0]);
+		clickEventTitle(event.childNodes[0].childNodes[0],false);
 	}
 }

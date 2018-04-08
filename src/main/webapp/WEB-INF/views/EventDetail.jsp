@@ -16,6 +16,7 @@
 	span{
 		margin-right: 10px;
 	}
+	
 	/*전체 문서*/
 	#container{
 		padding: 2% 2%;
@@ -26,6 +27,10 @@
 		width: 85%;
 		margin: 0 auto;
 		height: 100%;
+	}
+	/*캘린더 리스트 select*/
+	#calendarList{
+		width: 30%;
 	}
 	.form-control{
 		width: 80%;
@@ -41,7 +46,18 @@
 		width:19%;
 		margin-right:1%;
 	}
-</style>
+	/*알람 메소드 선택 */
+	.selectMethod{
+		width: 20%;
+		margin-right: 2%;
+	}
+	/*알람 타입 선택*/
+	.selectType{
+		width: 10%;
+		margin-left: 2%;
+		margin-right: 2%;
+	}
+	</style>
 </head>
 <body>
 <div id="container">
@@ -59,7 +75,9 @@
 			 <br/><br/>
 			<span>장소</span><input id="location" class="form-control" type="text" name="location" ><br/><br>
 			<span>메모</span><textarea id="description" class="form-control" rows="5" id="memo" style="display:block; width:84%;" name="description"></textarea> <br/><br>
-			<span>캘린더</span><select id="calendarList" name="calendars">
+			<span>알람</span><ul id="alarmList" style="list-style: none; padding:0% 0%; display:none;" data-alarmNum="0"></ul>
+			<button id="btnAddAlarm" class="btn btn-info" type="button" onclick="addAlarm()">알람 추가</button><br><br>
+			<span>캘린더</span><select class="form-control" id="calendarList" name="calendars">
 			</select>
 			<input id="eventId" type="text" style="display:none;" value=${eventId} name="eventId">
 			<input id="calendarId" type="text" style="display:none;"value=${calendarId} name="calendarId">
@@ -100,7 +118,7 @@ $(document).ready(function(){
 		}
 		
 		$("#allDayCheckBox").attr('value',false);
-		
+		showAlarm(true);
 		getCalendarList();
 	}else{
 		getEvent();
@@ -159,6 +177,7 @@ function getEvent(){
 	});
 }
 
+//이벤트 정보 input에 출력
 function showEvent(data){
 	$('#summary').attr('value',data.summary);
 	var date;
@@ -193,9 +212,13 @@ function showEvent(data){
 	if(data.description != null){
 		$('#description').text(data.description);
 	}
+	if(data.reminders.overrides != null || data.reminders.useDefault){
+		showAlarm(data.reminders.useDefault,data);
+	}
 	getCalendarList();
 }
-	
+
+//0추가
 function makeTimeForm(hour, min, sec){
 	var result="";
 	if(hour < 10){
@@ -212,6 +235,190 @@ function makeTimeForm(hour, min, sec){
 	result+=sec;
 	
 	return result;
+}
+//<select class="form-control" id="calendarList" name="calendars">
+function showAlarm(useDefault, data){
+	var text = "";
+	var size = 0;
+	if(useDefault == true){
+		text += makeAlarmForm(0,"popup",30);
+		text += makeAlarmForm(1,"email",10);
+		size = 2;
+		$("[data-alarmnum]").attr("data-alarmnum",2);
+	}else{
+		 size = data.reminders.overrides.length;
+		for(var i=0;i<size;i++){
+			text += makeAlarmForm(i,data.reminders.overrides[i].method,data.reminders.overrides[i].minutes);
+		}
+		$("[data-alarmnum]").attr("data-alarmnum",size);
+	}
+	if(size != 0){
+		$("#alarmList").css('display','block');
+	}
+	$("#alarmList").html(text);
+}
+function makeAlarmForm(alarmIndex, method, minutes){
+	var text = "";
+	if(alarmIndex == 5){
+		return "";
+	}
+	text += "<li>";
+	text += "<select class='form-control selectMethod' name='overrides["+alarmIndex+"].method'>";
+	if(method == "popup"){
+		text += "<option value='popup' selected>알림</option>";
+		text += "<option value='email'>이메일</option>";
+	}else{
+		text += "<option value='popup'>알림</option>";
+		text += "<option value='email' selected>이메일</option>";
+	}
+	text += "</select>";
+	var hour = 0;
+	var type;
+	var result = minutes;
+	if(minutes >= 60){
+		hour = minutes/60;
+		if(parseInt(hour) === hour){
+			var day = hour/24;
+			if(parseInt(day) === day){
+				var week = day/7;
+				if(parseInt(week) === week){//주
+					result = week;
+					type="week";
+				}else{
+					result = day;
+					type = "day";
+				}
+			}else{//시간
+				result = hour;
+				type = "hour";
+			}
+		}else{//분
+			result = minutes;
+			type = "min";
+		}
+	}
+	var optionValue=["min","hour","day","week"];
+	var optionText=["분","시간","일","주"];
+	text += "<input type='number' name='overrides["+alarmIndex+"].minutes' min='0' max='40320' style='display:none;' value="+minutes+">";
+	text += "<input type='number' id='inputNumber'min='0' value="+result+" onblur='checkMinutes(this);'>";
+	text += "<select class='form-control selectType' onchange='changeType(this);'>";
+	for(var i=0;i<4;i++){
+		text += "<option value="+optionValue[i];
+		if(optionValue[i] == type){
+			text += " selected";
+		}
+		text += ">"+optionText[i]+"</option>";
+	}
+	text += "</select>";
+	text += "<span> 전</span>"
+	text += "<button type='button' class='btn btn-info' onclick='removeAlarm(this);'>X</button>";
+	text += "</li>";
+	return text;
+}
+//알람 삭제 버튼 눌렀을 시
+function removeAlarm(btn){
+	$(btn).parent().remove();
+	var alarmNum = $("[data-alarmnum]");
+	var before = alarmNum.attr('data-alarmnum');
+	alarmNum.attr('data-alarmnum',before-1);
+	if(before-1 == 0){
+		$("#alarmList").css('display','none');
+	}
+	console.log(alarmNum.children().length);
+	var children = alarmNum.children();
+	for(var i=0; i<children.length;i++){
+		children.eq(i).children().eq(0).attr('name',"overrides["+i+"].method");
+		children.eq(i).children().eq(1).attr('name',"overrides["+i+"].minutes");
+	}
+}
+//알람 추가 버튼 눌렀을 시
+function addAlarm(){
+	var alarmIndex = parseInt($("[data-alarmnum]").attr('data-alarmnum'));
+	var text = makeAlarmForm(alarmIndex,"popup",10);
+	if(alarmIndex == 0){
+		$("#alarmList").css('display','block');
+	}
+	if(text != ""){
+		$("#alarmList").append(text);
+		$("[data-alarmnum]").attr('data-alarmnum',alarmIndex+1);
+	}
+}
+//알람 숫자 입력칸 유효성 체크
+function checkMinutes(input){
+	var num = parseInt(input.value);
+	var result = num;
+	if(num < 0){
+		input.value = 0;
+	}else{
+		switch($(input).next().val()){
+		case "min":
+			if(num > 40320){
+				input.value = 40320;
+			}
+			break;
+		case "hour":
+			if(num > 672){
+				input.value = 672;
+			}
+			result = input.value*60;
+			break;
+		case "day":
+			if(num > 28){
+				input.value = 28;
+			}
+			result = input.value*60*24;
+			break;
+		case "week":
+			if(num > 4){
+				input.value = 4;
+			}
+			result = input.value*60*24*7;
+			break;
+		}
+	}
+	$(input).prev().attr('value',result);
+}
+//알람 타입(분,시,일,주) 바꼈을 떄
+function changeType(input){
+	var type = $(input).val();
+	var num = $(input).prev().val();
+	var result = num;
+	var numInput = $(input).prev();
+	console.log(num);
+	switch(type){
+	case "min":
+		if(num > 40320){
+			numInput.attr('value',40320);
+			numInput.val(40320);
+			num = 40320;
+		}
+		break;
+	case "hour":
+		if(num > 672){
+			numInput.attr('value',672);
+			numInput.val(672);
+			num = 672;
+		}
+		result =num*60;
+		break;
+	case "day":
+		if(num > 28){
+			numInput.attr('value',28);
+			numInput.val(28);
+			num = 28;
+		}
+		result = num*60*24;
+		break;
+	case "week":
+		if(num > 4){
+			numInput.attr('value',4);
+			numInput.val(4);
+			num = 4;
+		}
+		result = num*60*24*7;
+		break;
+	}
+	$(input).prev().prev().attr('value',result);
 }
 //종일 일정 체크 여부에 따른 리셋
 function resetTimePicker(){
@@ -244,10 +451,10 @@ function checkDate(){
 function checkTime(){
 	var startDate = new Date($("#startDatePicker").val());
 	var endDate = new Date($("#endDatePicker").val());
-	if(startDate != endDate){//시작 날짜와 끝 날짜가 다르면 시간 체크는 안해도 됨
+	if(startDate.getFullYear() != endDate.getFullYear() || startDate.getMonth() != endDate.getMonth() || startDate.getDate() != endDate.getDate()){//시작 날짜와 끝 날짜가 다르면 시간 체크는 안해도 됨
 		return;
 	}
-	console.log($('#startTimePicker').val());
+	//console.log($('#startTimePicker').val());
 	if($('#startTimePicker').val() == ''){
 		document.getElementById('startTimePicker').value = makeTimeForm(0,0,0);
 	}

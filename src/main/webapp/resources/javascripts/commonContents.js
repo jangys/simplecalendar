@@ -43,6 +43,7 @@ $(document).on('click','#backBtn',function(){
   	  break;
     case 'l':
   	  changeStyle('list');
+  	  requestListCalendar(year,month,date);
   	  break;
     }
 	
@@ -73,6 +74,7 @@ $(document).on('click','#forwardBtn',function(){
   	  break;
     case 'l':
   	  changeStyle('list');
+  	  requestListCalendar(year,month,date);
   	  break;
     }
 });
@@ -105,6 +107,7 @@ function requestData(request){
 		requestMonthlyCalendar(year,month,date);
 		break;
 	case 'list':
+		requestListCalendar(year,month,date);
 		break;
 	}
 	return pageUrl;
@@ -123,6 +126,26 @@ function requestMonthlyCalendar(year,month,date){
 		success:function(data){
 			showTitle(year,month);
 			printCalendar(year,month-1,data);
+			history.replaceState(data,"SimpleCalendar",pageUrl);
+		},
+		error: function (XMLHttpRequest, textStatus, errorThrown){
+      	alert(errorThrown);
+      }
+	});
+}
+
+function requestListCalendar(year,month,date){
+	var baseUrl = "http://localhost:8080";
+	var pageUrl = "/l/"+year+"-"+month+"-"+date;
+	history.replaceState(null,"SimpleCalendar",pageUrl);				//데이터 요청이 느리니 먼저 url을 바꾸자
+	$.ajax({
+		url: baseUrl+"/monthly/"+year+"/"+month+"/"+date,
+		type:'GET',
+		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+		dataType:"json",
+		success:function(data){
+			showTitle(year,month);
+			printList(year,month,data);
 			history.replaceState(data,"SimpleCalendar",pageUrl);
 		},
 		error: function (XMLHttpRequest, textStatus, errorThrown){
@@ -154,16 +177,35 @@ $(document).on('click','#monthBtn',function(){
 $(document).on('click','#listBtn',function(){
 	changeStyle("list");
 	var pageUrl = "/l"+requestData('list');
-    history.replaceState(null,"SimpleCalendar",pageUrl);
+    //history.replaceState(null,"SimpleCalendar",pageUrl);
 });
 
 //버튼 배경색 설정 함수
 function changeStyle(button){
-	var id = $(".pushCalendarBtn").attr('id').split('Btn');
-	$("#"+id[0]+"Calendar").css("display","none");
-	$(".pushCalendarBtn").removeClass('pushCalendarBtn');
-	$("#"+button+"Btn").addClass('pushCalendarBtn');
-	$("#"+button+"Calendar").css("display","block");
+	if($(".pushCalendarBtn").length == 0){
+		$("#"+button+"Btn").addClass('pushCalendarBtn');
+		$("#"+button+"Calendar").css("display","inline-block");
+	}else{
+		var id = $(".pushCalendarBtn").attr('id').split('Btn');
+		$("#"+id[0]+"Calendar").css("display","none");
+		$(".pushCalendarBtn").removeClass('pushCalendarBtn');
+		$("#"+button+"Btn").addClass('pushCalendarBtn');
+		$("#"+button+"Calendar").css("display","inline-block");
+	}
+	switch(button){
+	case "day":
+		break;
+	case "week":
+		break;
+	case "month":
+		$("#contents").css('height','90%');
+		$("#container").css('height','100%');
+		break;
+	case "list":
+		$("#contents").height('auto');
+		$("#container").height('auto');
+		break;
+	}
 }	
 
 //처음 
@@ -213,6 +255,8 @@ function getList(){
           	month = parseInt(fullDate[1]);
           }else{//맨처음 요청시
           	history.replaceState(data,"SimpleCalendar",pageUrl);
+          	$("#monthCalendar").css('display','inline-block');
+          	$("#monthBtn").addClass('pushCalendarBtn');
           	printCalendar(year,month-1,data);
           }
           showTitle(year, month);
@@ -230,6 +274,7 @@ function getList(){
         	  break;
           case 'l':
         	  changeStyle('list');
+        	  printList(year,month,data);
         	  break;
           }
           

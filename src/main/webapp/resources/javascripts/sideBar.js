@@ -52,6 +52,7 @@ function clickCheckbox(box){
 }
 function requestCheckCalendar(year,month,date,box){
 	var baseUrl = "http://localhost:8080";
+	var path = location.pathname.split('/');
 	//console.log(box.value);
 	var data = {
 			"id" : box.value,
@@ -66,8 +67,20 @@ function requestCheckCalendar(year,month,date,box){
 		dataType :"json",
 		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
 		success:function(data){
-			printCalendar(year,month-1,data);
+			switch(path[1]){
+		    case 'd':
+		  	  //request, print 추가
+		  	  break;
+		    case 'w':
+		  	  break;
+		    case 'm':
+		      printCalendar(year,month-1,data);
+		  	  break;
+		    case 'l':
+		  	  printList(year,month,data);
+		  	  break;
+		    }
+			
 		}
 	});
-	//지금은 month만
 }

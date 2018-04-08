@@ -21,7 +21,9 @@ import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.Calendar.Events.Get;
 import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.Event.Reminders;
 import com.google.api.services.calendar.model.EventDateTime;
+import com.google.api.services.calendar.model.EventReminder;
 
 @Controller
 public class EventController {
@@ -83,30 +85,30 @@ public class EventController {
 	
 	//수정
 	@RequestMapping(value="/updateEvent",method = RequestMethod.POST)
-	public String updateEvent(HttpServletRequest request, Model model) {
+	public String updateEvent(EventInputDTO dto, HttpServletRequest request, Model model) {
 		GoogleCalendarService gcs = new GoogleCalendarService();
 		Calendar service;
-		String calendarId = request.getParameter("calendarId");
-		String eventId = request.getParameter("eventId");
+		String calendarId = dto.getCalendarId();
+		String eventId = dto.getEventId();
 		EventDateTime start = new EventDateTime();
 		EventDateTime end = new EventDateTime();
-		String[] strStartDate = request.getParameter("startDate").split("-");
-		String[] strEndDate = request.getParameter("endDate").split("-");
-		System.out.println(request.getParameter("allDay"));
-		if(request.getParameter("allDay") != null) {
+		Reminders reminders = new Reminders();
+		String[] strStartDate = dto.getStartDate().split("-");
+		String[] strEndDate = dto.getEndDate().split("-");
+		if(dto.getAllDay() != null) {
 			Date startD;
 			startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]),9,0);	//timezone만큼 시간 설정해야함.
 			System.out.println(startD.toString());
 			start.setDate(new DateTime(true,startD.getTime(),startD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
 			
 		}else {
-			String[] strStartDateTime = request.getParameter("startDateTime").split(":");
-			System.out.println(request.getParameter("startDateTime"));
+			String[] strStartDateTime = dto.getStartDateTime().split(":");
+			System.out.println(dto.getStartDateTime());
 			Date startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]), 
 					Integer.parseInt(strStartDateTime[0]), Integer.parseInt(strStartDateTime[1]));
 			start.setDateTime(new DateTime(startD)).setTimeZone("Asia/Seoul");
 		}
-		if(request.getParameter("allDay") != null) {
+		if(dto.getAllDay() != null) {
 			Date endD;
 			endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]),9,0);
 			DateTime endDate = new DateTime(endD);
@@ -114,7 +116,7 @@ public class EventController {
 			end.setDate(new DateTime(true,endD.getTime()+86400000l,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
 			
 		}else {
-			String[] strEndDateTime = request.getParameter("endDateTime").split(":");
+			String[] strEndDateTime = dto.getEndDateTime().split(":");
 			Date endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]), 
 					Integer.parseInt(strEndDateTime[0]), Integer.parseInt(strEndDateTime[1]));
 			end.setDateTime(new DateTime(endD)).setTimeZone("Asia/Seoul");
@@ -123,22 +125,41 @@ public class EventController {
 		System.out.println(end.toString());
 		//System.out.println(startDate.toString());
 		//String[] strStartDateTime = request.getParameter("startDateTime").split(":");
-		if(calendarId.equals(request.getParameter("calendars"))) {
+		//알람 default 체크
+		boolean useDefault = false;
+		if(dto.getOverrides() != null) {
+			if(dto.getOverrides().size() == 2) {
+				EventReminder eventReminder = dto.getOverrides().get(0);
+				if(eventReminder.getMethod().equals("popup") && eventReminder.getMinutes() == 30) {
+					EventReminder eventReminderTwo = dto.getOverrides().get(1);
+					if(eventReminderTwo.getMethod().equals("email") && eventReminderTwo.getMinutes() == 10) {
+						useDefault = true;
+					}
+				}
+			}
+			if(!useDefault) {
+				reminders.setOverrides(dto.getOverrides());
+				//System.out.println(dto.getOverrides().get(1).getMethod()+", "+dto.getOverrides().get(1).getMinutes());
+			}
+		}
+		reminders.setUseDefault(useDefault);
+		if(calendarId.equals(dto.getCalendars())) {
 			try {
 				service = gcs.getCalendarService();
 				Event event = service.events().get(calendarId, eventId).execute();
-				event.setSummary(request.getParameter("summary"))
-				.setLocation(request.getParameter("location"))
-				.setDescription(request.getParameter("description"))
+				event.setSummary(dto.getSummary())
+				.setLocation(dto.getLocation())
+				.setDescription(dto.getDescription())
 				.setStart(start)
 				.setEnd(end)
+				.setReminders(reminders)
 				;
 				Event updatedEvent = service.events().update(calendarId, event.getId(), event).execute();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}else if(!calendarId.equals(request.getParameter("calendars"))){//calendar Id를 수정한 경우나 일정을 입력한 경우
+		}else if(!calendarId.equals(dto.getCalendars())){//calendar Id를 수정한 경우나 일정을 입력한 경우
 			try {
 				service = gcs.getCalendarService();
 				
@@ -146,13 +167,14 @@ public class EventController {
 					service.events().delete(calendarId, eventId).execute();
 				}
 				Event event = new Event()
-						.setSummary(request.getParameter("summary"))
-						.setLocation(request.getParameter("location"))
-						.setDescription(request.getParameter("description"))
+						.setSummary(dto.getSummary())
+						.setLocation(dto.getLocation())
+						.setDescription(dto.getDescription())
 						.setStart(start)
 						.setEnd(end)
+						.setReminders(reminders)
 						;
-				String newCalendarId = request.getParameter("calendars");
+				String newCalendarId = dto.getCalendars();
 				service.events().insert(newCalendarId, event).execute();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -160,6 +182,6 @@ public class EventController {
 			}
 			
 		}
-		return "redirect:/m/"+request.getParameter("startDate");
+		return "redirect:/m/"+dto.getStartDate();
 	}
 }
