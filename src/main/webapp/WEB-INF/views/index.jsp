@@ -289,7 +289,7 @@
 	}
 	/*날짜 칸 눌렀을때*/
 	.clickDate{
-		background-color:#FFFFD2;
+		background-color: #EAEAEA;
 		opacity: 0.5;
 	}
 	/*더보기 링크가 있는 칸*/

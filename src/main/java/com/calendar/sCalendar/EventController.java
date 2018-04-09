@@ -1,8 +1,11 @@
 package com.calendar.sCalendar;
 
+import java.awt.List;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 
@@ -22,6 +25,7 @@ import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.Calendar.Events.Get;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Event.Reminders;
+import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.EventDateTime;
 import com.google.api.services.calendar.model.EventReminder;
 
@@ -112,9 +116,7 @@ public class EventController {
 			Date endD;
 			endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]),9,0);
 			DateTime endDate = new DateTime(endD);
-			
 			end.setDate(new DateTime(true,endD.getTime()+86400000l,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
-			
 		}else {
 			String[] strEndDateTime = dto.getEndDateTime().split(":");
 			Date endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]), 
@@ -143,6 +145,11 @@ public class EventController {
 			}
 		}
 		reminders.setUseDefault(useDefault);
+//		EventAttendee[] attendees = new EventAttendee[] {
+//			new EventAttendee().setEmail("kaka@example.com"),
+//			new EventAttendee().setEmail("jangys9510@naver.com"),
+//		};
+		
 		if(calendarId.equals(dto.getCalendars())) {
 			try {
 				service = gcs.getCalendarService();
@@ -173,6 +180,7 @@ public class EventController {
 						.setStart(start)
 						.setEnd(end)
 						.setReminders(reminders)
+//						.setAttendees(Arrays.asList(attendees))
 						;
 				String newCalendarId = dto.getCalendars();
 				service.events().insert(newCalendarId, event).execute();

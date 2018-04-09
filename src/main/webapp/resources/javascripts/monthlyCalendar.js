@@ -58,7 +58,7 @@ function printCalendar(y, m, data) {
 				if(tempDateNum > lastDate){
 					table += "<td></td>";
 				}else{
-					table += "<td data-dateIndex='"+(j+start)+"' draggable='true' onclick='mouseUpDate(this,false)' onmousedown='addId(this)' ondragenter='mouseDownDate(this)' ondragend='mouseUpDate(this,true)'></td>";
+					table += "<td data-dateIndex='"+(j+start)+"' draggable='true' onclick='mouseUpDate(this,false)' onmousedown='startDrag(this)' ondragenter='mouseDownDate(this)' ondragend='mouseUpDate(this,true)'></td>";
 					tempDateNum ++;
 				}
 			}
@@ -145,9 +145,12 @@ function printCalendar(y, m, data) {
 		return false;	//버튼 누를시 스크롤바 이동 방지
 	});
 }
-function addId(td){
+//날짜 칸을 마우스가 처음으로 눌렀을 때
+function startDrag(td){
 	$(td).attr('id','firstClick');
-	
+	//eventFill original value = 4  날짜 한칸은 2
+	$(".eventFill").css('z-index','1');
+	$(".moreEvent").css('z-index','1');
 }
 function mouseDownDate(td){
 	var last = $('.clickDate:last').attr('data-dateIndex');
@@ -223,7 +226,6 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 	var eventNum = 0;
 	var dateIndex = startIndex-1;
 	 var size = data.length;
-	 console.log(print);
 	for(var i = 0; i < size; i++){
 		var index=0;
 		var startDateIndex=0;

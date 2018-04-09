@@ -111,7 +111,6 @@ public class GoogleCalendarService {
 	public static ArrayList<EventDTO> getEvent_Month(ArrayList<CalendarDTO> calendarList, int year, int month) throws IOException{
     	com.google.api.services.calendar.Calendar service =
                 getCalendarService();
-            // List the next 10 events from the primary calendar.
             //DateTime now = new DateTime(System.currentTimeMillis());
     		Date cur = new Date(year-1900, month-1, 1);
     		ArrayList<EventDTO> dtoList = new ArrayList<EventDTO>();
@@ -132,8 +131,6 @@ public class GoogleCalendarService {
 	            Events events = service.events().list(id)
 	            	.setTimeMin(now)
 	            	.setTimeMax(next)
-	                .setOrderBy("startTime")	//이걸 사용하려면 setSingleEvents가 true로 되어 있어야함.
-	                .setSingleEvents(true)
 	                .execute();
 	            List<Event> items = events.getItems();
 	            if (items.size() == 0) {
