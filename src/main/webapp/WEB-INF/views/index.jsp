@@ -182,6 +182,7 @@
 		padding : 1% 1%;
 		position : relative;
 		min-width: 930px;
+		min-height: 246px;
 		width:75%;
 		display:inline-block;
 	/*

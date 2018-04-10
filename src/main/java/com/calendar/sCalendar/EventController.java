@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.junit.runner.Request;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -97,6 +98,7 @@ public class EventController {
 		EventDateTime start = new EventDateTime();
 		EventDateTime end = new EventDateTime();
 		Reminders reminders = new Reminders();
+		System.out.println(dto.getSummary());
 		String[] strStartDate = dto.getStartDate().split("-");
 		String[] strEndDate = dto.getEndDate().split("-");
 		if(dto.getAllDay() != null) {
@@ -141,14 +143,14 @@ public class EventController {
 			}
 			if(!useDefault) {
 				reminders.setOverrides(dto.getOverrides());
-				//System.out.println(dto.getOverrides().get(1).getMethod()+", "+dto.getOverrides().get(1).getMinutes());
+				System.out.println(dto.getOverrides().get(0).getMethod()+", "+dto.getOverrides().get(0).getMinutes());
 			}
 		}
 		reminders.setUseDefault(useDefault);
-//		EventAttendee[] attendees = new EventAttendee[] {
-//			new EventAttendee().setEmail("kaka@example.com"),
-//			new EventAttendee().setEmail("jangys9510@naver.com"),
-//		};
+		EventAttendee[] attendees = new EventAttendee[] {
+			new EventAttendee().setEmail("kaka@example.com"),
+			new EventAttendee().setEmail("jangys9510@naver.com"),
+		};
 		
 		if(calendarId.equals(dto.getCalendars())) {
 			try {

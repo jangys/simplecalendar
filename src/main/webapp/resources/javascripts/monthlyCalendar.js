@@ -1,6 +1,6 @@
 
 //달력 출력
-function printCalendar(y, m, data) {    
+function printCalendar(y, m, data,colNum) {    
 	
    var now = new Date();
    var year = now.getFullYear();
@@ -31,8 +31,6 @@ function printCalendar(y, m, data) {
 	var table = "";
 	var dateNum = 1;
 	var tempDateNum = 1;
-	//높이에 따른 세로 갯수
-	var colNum = 6;	//0번째 줄은 무조건 날짜
 	
 	//달력그리기
 	for(var i = 0; i<row;i++){
@@ -144,6 +142,29 @@ function printCalendar(y, m, data) {
 		list.html(text);
 		return false;	//버튼 누를시 스크롤바 이동 방지
 	});
+}
+function drawCalendar(year,month,data){
+	calColNumAndPrintCalendar(year, month, data);
+	$(window).resize(function(){
+		calColNumAndPrintCalendar(year, month, data);
+	});
+	
+}
+function calColNumAndPrintCalendar(year, month, data){
+	//높이에 따른 세로 갯수
+	var colNum = 6;	//0번째 줄은 무조건 날짜
+	var height = $("#container").height();
+	if(height <= 744 && height > 610){
+		colNum = 5;
+	}else if(height <= 610 && height > 508){
+		colNum = 4;
+	}else if(height <= 508 && height > 385){
+		colNum = 3;
+	}else if(height <= 385){
+		colNum = 2;
+	}
+	console.log(colNum);
+	printCalendar(year,month,data,colNum);
 }
 //날짜 칸을 마우스가 처음으로 눌렀을 때
 function startDrag(td){
@@ -357,6 +378,7 @@ function setEventTd(index, col, title, colorCode, colspan){
 	td.html(title);
 	td.css('background-color',colorCode);
 	td.css('border-bottom','1px solid white');
+	td.css('border-top','1px solid white');
 	td.attr("colspan",colspan);
 	td.attr("class","eventFill");
 	td.removeAttr("data-index");

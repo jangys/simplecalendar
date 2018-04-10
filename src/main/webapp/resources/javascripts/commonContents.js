@@ -125,7 +125,7 @@ function requestMonthlyCalendar(year,month,date){
 		dataType:"json",
 		success:function(data){
 			showTitle(year,month);
-			printCalendar(year,month-1,data);
+			drawCalendar(year,month-1,data);
 			history.replaceState(data,"SimpleCalendar",pageUrl);
 		},
 		error: function (XMLHttpRequest, textStatus, errorThrown){
@@ -257,7 +257,7 @@ function getList(){
           	history.replaceState(data,"SimpleCalendar",pageUrl);
           	$("#monthCalendar").css('display','inline-block');
           	$("#monthBtn").addClass('pushCalendarBtn');
-          	printCalendar(year,month-1,data);
+          	drawCalendar(year,month-1,data);
           }
           showTitle(year, month);
           switch(path[1]){
@@ -270,7 +270,7 @@ function getList(){
         	  break;
           case 'm':
         	  changeStyle('month');
-        	  printCalendar(year,month-1,data);
+        	  drawCalendar(year,month-1,data);
         	  break;
           case 'l':
         	  changeStyle('list');

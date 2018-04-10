@@ -11,7 +11,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.client.util.DateTime;
-
+import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.*;
 
@@ -25,6 +25,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class GoogleCalendarService {
     /** Application name. */
@@ -109,8 +114,7 @@ public class GoogleCalendarService {
     //@SuppressWarnings("deprecation")
     //year, month에 맞는 이벤트 ArrayList<EventDTO>로 저장
 	public static ArrayList<EventDTO> getEvent_Month(ArrayList<CalendarDTO> calendarList, int year, int month) throws IOException{
-    	com.google.api.services.calendar.Calendar service =
-                getCalendarService();
+    	
             //DateTime now = new DateTime(System.currentTimeMillis());
     		Date cur = new Date(year-1900, month-1, 1);
     		ArrayList<EventDTO> dtoList = new ArrayList<EventDTO>();
@@ -123,43 +127,24 @@ public class GoogleCalendarService {
 
             DateTime now = new DateTime(cur);
             DateTime next = new DateTime(nextDate);
-           
             int size = calendarList.size();
+            ExecutorService executorService = Executors.newFixedThreadPool(size);
+            ArrayList<EventDTO> result = new ArrayList<EventDTO>();
+            List<Future<ArrayList<EventDTO>>> future = new ArrayList<Future<ArrayList<EventDTO>>>();
             for(int i=0;i<size;i++) {
-            	//System.out.println(checkedCalId.get(i));
             	String id = calendarList.get(i).getId();
-	            Events events = service.events().list(id)
-	            	.setTimeMin(now)
-	            	.setTimeMax(next)
-	                .execute();
-	            List<Event> items = events.getItems();
-	            if (items.size() == 0) {
-	                System.out.println("No upcoming events found.");
-	            } else {
-	            	// System.out.println(now.toString());
-	                System.out.println("Upcoming events");
-	                for (Event event : items) {
-	                    DateTime start = event.getStart().getDateTime();
-	                    if (start == null) {
-	                        start = event.getStart().getDate();
-	                    }
-	                    DateTime end = event.getEnd().getDateTime();
-	                    if(end == null) {
-	                    	end = event.getEnd().getDate();
-	                    }
-	                   // System.out.printf("%s (%s)\n", event.getSummary(), start.toString());
-	                    EventDTO tempDTO = new EventDTO();
-	                    tempDTO.setCalendarID(id);
-	                    tempDTO.setSummary(event.getSummary());
-	                    tempDTO.setStart(start.getValue(),start.isDateOnly());
-	                    tempDTO.setEnd(end.getValue(),end.isDateOnly());
-	                    tempDTO.setEventID(event.getId());
-//	                    if(event.getReminders() != null)
-//	                    	System.out.println(event.getSummary()+" , "+event.getReminders().toPrettyString());
-	                    dtoList.add(tempDTO);
-	                }
-	            }
+            	Callable<ArrayList<EventDTO>> task = new callable(id, now, next);
+            	future.add(executorService.submit(task));
             }
+            try {
+             	for(int i=0;i<size;i++) {
+             		result.addAll(future.get(i).get());
+             	}
+             }catch(Exception e) {
+             	e.printStackTrace();
+             }
+            executorService.shutdown();
+            dtoList = result;
             Collections.sort(dtoList,new comparator());
             dtoList = new EventProcessing().arrangeOrder(dtoList, year, month);
 
@@ -226,7 +211,7 @@ public class GoogleCalendarService {
 		}
 		return event;
 	}
-	
+
 //	public static ArrayList<String> getCheckedCalendarId(ArrayList<CalendarDTO> dto){
 //		ArrayList<String> result = new ArrayList<String>();
 //		int size = dto.size();
@@ -256,4 +241,61 @@ public class GoogleCalendarService {
 //
 //    }
     
+}
+
+class callable implements Callable<ArrayList<EventDTO>>{
+	private String id;
+	private DateTime now;
+	private DateTime next;
+	
+	public callable(String id, DateTime now, DateTime next) {
+		this.id = id;
+		this.now = now;
+		this.next = next;
+	}
+	@Override
+	public ArrayList<EventDTO> call() {
+        Events events = null;
+        ArrayList<EventDTO> result = new ArrayList<EventDTO>();
+		try {
+			com.google.api.services.calendar.Calendar service =
+                    new GoogleCalendarService().getCalendarService();
+			events = service.events().list(id)
+				.setTimeMin(now)
+				.setTimeMax(next)
+			    .execute();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        List<Event> items = events.getItems();
+        if (items.size() == 0) {
+            System.out.println("No upcoming events found.");
+        } else {
+        	// System.out.println(now.toString());
+            System.out.println("Upcoming events");
+            for (Event event : items) {
+                DateTime start = event.getStart().getDateTime();
+                if (start == null) {
+                    start = event.getStart().getDate();
+                }
+                DateTime end = event.getEnd().getDateTime();
+                if(end == null) {
+                	end = event.getEnd().getDate();
+                }
+               // System.out.printf("%s (%s)\n", event.getSummary(), start.toString());
+                EventDTO tempDTO = new EventDTO();
+                tempDTO.setCalendarID(id);
+                tempDTO.setSummary(event.getSummary());
+                tempDTO.setStart(start.getValue(),start.isDateOnly());
+                tempDTO.setEnd(end.getValue(),end.isDateOnly());
+                tempDTO.setEventID(event.getId());
+//                if(event.getReminders() != null)
+//                	System.out.println(event.getSummary()+" , "+event.getReminders().toPrettyString());
+                result.add(tempDTO);
+            }
+        }
+        return result;
+	}
+	
 }

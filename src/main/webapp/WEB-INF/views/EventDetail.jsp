@@ -63,7 +63,6 @@
 <div id="container">
 	<h4 id="eventDateTitle"></h4>
 	<div id="contents">
-		<form action="updateEvent" method="post" accept-charset="UTF-8">
 			<span>제목</span><input id="summary" class="form-control" type="text" name="summary"><br><br>
 			<span>일시</span>
 				<input id="startDatePicker" class="form-control datePick" type="date" name="startDate" required onblur="checkDate();">
@@ -77,14 +76,15 @@
 			<span>메모</span><textarea id="description" class="form-control" rows="5" id="memo" style="display:block; width:84%;" name="description"></textarea> <br/><br>
 			<span>알람</span><ul id="alarmList" style="list-style: none; padding:0% 0%; display:none;" data-alarmNum="0"></ul>
 			<button id="btnAddAlarm" class="btn btn-info" type="button" onclick="addAlarm()">알람 추가</button><br><br>
-			<span>캘린더</span><select class="form-control" id="calendarList" name="calendars">
-			</select>
-			<input id="eventId" type="text" style="display:none;" value=${eventId} name="eventId">
+			<span>참석자</span><input id="attendee" class="form-fontrol" type="email" onkeypress="addAttendee(this);" >
+			<ul id="attendeeList" style="list-style:none; padding: 0% 0%; " data-attNum="0">
+				</ul>
+			<span>캘린더</span><select class="form-control" id="calendarList" name="calendars"></select>
 			<input id="calendarId" type="text" style="display:none;"value=${calendarId} name="calendarId">
+			<input id="eventId" type="text" style="display:none;"value=${eventId} name="eventId">
 			<br/><br/>
-			<button id="btnSave" class="btn btn-info" type="submit" name="save" value="true">저장</button>
+			<button id="btnSave" class="btn btn-info" type="button" name="save" value="true" onclick="submitInput();">저장</button>
 			<button id="btnCancel" class="btn btn-info" type="button" onclick="history.back();">취소</button>
-		</form>
 	</div>
 	
 </div>
@@ -125,7 +125,12 @@ $(document).ready(function(){
 	}
 	//getList();
 });
-
+//submit 엔터키 막기
+$("*").keypress(function(e){
+	if(e.keyCode == 13){
+		return false;
+	}
+});
 //캘린더 목록 추가
 function getCalendarList(){
 	var baseUrl = "http://localhost:8080";
@@ -214,6 +219,29 @@ function showEvent(data){
 	}
 	if(data.reminders.overrides != null || data.reminders.useDefault){
 		showAlarm(data.reminders.useDefault,data);
+	}
+	if(data.attendees != null){
+		var size = data.attendees.length;
+		var text = "";
+		for(var i=0;i<size;i++){
+			var optional = false;
+			var organizer = false;
+			var name = "";
+			var email = "";
+			if(data.attendees[i].optional != null){
+				optional = true;
+			}
+			if(data.attendees[i].organizer != null){
+				organizer = true;
+			}
+			if(data.attendees[i].displayName != null){
+				name = data.attendees[i].displayName;
+			}
+			email = data.attendees[i].email;
+			text += makeAttendeeForm(optional, name, email, organizer,data.attendees[i].responseStatus);
+		}
+		console.log(text);
+		$("#attendeeList").append(text);
 	}
 	getCalendarList();
 }
@@ -480,6 +508,50 @@ function checkTime(){
 	}
 }
 	//document.getElementById('startTimePicker').value = "15:21:00";
+function addAttendee(input){
+	var regExp = /([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+
+	if(event.keyCode == 13){
+		if($(input).val().match(regExp)){
+			var text = makeAttendeeForm(false, "", $(input).val(), false ,"needsAction");
+			$("#attendeeList").append(text);
+			input.value = "";
+		}else{
+			alert('이메일 형태로 입력해주세요.');
+			input.focus();
+		}
+		
+	}
+}	
+//<li><button type="button" class="optionalBtn btn" value="false">필수</button><span class="attendeeName"> 이름 </span><span class="email"> 이메일 </span><span>주최자</span>
+function makeAttendeeForm(optional, name, email, organizer,response){
+	var text = "<li><button type='button' class='optionalBtn btn' value="+optional+">";
+	if(optional){
+		text += "선택";
+	}else{
+		text += "필수";
+	}
+	text += "</button><span class='attendeeName'> "+name+" </span>";
+	text += "<span class='email'> "+email+" </span>";
+	if(organizer){
+		text += "<span> 주최자 </span>";
+	}
+	text += "<span> "+response+" </span>";
+	text += "<button type='button' class='btn btn-info'>X</button>";
 	
+	return text;
+}
+
+function submitInput(){
+	var form = document.createElement("form");
+	form.setAttribute("accept-charset","UTF-8");
+	form.setAttribute("method","POST");
+	form.setAttribute("action","updateEvent");
+
+	form.appendChild(document.getElementById("contents"));
+	
+	document.body.appendChild(form);
+	form.submit();
+}
 </script>
 </html>
