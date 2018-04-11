@@ -5,8 +5,12 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.ListIterator;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
@@ -15,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.junit.runner.Request;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -74,7 +79,6 @@ public class EventController {
 	@RequestMapping(value = "/showAddEventPage")
 	public String showAddEventPage(HttpServletRequest requset, Locale locale, Model model) {
 		model.addAttribute("eventId", "addEvent");
-		System.out.println(requset.getParameter("addEventDate"));
 		model.addAttribute("calendarId",requset.getParameter("addEventDate"));
 		
 		return "EventDetail";
@@ -90,7 +94,7 @@ public class EventController {
 	
 	//¼öÁ¤
 	@RequestMapping(value="/updateEvent",method = RequestMethod.POST)
-	public String updateEvent(EventInputDTO dto, HttpServletRequest request, Model model) {
+	public String updateEvent(@ModelAttribute EventInputDTO dto, HttpServletRequest request, Model model) {
 		GoogleCalendarService gcs = new GoogleCalendarService();
 		Calendar service;
 		String calendarId = dto.getCalendarId();
@@ -147,11 +151,24 @@ public class EventController {
 			}
 		}
 		reminders.setUseDefault(useDefault);
-		EventAttendee[] attendees = new EventAttendee[] {
-			new EventAttendee().setEmail("kaka@example.com"),
-			new EventAttendee().setEmail("jangys9510@naver.com"),
-		};
-		
+		//Attendee
+		Boolean optional = false;
+		ArrayList<EventAttendee> attendees = new ArrayList<EventAttendee>();
+		if(dto.getAttendees() != null) {
+			int size = dto.getAttendees().size();
+			for(int i=0;i<size;i++) {
+				EventAttendee attendee = new EventAttendee();
+				InputAttendee inputAtt = dto.getAttendees().get(i);
+				attendee.setEmail(inputAtt.getEmail());
+				attendee.setOptional(inputAtt.getOptional().equals("true"));
+				attendee.setResponseStatus(inputAtt.getResponseStatus());
+				attendee.setOrganizer(inputAtt.getOrganizer().equals("true"));
+				attendee.setSelf(inputAtt.getSelf().equals("true"));
+				attendees.add(attendee);
+			}
+			
+		}
+		System.out.println(dto.getAttendees().get(0).getOptional());
 		if(calendarId.equals(dto.getCalendars())) {
 			try {
 				service = gcs.getCalendarService();
@@ -162,6 +179,7 @@ public class EventController {
 				.setStart(start)
 				.setEnd(end)
 				.setReminders(reminders)
+				.setAttendees(attendees)
 				;
 				Event updatedEvent = service.events().update(calendarId, event.getId(), event).execute();
 			} catch (IOException e) {
@@ -174,6 +192,7 @@ public class EventController {
 				
 				if(!eventId.equals("addEvent")) {
 					service.events().delete(calendarId, eventId).execute();
+					System.out.println("delete");
 				}
 				Event event = new Event()
 						.setSummary(dto.getSummary())
@@ -182,7 +201,7 @@ public class EventController {
 						.setStart(start)
 						.setEnd(end)
 						.setReminders(reminders)
-//						.setAttendees(Arrays.asList(attendees))
+						.setAttendees(attendees)
 						;
 				String newCalendarId = dto.getCalendars();
 				service.events().insert(newCalendarId, event).execute();

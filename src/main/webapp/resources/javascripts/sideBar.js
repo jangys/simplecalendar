@@ -74,7 +74,7 @@ function requestCheckCalendar(year,month,date,box){
 		    case 'w':
 		  	  break;
 		    case 'm':
-		      printCalendar(year,month-1,data);
+		    	drawCalendar(year,month-1,data);
 		  	  break;
 		    case 'l':
 		  	  printList(year,month,data);

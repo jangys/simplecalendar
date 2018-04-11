@@ -57,6 +57,7 @@
 		margin-left: 2%;
 		margin-right: 2%;
 	}
+
 	</style>
 </head>
 <body>
@@ -77,6 +78,15 @@
 			<span>알람</span><ul id="alarmList" style="list-style: none; padding:0% 0%; display:none;" data-alarmNum="0"></ul>
 			<button id="btnAddAlarm" class="btn btn-info" type="button" onclick="addAlarm()">알람 추가</button><br><br>
 			<span>참석자</span><input id="attendee" class="form-fontrol" type="email" onkeypress="addAttendee(this);" >
+			<span style="margin-left:10%;">내 참석 여부 </span>
+			<select id="c" class="form-control" style="display:inline; width:135px;" onchange="changeMyResponseStatus(this);">
+				<option value="accepted">수락</option>
+				<option value="declined">거절</option>
+				<option value="tentative">미정</option>
+				<option value="needsAction">대기</option>
+			</select>
+			<br/>
+			<br>
 			<ul id="attendeeList" style="list-style:none; padding: 0% 0%; " data-attNum="0">
 				</ul>
 			<span>캘린더</span><select class="form-control" id="calendarList" name="calendars"></select>
@@ -86,7 +96,7 @@
 			<button id="btnSave" class="btn btn-info" type="button" name="save" value="true" onclick="submitInput();">저장</button>
 			<button id="btnCancel" class="btn btn-info" type="button" onclick="history.back();">취소</button>
 	</div>
-	
+	<p id="userId" style="display:none;"></p>
 </div>
 </body>
 <script type="text/javascript">
@@ -153,10 +163,14 @@ function getCalendarList(){
 							text += "selected";
 						}
 					}
+					if(data[i].primary){
+						$("#userId").text(data[i].id);
+					}
 					text += ">"+data[i].summary+"</option>";
 				}
 			}
 			$("#calendarList").html(text);
+			
 		}
 	});
 }
@@ -184,6 +198,7 @@ function getEvent(){
 
 //이벤트 정보 input에 출력
 function showEvent(data){
+	
 	$('#summary').attr('value',data.summary);
 	var date;
 	if(data.start.date != null){
@@ -220,28 +235,47 @@ function showEvent(data){
 	if(data.reminders.overrides != null || data.reminders.useDefault){
 		showAlarm(data.reminders.useDefault,data);
 	}
+	
 	if(data.attendees != null){
 		var size = data.attendees.length;
 		var text = "";
+		var organizerResponse="accepted";
+		var self = false;
 		for(var i=0;i<size;i++){
 			var optional = false;
-			var organizer = false;
 			var name = "";
 			var email = "";
-			if(data.attendees[i].optional != null){
-				optional = true;
+			if(data.attendees[i].organizer == null){//주최자는 따로 추가
+				if(data.attendees[i].optional != null){
+					optional = true;
+				}
+				if(data.attendees[i].displayName != null){
+					name = data.attendees[i].displayName;
+				}
+				if(data.attendees[i].self != null){
+					self = true;
+				}else{
+					self = false;
+				}
+				email = data.attendees[i].email;
+				text += makeAttendeeForm(optional, name, email, false,data.attendees[i].responseStatus,self);
+			}else{
+				organizerResponse=data.attendees[i].responseStatus;
 			}
-			if(data.attendees[i].organizer != null){
-				organizer = true;
-			}
-			if(data.attendees[i].displayName != null){
-				name = data.attendees[i].displayName;
-			}
-			email = data.attendees[i].email;
-			text += makeAttendeeForm(optional, name, email, organizer,data.attendees[i].responseStatus);
+			
 		}
-		console.log(text);
+		var organizerName = "";
+		if(data.organizer.displayName != null){
+			organizerName = data.organizer.displayName;
+		}
+		if(data.organizer.self != null){
+			self = true;
+		}else{
+			self = false;
+		}
+		var organizer = makeAttendeeForm(false,organizerName, data.organizer.email, true,organizerResponse,self);
 		$("#attendeeList").append(text);
+		$("#attendeeList").prepend(organizer);
 	}
 	getCalendarList();
 }
@@ -510,11 +544,19 @@ function checkTime(){
 	//document.getElementById('startTimePicker').value = "15:21:00";
 function addAttendee(input){
 	var regExp = /([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
-
 	if(event.keyCode == 13){
 		if($(input).val().match(regExp)){
-			var text = makeAttendeeForm(false, "", $(input).val(), false ,"needsAction");
-			$("#attendeeList").append(text);
+			if($("#attendeeList").children().length == 0 && $(input).val() != $("#userId").text()){
+				var text = makeAttendeeForm(false,"",$("#userId").text(),true,"accepted",false);
+				$("#attendeeList").append(text);
+			}
+			if($(input).val() == $("#userId").text()){//본인이 추가
+				var text = makeAttendeeForm(false,"",$("#userId").text(),true,"accepted",true);
+				$("#attendeeList").append(text);
+			}else{
+				var text = makeAttendeeForm(false, "", $(input).val(), false ,"needsAction",false);
+				$("#attendeeList").append(text);
+			}
 			input.value = "";
 		}else{
 			alert('이메일 형태로 입력해주세요.');
@@ -524,30 +566,127 @@ function addAttendee(input){
 	}
 }	
 //<li><button type="button" class="optionalBtn btn" value="false">필수</button><span class="attendeeName"> 이름 </span><span class="email"> 이메일 </span><span>주최자</span>
-function makeAttendeeForm(optional, name, email, organizer,response){
-	var text = "<li><button type='button' class='optionalBtn btn' value="+optional+">";
+function makeAttendeeForm(optional, name, email, organizer,response,self){
+	var text = "<li class='attendee'><button type='button' class='optionalBtn btn' value="+optional+" onclick='changeOptionalBtn(this);'>";
 	if(optional){
 		text += "선택";
 	}else{
 		text += "필수";
 	}
-	text += "</button><span class='attendeeName'> "+name+" </span>";
-	text += "<span class='email'> "+email+" </span>";
+	text += "</button><span class='attendeeName'>"+name+"</span>";
+	text += "<span class='email attendeeSpan'>&lt;"+email+"&gt;</span>";
 	if(organizer){
-		text += "<span> 주최자 </span>";
+		text += "<span class='attendeeSpan'>주최자</span>";
+	}else{
+		text += "<span class='attendeeSpan'></span>";
 	}
-	text += "<span> "+response+" </span>";
-	text += "<button type='button' class='btn btn-info'>X</button>";
+	text += "<span class='attendeeSpan'";
+	if(self){
+		text += " data-self='true'";
+		$("option[value="+response+"]").attr("selected", "selected");
+	}
+	text += ">"+getResponseStatus(response)+"</span>";
+	text += "<button type='button' class='btn btn-info' onclick='$(this).parent().remove();'>X</button>";
 	
 	return text;
 }
+//참석자의 선택, 필수 여부
+function changeOptionalBtn(btn){
+	var optional = !($(btn).val() == 'true');
+	$(btn).val(optional);
+	if(optional){
+		$(btn).text("선택");
+	}else{
+		$(btn).text("필수");
+	}
+}
+//내 참석 여부 바꿨을 경우
+function changeMyResponseStatus(select){
+	var me = $("[data-self='true']");
+	me.text(getResponseStatus($(select).val()));
+}
 
+function getResponseStatus(response){
+	switch(response){
+	case "needsAction":
+		return "대기";
+		break;
+	case "declined":
+		return "거절";
+		break;
+	case "tentative":
+		return "미정";
+		break;
+	case "accepted":
+		return "수락";
+		break;
+	case "대기":
+		return "needsAction";
+		break;
+	case "거절":
+		return "declined";
+		break;
+	case "미정":
+		return "tentative";
+		break;
+	case "수락":
+		return "accepted";
+		break;		
+	}
+}
 function submitInput(){
+	
 	var form = document.createElement("form");
 	form.setAttribute("accept-charset","UTF-8");
 	form.setAttribute("method","POST");
 	form.setAttribute("action","updateEvent");
+	var size = $("li.attendee").length;
+	var field=["optional","email","organizer","responseStatus","self"];
+	for(var i=0;i<size;i++){
+		var index = 0;
+		var email = "";
+		var li = $("li.attendee").eq(i);
+		for(var j=0;j<field.length;j++){
+			var input = document.createElement("input");
+			input.setAttribute("type","hidden");
+			input.setAttribute("name","attendees["+i+"]."+field[j]);
+			var child = li.children().eq(index);
+			switch(index){
+			case 0:
+				input.setAttribute("value",child.val());
+				index = 2;
+				break;
+			case 2:
+				var emailStr = child.text();
+				email = emailStr.substring(1,emailStr.length-1);
+				input.setAttribute("value",email);
+				index ++;
+				break;
+			case 3:
+				var organizer = false;
+				if(child.text() == "주최자"){
+					organizer = true;
+				}
+				input.setAttribute("value",organizer);
+				index++;
+				break;
+			case 4:
+				input.setAttribute("value",getResponseStatus(child.text()));
+				index++;
+				break;
+			case 5:
+				var self = false;
+				if(email == $("#userId").text()){
+					self = true;
+				}
+				input.setAttribute("value",self);
+				index++;
+				break;
+			}
 
+			form.appendChild(input);
+		}
+	}	
 	form.appendChild(document.getElementById("contents"));
 	
 	document.body.appendChild(form);

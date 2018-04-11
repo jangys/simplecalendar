@@ -2,6 +2,7 @@ package com.calendar.sCalendar;
 
 import java.util.List;
 
+import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.EventReminder;
 
 public class EventInputDTO {
@@ -15,6 +16,7 @@ public class EventInputDTO {
 	private String description;
 	private String useDefault;		//email 10분전, popup 30분전
 	private List<EventReminder> overrides;
+	private List<InputAttendee> attendees;
 	private String calendars;
 	private String eventId;
 	private String calendarId;
@@ -49,6 +51,9 @@ public class EventInputDTO {
 	//EventReminder-> method, minutes(0~40320 4weeks) 최대 5개
 	public void setOverrides(List<EventReminder> overrides) {
 		this.overrides = overrides;
+	}
+	public void setAttendees(List<InputAttendee> attendees) {
+		this.attendees = attendees;
 	}
 	public void setCalendars(String calendars) {
 		this.calendars = calendars;
@@ -90,6 +95,9 @@ public class EventInputDTO {
 	public List<EventReminder> getOverrides() {
 		return overrides;
 	}
+	public List<InputAttendee> getAttendees() {
+		return attendees;
+	}
 	public String getCalendars() {
 		return calendars;
 	}
@@ -100,3 +108,4 @@ public class EventInputDTO {
 		return calendarId;
 	}
 }
+
