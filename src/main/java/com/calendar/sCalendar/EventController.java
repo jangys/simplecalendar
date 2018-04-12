@@ -20,6 +20,7 @@ import org.junit.runner.Request;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -37,6 +38,45 @@ import com.google.api.services.calendar.model.EventReminder;
 
 @Controller
 public class EventController {
+	
+	@RequestMapping(value = "/MonthlyCalendar/{date}")
+	public @ResponseBody ArrayList<EventDTO> getEventList(@PathVariable String date, Locale locale, Model model,HttpServletRequest request){
+		ArrayList<EventDTO> eventList = new ArrayList<>();
+		GoogleCalendarService gcs = new GoogleCalendarService();
+		Date curDate = new Date();
+		String[] temp = date.split("-");
+		int year = 0;
+		int month = 0;
+		if(date != null) {
+			year = Integer.parseInt(temp[0]);
+			month = Integer.parseInt(temp[1]);
+		}else {
+			year = curDate.getYear()+1900;
+			month = curDate.getMonth()+1;
+		}
+		//System.out.println(year+" , "+month);
+		try {
+			eventList = gcs.getEvent_Month(new CalendarController().getCheckedCalendarList(request),year,month);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return eventList;
+	}
+	//월 뷰 요청
+		@RequestMapping(value = "/monthly/{year}/{month}/{date}")
+		public @ResponseBody ArrayList<EventDTO> getBackMonthEventList(@PathVariable int year,@PathVariable int month,@PathVariable int date, Model model,HttpServletResponse response,HttpServletRequest request)throws Exception{
+			ArrayList<EventDTO> eventList = new ArrayList<>();
+			GoogleCalendarService gcs = new GoogleCalendarService();
+			try {
+				eventList = gcs.getEvent_Month(new CalendarController().getCheckedCalendarList(request),year,month);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return eventList;
+		}
 	
 	//이벤트 디테일 요청
 	@RequestMapping(value = "/showEventDetail")
@@ -70,16 +110,16 @@ public class EventController {
 	
 	@RequestMapping(value = "/showEventPage")
 	public String showEventPage(HttpServletRequest requset, Locale locale, Model model) {
-		model.addAttribute("eventId",requset.getParameter("eventId"));
-		model.addAttribute("calendarId",requset.getParameter("calendarId"));
+		model.addAttribute("eventId_detail",requset.getParameter("eventId"));
+		model.addAttribute("calendarId_detail",requset.getParameter("calendarId"));
 		
 		return "EventDetail";
 	}
 
 	@RequestMapping(value = "/showAddEventPage")
 	public String showAddEventPage(HttpServletRequest requset, Locale locale, Model model) {
-		model.addAttribute("eventId", "addEvent");
-		model.addAttribute("calendarId",requset.getParameter("addEventDate"));
+		model.addAttribute("eventId_detail", "addEvent");
+		model.addAttribute("calendarId_detail",requset.getParameter("addEventDate"));
 		
 		return "EventDetail";
 	}
@@ -94,7 +134,7 @@ public class EventController {
 	
 	//수정
 	@RequestMapping(value="/updateEvent",method = RequestMethod.POST)
-	public String updateEvent(@ModelAttribute EventInputDTO dto, HttpServletRequest request, Model model) {
+	public @ResponseBody boolean updateEvent(@RequestBody EventInputDTO dto, HttpServletRequest request, Model model) {
 		GoogleCalendarService gcs = new GoogleCalendarService();
 		Calendar service;
 		String calendarId = dto.getCalendarId();
@@ -136,18 +176,26 @@ public class EventController {
 		//알람 default 체크
 		boolean useDefault = false;
 		if(dto.getOverrides() != null) {
-			if(dto.getOverrides().size() == 2) {
-				EventReminder eventReminder = dto.getOverrides().get(0);
-				if(eventReminder.getMethod().equals("popup") && eventReminder.getMinutes() == 30) {
-					EventReminder eventReminderTwo = dto.getOverrides().get(1);
-					if(eventReminderTwo.getMethod().equals("email") && eventReminderTwo.getMinutes() == 10) {
+			if(dto.getOverrides().length == 2) {
+				InputReminder eventReminder = dto.getOverrides()[0];
+				if(eventReminder.getMethod().equals("popup") && eventReminder.getMinutes().equals("30")) {
+					InputReminder eventReminderTwo = dto.getOverrides()[1];
+					if(eventReminderTwo.getMethod().equals("email") && eventReminderTwo.equals("10")) {
 						useDefault = true;
 					}
 				}
 			}
 			if(!useDefault) {
-				reminders.setOverrides(dto.getOverrides());
-				System.out.println(dto.getOverrides().get(0).getMethod()+", "+dto.getOverrides().get(0).getMinutes());
+				int size = dto.getOverrides().length;
+				ArrayList<EventReminder> reminderList = new ArrayList<EventReminder>();
+				for(int i=0;i<size;i++) {
+					EventReminder eventReminder = new EventReminder();
+					InputReminder inputER = dto.getOverrides()[i];
+					eventReminder.setMethod(inputER.getMethod());
+					eventReminder.setMinutes(Integer.parseInt(inputER.getMinutes()));
+					reminderList.add(eventReminder);
+				}
+				reminders.setOverrides(reminderList);
 			}
 		}
 		reminders.setUseDefault(useDefault);
@@ -155,10 +203,10 @@ public class EventController {
 		Boolean optional = false;
 		ArrayList<EventAttendee> attendees = new ArrayList<EventAttendee>();
 		if(dto.getAttendees() != null) {
-			int size = dto.getAttendees().size();
+			int size = dto.getAttendees().length;
 			for(int i=0;i<size;i++) {
 				EventAttendee attendee = new EventAttendee();
-				InputAttendee inputAtt = dto.getAttendees().get(i);
+				InputAttendee inputAtt = dto.getAttendees()[i];
 				attendee.setEmail(inputAtt.getEmail());
 				attendee.setOptional(inputAtt.getOptional().equals("true"));
 				attendee.setResponseStatus(inputAtt.getResponseStatus());
@@ -168,7 +216,6 @@ public class EventController {
 			}
 			
 		}
-		System.out.println(dto.getAttendees().get(0).getOptional());
 		if(calendarId.equals(dto.getCalendars())) {
 			try {
 				service = gcs.getCalendarService();
@@ -211,6 +258,6 @@ public class EventController {
 			}
 			
 		}
-		return "redirect:/m/"+dto.getStartDate();
+		return true;
 	}
 }

@@ -7,11 +7,14 @@
 <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link rel="stylesheet" href="/bootstrap/css/bootstrap.css" >
+<link rel="stylesheet" href="/css/EventDetail_style.css" >
+
 <script src="/bootstrap/js/bootstrap.min.js"></script>
 <script src="/javascripts/monthlyCalendar.js" charset="utf-8"></script>
 <script src="/javascripts/sideBar.js" charset="utf-8"></script>
 <script src="/javascripts/commonContents.js" charset="utf-8"></script>
 <script src="/javascripts/listCalendar.js" charset="utf-8"></script>
+<script src="/javascripts/eventDetail.js" charset="utf-8"></script>
 
 <title>Simple Calendar</title>
 
@@ -177,7 +180,7 @@
 	#checkboxList{
 		width:100%;
 	}
-	/*본문*/
+	/*본문*/ 
 	#container{
 		padding : 1% 1%;
 		position : relative;
@@ -192,6 +195,12 @@
 		float:left;
 		layout:fixed;
 		*/
+	}
+	/*일정 상세페이지 본문*/
+	#container_EventDetail{
+		padding : 1% 1%;
+		width:100%;
+		
 	}
 	/*일정 요약 보여주는 작은 창*/
 	#showEventSummary{
@@ -344,7 +353,7 @@
 </head>
 
 <body>
-<div id = "header" class = "row" style="min-width: 930px;flex-wrap: nowrap; width:90%;margin-left:0;">
+<div id = "header" class = "row" style="min-width: 930px;flex-wrap: nowrap; width:90%;margin-left:0; diplay:none;">
 	<div id="title" class = "col-sm-3">
 	</div>
 	<div id = "btnList" class = "col-sm-5">
@@ -361,10 +370,8 @@
 			</div>
 		</form>
 		<br><br>
-		<form action="http://localhost:8080/showAddEventPage" method="get" id="addForm">
 			<input type="text" id="addEventDate" style="display: none;" name="addEventDate">
-			<button class='btn btn-info' id='addBtn' type='submit' name='addBtn' value='0' onclick="$('#addEventDate').attr('value',0);">일정 추가</button> 
-		</form>
+			<button class='btn btn-info' id='addBtn' type='button' name='addBtn' value='0' onclick="$('#addEventDate').attr('value',0); clickAddBtn();">일정 추가</button> 
 	</div>
 	<div id="container" style="height:100%;">
 		<div id="monthCalendar">
@@ -392,9 +399,7 @@
 			<div id="eventSummary_Contents"></div>
 			<div id="eventSummary_Footer">
 				<button id='btnDeleteEvent'class='btn btn-info' type='button' value='deleteEvent' name='delete' onclick="clickDeleteEvent(this)"  style="display: none;">삭제</button>
-				<form id ='showEvent_Form'action="http://localhost:8080/showEventPage" method='get'>
-					<button id='btnShowEvent' class='btn btn-info' type='submit' style="display: none;">상세보기</button>
-				</form>
+					<button id='btnShowEvent' class='btn btn-info' type='button' style="display: none;" onclick="clickbtnShowEvent(this);">상세보기</button>
 			</div>
 		</div>
 		<div id="showMoreEventDiv" style="border: 1px solid #c3c3c3;">
@@ -404,6 +409,8 @@
 				</ul>
 			</div>
 		</div>
+	</div>
+	<div id="container_EventDetail" style="">
 	</div>
 </div>
 
@@ -419,6 +426,43 @@
 		$('#btnShowEvent').css('display','none');
 		$('#btnDeleteEvent').css('display','none');
 		$('#eventSummary_Contents').html('');
+	}
+	function clickbtnShowEvent(button){
+		$.ajax({
+			url: "http://localhost:8080/showEventPage",
+			dataType: "text",
+			success: function(data){
+				var refine = $("#container_EventDetail").html(data).find("#container_ShowEventDetail");
+				$("#container_EventDetail").html(refine);
+				$("#container").css('display','none');
+				$("#header").css('display','none');
+				$("#side").css('display','none');
+				$("#container_EventDetail").css('display','inline-block');
+				var calendarId = $("#btnDeleteEvent").attr("data-calendarid");
+				var eventId = $("#btnDeleteEvent").attr("data-eventid");
+				history.pushState(data,"Simple Calendar-Add/Update Event","http://localhost:8080/event/"+calendarId+"/"+eventId);
+				loadEventDetail();
+			}
+		});
+	}
+	//evnet에는 addEvent, calendarId에는 기간
+	function clickAddBtn(){
+		$.ajax({
+			url: "http://localhost:8080/showEventPage",
+			dataType: "text",
+			success: function(data){
+				var refine = $("#container_EventDetail").html(data).find("#container_ShowEventDetail");
+				$("#container_EventDetail").html(refine);
+				$("#container").css('display','none');
+				$("#header").css('display','none');
+				$("#side").css('display','none');
+				$("#container_EventDetail").css('display','inline-block');
+				var calendarId = $("#addEventDate").attr('value');
+				var eventId = "addEvent";
+				history.pushState(data,"Simple Calendar-Add/Update Event","http://localhost:8080/event/"+calendarId+"/"+eventId);
+				loadEventDetail();
+			}
+		});
 	}
 </script>
 </body>

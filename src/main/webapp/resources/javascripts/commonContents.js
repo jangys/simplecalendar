@@ -1,3 +1,52 @@
+//뒤로가기나 앞으로가기 이벤트
+$(window).bind("popstate",function(event){
+	var data = event.originalEvent.state;
+	if(data){
+		var path = location.pathname.split('/');
+		var year;
+		var month;
+		var date;
+		if(location.pathname != '/'){
+	      	var fullDate = path[2].split('-');
+	      	year = parseInt(fullDate[0]);
+	      	month = parseInt(fullDate[1]);
+	      	date = parseInt(fullDate[2]);
+	     }else{
+	    	 var now = new Date();
+	    	 year = now.getFullYear();
+	    	 month = now.getMonth()+1;
+	    	 date = now.getDate();
+	     }
+		var pageUrl = "/"+year+"-"+month+"-"+date;
+		
+		switch(path[1]){
+		case 'd':
+			break;
+		case 'w':
+			break;
+		case 'm':
+			changeStyle("month");
+			requestMonthlyCalendar(year,month,date,true);
+			break;
+		case 'l':
+			changeStyle("list");
+			requestListCalendar(year,month,date,true);
+			break;
+		case 'event':
+			var refine = $("#container_EventDetail").html(data).find("#container_ShowEventDetail");
+			$("#container_EventDetail").html(refine);
+			$("#container").css('display','none');
+			$("#header").css('display','none');
+			$("#side").css('display','none');
+			$("#container_EventDetail").css('display','inline-block');
+			loadEventDetail();
+			break;
+		}
+	}else{
+		$(location).attr("href","/");
+	}
+});
+
 function showTitle(y,m){
 	var now = new Date();
 	var year = now.getFullYear();
@@ -39,11 +88,11 @@ $(document).on('click','#backBtn',function(){
   	  break;
     case 'm':
   	  changeStyle('month');
-  	  requestMonthlyCalendar(year,month,date);
+  	  requestMonthlyCalendar(year,month,date,false);
   	  break;
     case 'l':
   	  changeStyle('list');
-  	  requestListCalendar(year,month,date);
+  	  requestListCalendar(year,month,date,false);
   	  break;
     }
 	
@@ -70,11 +119,11 @@ $(document).on('click','#forwardBtn',function(){
   	  break;
     case 'm':
   	  changeStyle('month');
-  	  requestMonthlyCalendar(year,month,date);
+  	  requestMonthlyCalendar(year,month,date,false);
   	  break;
     case 'l':
   	  changeStyle('list');
-  	  requestListCalendar(year,month,date);
+  	  requestListCalendar(year,month,date,false);
   	  break;
     }
 });
@@ -104,20 +153,20 @@ function requestData(request){
 	case 'week':
 		break;
 	case 'month':
-		requestMonthlyCalendar(year,month,date);
+		requestMonthlyCalendar(year,month,date,false);
 		break;
 	case 'list':
-		requestListCalendar(year,month,date);
+		requestListCalendar(year,month,date,false);
 		break;
 	}
 	return pageUrl;
 }
 
-function requestMonthlyCalendar(year,month,date){
+function requestMonthlyCalendar(year,month,date,reload){
 	var baseUrl = "http://localhost:8080";
 	var pageUrl = "/m/"+year+"-"+month+"-"+date;
 	console.log("request");
-	history.replaceState(null,"SimpleCalendar",pageUrl);				//데이터 요청이 느리니 먼저 url을 바꾸자
+	
 	$.ajax({
 		url: baseUrl+"/monthly/"+year+"/"+month+"/"+date,
 		type:'GET',
@@ -126,7 +175,9 @@ function requestMonthlyCalendar(year,month,date){
 		success:function(data){
 			showTitle(year,month);
 			drawCalendar(year,month-1,data);
-			history.replaceState(data,"SimpleCalendar",pageUrl);
+			if(!reload){
+				history.pushState(data,"SimpleCalendar",pageUrl);				//데이터 요청이 느리니 먼저 url을 바꾸자
+			}
 		},
 		error: function (XMLHttpRequest, textStatus, errorThrown){
       	alert(errorThrown);
@@ -134,10 +185,10 @@ function requestMonthlyCalendar(year,month,date){
 	});
 }
 
-function requestListCalendar(year,month,date){
+function requestListCalendar(year,month,date,reload){
 	var baseUrl = "http://localhost:8080";
 	var pageUrl = "/l/"+year+"-"+month+"-"+date;
-	history.replaceState(null,"SimpleCalendar",pageUrl);				//데이터 요청이 느리니 먼저 url을 바꾸자
+
 	$.ajax({
 		url: baseUrl+"/monthly/"+year+"/"+month+"/"+date,
 		type:'GET',
@@ -146,7 +197,9 @@ function requestListCalendar(year,month,date){
 		success:function(data){
 			showTitle(year,month);
 			printList(year,month,data);
-			history.replaceState(data,"SimpleCalendar",pageUrl);
+			if(!reload){
+				history.pushState(data,"SimpleCalendar",pageUrl);				//데이터 요청이 느리니 먼저 url을 바꾸자
+			}
 		},
 		error: function (XMLHttpRequest, textStatus, errorThrown){
       	alert(errorThrown);
@@ -159,13 +212,13 @@ $(document).on('click','#dayBtn',function(){
 	changeStyle("day");
 	var baseUrl = "http://localhost:8080";
 	var pageUrl = "/d"+requestData('day');
-    history.replaceState(null,"SimpleCalendar",pageUrl);
+    history.pushState(null,"SimpleCalendar",pageUrl);
 });
 //주 버튼
 $(document).on('click','#weekBtn',function(){
 	changeStyle("week");
 	var pageUrl = "/w"+requestData('week');
-    history.replaceState(null,"SimpleCalendar",pageUrl);
+    history.pushState(null,"SimpleCalendar",pageUrl);
 });
 //월 버튼
 $(document).on('click','#monthBtn',function(){
@@ -182,6 +235,15 @@ $(document).on('click','#listBtn',function(){
 
 //버튼 배경색 설정 함수
 function changeStyle(button){
+	if($("#container").css('display') == 'none'){
+		$("#container").css('display','inline-block');
+		$("#header").css('display','');
+		$("#showMoreEventDiv").css('display','none');
+		$("#showEventSummary").css('display','none');
+		$("#side").css('display','inline-block');
+		$("#container_EventDetail").css('display','none');
+		$("#container_EventDetail").html("");
+	}
 	if($(".pushCalendarBtn").length == 0){
 		$("#"+button+"Btn").addClass('pushCalendarBtn');
 		$("#"+button+"Calendar").css("display","inline-block");
@@ -210,8 +272,29 @@ function changeStyle(button){
 
 //처음 
 $(document).ready(function(){
-	getCalendarList();
 	//getList();
+	var path = location.pathname.split('/');
+	var year;
+	var month;
+	var date;
+	if(path[1] =="event"){
+		$.ajax({
+			url: "http://localhost:8080/showEventPage",
+			dataType: "text",
+			success: function(data){
+				var refine = $("#container_EventDetail").html(data).find("#container_ShowEventDetail");
+				$("#container_EventDetail").html(refine);
+				$("#container").css('display','none');
+				$("#header").css('display','none');
+				$("#side").css('display','none');
+				$("#container_EventDetail").css('display','inline-block');
+				loadEventDetail();
+			}
+		});
+	}else{
+		getCalendarList();
+	}
+
 });
 function getList(){
 	var baseUrl = "http://localhost:8080";
@@ -254,7 +337,7 @@ function getList(){
           	year = parseInt(fullDate[0]);
           	month = parseInt(fullDate[1]);
           }else{//맨처음 요청시
-          	history.replaceState(data,"SimpleCalendar",pageUrl);
+          	history.pushState(data,"SimpleCalendar",pageUrl);
           	$("#monthCalendar").css('display','inline-block');
           	$("#monthBtn").addClass('pushCalendarBtn');
           	drawCalendar(year,month-1,data);

@@ -133,7 +133,7 @@ function printCalendar(y, m, data,colNum) {
 		for(var i=0;i<size;i++){
 			//console.log(data[i].summary + " , "+data[i].start+" , "+clickDateMax + " , "+data[i].end+" , "+clickDate);
 			if(data[i].start < clickDateMax && data[i].end >= clickDate && data[i].start != clickDateMax -1){//확인 종일 일정인 경우에는 오전 12시에서 -1밀리초 만큼 빼서 다음날 일정은 포함 안되게
-				text+="<li>"+makeEventTitleForm(data[i],"black")+"</li>";
+				text+="<li>"+makeEventTitleForm(data[i],"black",true)+"</li>";
 			}
 			if(data[i].start > clickDateMax){
 				break;
@@ -217,23 +217,29 @@ function mouseUpDate(td,drag){
 	var startDate = new Date($("#backBtn").attr('value'),parseInt($("#forwardBtn").attr('value'))-1,1);
 	var startDay = startDate.getDay();	//시작 요일
 	date += (parseInt($(".clickDate:first").attr("data-dateindex"))-startDay +1);
-	date += "/"+year+"-"+month+"-";
+	date += "~"+year+"-"+month+"-";
 	date += (parseInt($(".clickDate:last").attr('data-dateIndex'))-startDay+1);
 	console.log(date);
 	$("#addEventDate").attr('value',date);
-	
-	document.getElementById("addForm").submit();
+	clickAddBtn();
+	$(".clickDate").removeClass("clickDate");
+	//document.getElementById("addForm").submit();
 }
 
 
-function makeEventTitleForm(data,color){
+function makeEventTitleForm(data,color,more){
 	var text = "<span class='eventTime'>";
 	if(data.startTime[3] != -1){
 		var hour = data.startTime[3];
 		var min = data.startTime[4];
 		text += changeTimeForm(hour, min);
 	}
-	text +=" </span><a title='"+isNull(data.summary)+"'style='color:"+color+"' onClick ='clickEventTitle(this,false); return false;' href='#' data-eventId ="+data.eventID+" data-calendarId = "+data.calendarID+">"+isNull(data.summary)+"</a>";
+	text +=" </span><a title='"+isNull(data.summary)+"'style='color:"+color+"'";
+	text += " onClick ='";
+	if(more){
+		text += " clickEventTitle(this,false);"
+	}
+	text +=	"return false;' href='#' data-eventId ="+data.eventID+" data-calendarId = "+data.calendarID+">"+isNull(data.summary)+"</a>";
 	return text;
 }
 function isNull(text){
@@ -270,7 +276,7 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 		}else{
 			endDateIndex = data[i].endTime[2] + startIndex -1;
 		}
-		var title = "<div class='eventTitleLink' onclick='clickEvent(this);'>"+makeEventTitleForm(data[i],"white");
+		var title = "<div class='eventTitleLink' onclick='clickEvent(this);'>"+makeEventTitleForm(data[i],"white",false);
 		
 		if(startDateIndex == endDateIndex){//하루 일정
 			var col = $("[data-index="+startDateIndex+"]:eq(0)").attr("data-col");
@@ -500,7 +506,9 @@ function clickDeleteEvent(button){
 				if(data == true){
 					alert('삭제가 완료되었습니다.');
 					$(this).attr('disabled',false);
-					location.reload();
+					//location.reload();
+					$("#showEventSummary").css('display','none');
+					getList();
 					count=0;
 				}
 				else{

@@ -15,8 +15,8 @@ public class EventInputDTO {
 	private String location;
 	private String description;
 	private String useDefault;		//email 10분전, popup 30분전
-	private List<EventReminder> overrides;
-	private List<InputAttendee> attendees;
+	private InputReminder[] overrides;
+	private InputAttendee[] attendees;
 	private String calendars;
 	private String eventId;
 	private String calendarId;
@@ -49,10 +49,10 @@ public class EventInputDTO {
 		this.useDefault = useDefault;
 	}
 	//EventReminder-> method, minutes(0~40320 4weeks) 최대 5개
-	public void setOverrides(List<EventReminder> overrides) {
+	public void setOverrides(InputReminder[] overrides) {
 		this.overrides = overrides;
 	}
-	public void setAttendees(List<InputAttendee> attendees) {
+	public void setAttendees(InputAttendee[] attendees) {
 		this.attendees = attendees;
 	}
 	public void setCalendars(String calendars) {
@@ -92,10 +92,10 @@ public class EventInputDTO {
 	public String getUseDefault() {
 		return useDefault;
 	}
-	public List<EventReminder> getOverrides() {
+	public InputReminder[] getOverrides() {
 		return overrides;
 	}
-	public List<InputAttendee> getAttendees() {
+	public InputAttendee[] getAttendees() {
 		return attendees;
 	}
 	public String getCalendars() {
