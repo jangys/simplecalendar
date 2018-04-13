@@ -1,6 +1,9 @@
 package com.calendar.sCalendar;
 
+import java.util.List;
+
 import com.google.api.client.util.DateTime;
+import com.google.api.services.calendar.model.EventAttendee;
 
 public class EventDTO {
 	private String calendarID;
@@ -10,7 +13,9 @@ public class EventDTO {
 	private int[] startTime;
 	private long end;
 	private int[] endTime;
-	
+	private String location;
+	private String description;
+	private List<EventAttendee> attendees;
 
 	public void setCalendarID(String calendarID) {
 		this.calendarID = calendarID;
@@ -68,6 +73,15 @@ public class EventDTO {
 		}
 		
 	}
+	public void setLocation(String location) {
+		this.location = location;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public void setAttendees(List<EventAttendee> attendees) {
+		this.attendees = attendees;
+	}
 	public String getCalendarID() {
 		return calendarID;
 	}
@@ -88,5 +102,14 @@ public class EventDTO {
 	}
 	public int[] getEndTime() {
 		return endTime;
+	}
+	public String getLocation() {
+		return location;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public List<EventAttendee> getAttendees(){
+		return attendees;
 	}
 }

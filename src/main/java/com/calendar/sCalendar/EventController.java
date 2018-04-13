@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.ListIterator;
@@ -92,37 +93,22 @@ public class EventController {
 	}
 	
 	@RequestMapping(value = "/deleteEvent", method = RequestMethod.GET)
-	public @ResponseBody boolean deleteEvent(CalendarAndEventIdDTO dto){
-		boolean result = false;
+	public @ResponseBody String deleteEvent(CalendarAndEventIdDTO dto){
+		String result = "true";
 		GoogleCalendarService gcs = new GoogleCalendarService();
 		com.google.api.services.calendar.Calendar service;
 		try {
 			service = gcs.getCalendarService();
 			service.events().delete(dto.getCalendarId(), dto.getEventId()).execute();
-			result = true;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			result = getErrorMessage(e.getMessage());
 		}
 		
 		return result;
 	}
 	
-	@RequestMapping(value = "/showEventPage")
-	public String showEventPage(HttpServletRequest requset, Locale locale, Model model) {
-		model.addAttribute("eventId_detail",requset.getParameter("eventId"));
-		model.addAttribute("calendarId_detail",requset.getParameter("calendarId"));
-		
-		return "EventDetail";
-	}
-
-	@RequestMapping(value = "/showAddEventPage")
-	public String showAddEventPage(HttpServletRequest requset, Locale locale, Model model) {
-		model.addAttribute("eventId_detail", "addEvent");
-		model.addAttribute("calendarId_detail",requset.getParameter("addEventDate"));
-		
-		return "EventDetail";
-	}
 	
 	@RequestMapping(value = "/getEvent",method = RequestMethod.GET)
 	public @ResponseBody Event getEventObject(CalendarAndEventIdDTO dto, Model model){
@@ -134,11 +120,12 @@ public class EventController {
 	
 	//수정
 	@RequestMapping(value="/updateEvent",method = RequestMethod.POST)
-	public @ResponseBody boolean updateEvent(@RequestBody EventInputDTO dto, HttpServletRequest request, Model model) {
+	public @ResponseBody String updateEvent(@RequestBody EventInputDTO dto, HttpServletRequest request, Model model) {
 		GoogleCalendarService gcs = new GoogleCalendarService();
 		Calendar service;
 		String calendarId = dto.getCalendarId();
 		String eventId = dto.getEventId();
+		String eventResult="true";
 		EventDateTime start = new EventDateTime();
 		EventDateTime end = new EventDateTime();
 		Reminders reminders = new Reminders();
@@ -176,71 +163,26 @@ public class EventController {
 		//알람 default 체크
 		boolean useDefault = false;
 		if(dto.getOverrides() != null) {
-			if(dto.getOverrides().length == 2) {
-				InputReminder eventReminder = dto.getOverrides()[0];
-				if(eventReminder.getMethod().equals("popup") && eventReminder.getMinutes().equals("30")) {
-					InputReminder eventReminderTwo = dto.getOverrides()[1];
-					if(eventReminderTwo.getMethod().equals("email") && eventReminderTwo.equals("10")) {
+			if(dto.getOverrides().size() == 2) {
+				EventReminder eventReminder = dto.getOverrides().get(0);
+				if(eventReminder.getMethod().equals("popup") && eventReminder.getMinutes()== 30) {
+					EventReminder eventReminderTwo = dto.getOverrides().get(1);
+					if(eventReminderTwo.getMethod().equals("email") && eventReminderTwo.getMinutes() == 10) {
 						useDefault = true;
 					}
 				}
 			}
-			if(!useDefault) {
-				int size = dto.getOverrides().length;
-				ArrayList<EventReminder> reminderList = new ArrayList<EventReminder>();
-				for(int i=0;i<size;i++) {
-					EventReminder eventReminder = new EventReminder();
-					InputReminder inputER = dto.getOverrides()[i];
-					eventReminder.setMethod(inputER.getMethod());
-					eventReminder.setMinutes(Integer.parseInt(inputER.getMinutes()));
-					reminderList.add(eventReminder);
-				}
-				reminders.setOverrides(reminderList);
-			}
+		}
+		if(!useDefault) {
+			reminders.setOverrides(dto.getOverrides());
 		}
 		reminders.setUseDefault(useDefault);
-		//Attendee
-		Boolean optional = false;
-		ArrayList<EventAttendee> attendees = new ArrayList<EventAttendee>();
-		if(dto.getAttendees() != null) {
-			int size = dto.getAttendees().length;
-			for(int i=0;i<size;i++) {
-				EventAttendee attendee = new EventAttendee();
-				InputAttendee inputAtt = dto.getAttendees()[i];
-				attendee.setEmail(inputAtt.getEmail());
-				attendee.setOptional(inputAtt.getOptional().equals("true"));
-				attendee.setResponseStatus(inputAtt.getResponseStatus());
-				attendee.setOrganizer(inputAtt.getOrganizer().equals("true"));
-				attendee.setSelf(inputAtt.getSelf().equals("true"));
-				attendees.add(attendee);
-			}
-			
-		}
-		if(calendarId.equals(dto.getCalendars())) {
+		System.out.println(dto.getAttendees().size());
+		
+		if(eventId.equals("addEvent")){//일정을 입력한 경우
 			try {
 				service = gcs.getCalendarService();
-				Event event = service.events().get(calendarId, eventId).execute();
-				event.setSummary(dto.getSummary())
-				.setLocation(dto.getLocation())
-				.setDescription(dto.getDescription())
-				.setStart(start)
-				.setEnd(end)
-				.setReminders(reminders)
-				.setAttendees(attendees)
-				;
-				Event updatedEvent = service.events().update(calendarId, event.getId(), event).execute();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}else if(!calendarId.equals(dto.getCalendars())){//calendar Id를 수정한 경우나 일정을 입력한 경우
-			try {
-				service = gcs.getCalendarService();
-				
-				if(!eventId.equals("addEvent")) {
-					service.events().delete(calendarId, eventId).execute();
-					System.out.println("delete");
-				}
+
 				Event event = new Event()
 						.setSummary(dto.getSummary())
 						.setLocation(dto.getLocation())
@@ -248,16 +190,51 @@ public class EventController {
 						.setStart(start)
 						.setEnd(end)
 						.setReminders(reminders)
-						.setAttendees(attendees)
+						.setAttendees(dto.getAttendees())
 						;
 				String newCalendarId = dto.getCalendars();
 				service.events().insert(newCalendarId, event).execute();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				eventResult = getErrorMessage(e.getMessage());
 			}
 			
+		}else{
+			try {
+				service = gcs.getCalendarService();
+				Event upDateEvent = service.events().get(calendarId, eventId).execute();
+				upDateEvent.setSummary(dto.getSummary())
+				.setLocation(dto.getLocation())
+				.setDescription(dto.getDescription())
+				.setStart(start)
+				.setEnd(end)
+				.setReminders(reminders)
+				.setAttendees(dto.getAttendees())
+				;
+				service.events().update(calendarId, upDateEvent.getId(), upDateEvent).execute();
+				String newCalendarId = dto.getCalendars();
+				if(!newCalendarId.equals(calendarId)) {
+					System.out.println("move"+newCalendarId);
+					service.events().move(calendarId, upDateEvent.getId(), newCalendarId).execute();
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				eventResult = getErrorMessage(e.getMessage());
+				
+			}
 		}
-		return true;
+		return eventResult;
+	}
+	public String getErrorMessage(String message) {
+		String errorResult = "";
+		String[] strError = message.split("message");
+		if(strError.length > 1) {
+			String[] error = strError[2].split(":");
+			errorResult = error[1].substring(2, error[1].length()-4);
+			System.out.println(errorResult);
+		}
+		return errorResult;
 	}
 }

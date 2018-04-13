@@ -128,6 +128,7 @@ public class GoogleCalendarService {
             DateTime now = new DateTime(cur);
             DateTime next = new DateTime(nextDate);
             int size = calendarList.size();
+            System.out.println("size"+size);
             ExecutorService executorService = Executors.newFixedThreadPool(size);
             ArrayList<EventDTO> result = new ArrayList<EventDTO>();
             List<Future<ArrayList<EventDTO>>> future = new ArrayList<Future<ArrayList<EventDTO>>>();
@@ -290,6 +291,9 @@ class callable implements Callable<ArrayList<EventDTO>>{
                 tempDTO.setStart(start.getValue(),start.isDateOnly());
                 tempDTO.setEnd(end.getValue(),end.isDateOnly());
                 tempDTO.setEventID(event.getId());
+                tempDTO.setLocation(event.getLocation());
+                tempDTO.setDescription(event.getDescription());
+                tempDTO.setAttendees(event.getAttendees());
 //                if(event.getReminders() != null)
 //                	System.out.println(event.getSummary()+" , "+event.getReminders().toPrettyString());
                 result.add(tempDTO);

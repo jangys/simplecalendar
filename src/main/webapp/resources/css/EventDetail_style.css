@@ -37,3 +37,7 @@ span{
 	margin-left: 2%;
 	margin-right: 2%;
 }
+/*참석자 중 본인*/
+.selfAttendee{
+	color:#5586EB;
+}

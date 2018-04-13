@@ -240,6 +240,7 @@ function makeEventTitleForm(data,color,more){
 		text += " clickEventTitle(this,false);"
 	}
 	text +=	"return false;' href='#' data-eventId ="+data.eventID+" data-calendarId = "+data.calendarID+">"+isNull(data.summary)+"</a>";
+	text += "<span style='display:none;' data-information='"+JSON.stringify(data)+"'></span>";
 	return text;
 }
 function isNull(text){
@@ -373,10 +374,9 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 					}
 					break;
 				}
-				
 			}//for-n
 		}
-	}
+	}//for-i
 }
 
 function setEventTd(index, col, title, colorCode, colspan){
@@ -512,7 +512,7 @@ function clickDeleteEvent(button){
 					count=0;
 				}
 				else{
-					alert('삭제 오류');
+					alert(data);
 					$(this).attr('disabled',false);
 					count=0;
 				}

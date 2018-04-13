@@ -30,9 +30,9 @@ function loadEventDetail(){
 		
 		$("#allDayCheckBox").attr('value',false);
 		showAlarm_detail(true);
-		getCalendarList_detail();
+		getCalendarList_detail(false);
 	}else{
-		getEvent_detail();
+		getCalendarList_detail(true);
 	}
 	//getList();
 }
@@ -44,7 +44,7 @@ $("*").keypress(function(e){
 	}
 });
 //캘린더 목록 추가
-function getCalendarList_detail(){
+function getCalendarList_detail(getEvent){
 	var baseUrl = "http://localhost:8080";
 	$.ajax({
 		url:baseUrl+"/CalendarList",
@@ -74,9 +74,12 @@ function getCalendarList_detail(){
 				}
 			}
 			$("#calendarList_detail").html(text);
-			
+			if(getEvent){
+				getEvent_detail();
+			}
 		}
 	});
+	
 }
 
 //상세보기를 눌러서 들어왔을 경우
@@ -106,7 +109,7 @@ function showEvent_detail(data){
 	$('#summary_detail').attr('value',data.summary);
 	var date;
 	if(data.start.date != null){
-		date = new Date(data.start.date.value);
+		date = new Date(data.start.date.value);	
 		$("#allDayCheckBox").attr('checked',true);
 		$("#allDayCheckBox").attr('value',true);
 		resetTimePicker_detail();
@@ -131,57 +134,67 @@ function showEvent_detail(data){
 	date = new Date(end);
 	document.getElementById('endDatePicker').valueAsDate = new Date(date.getFullYear(),date.getMonth(),date.getDate(),12);
 	if(data.location != null){
-		$('#location').attr('value',data.location);		
+		$('#location_detail').attr('value',data.location);		
 	}
 	if(data.description != null){
-		$('#description').text(data.description);
+		$('#description_detail').val(data.description);
 	}
 	if(data.reminders.overrides != null || data.reminders.useDefault){
 		showAlarm_detail(data.reminders.useDefault,data);
 	}
-	
+	$("#creator_detail").text(data.creator.email);
 	if(data.attendees != null){
 		var size = data.attendees.length;
 		var text = "";
 		var organizerResponse="accepted";
 		var self = false;
+		var organizerEmail = data.organizer.email;
+		
+		if($("#calendarId_detail").val() == data.organizer.email){//먼저 메인 캘린더 여부 체크
+			$("#isOrganizerCalendar").text("이 캘린더가 초대 일정의 원본을 가지고 있는 메인 캘린더 입니다.");
+		}
+		
 		for(var i=0;i<size;i++){
 			var optional = false;
 			var name = "";
-			var email = "";
-			if(data.attendees[i].organizer == null){//주최자는 따로 추가
+			var email = data.attendees[i].email
+			if(data.attendees[i].organizer == null && email != organizerEmail){//주최자는 따로 추가
 				if(data.attendees[i].optional != null){
 					optional = true;
 				}
 				if(data.attendees[i].displayName != null){
 					name = data.attendees[i].displayName;
 				}
-				if(data.attendees[i].self != null){
+				if(data.attendees[i].email == $("#userId").text()){
 					self = true;
 				}else{
 					self = false;
 				}
-				email = data.attendees[i].email;
 				text += makeAttendeeForm_detail(optional, name, email, false,data.attendees[i].responseStatus,self);
 			}else{
 				organizerResponse=data.attendees[i].responseStatus;
 			}
 			
+		}//for
+		var strEmail = data.organizer.email.split("@");
+		if(strEmail[1] != "group.calendar.google.com"){//primary 아닌 경우
+			var organizerName = "";
+			if(data.organizer.displayName != null){
+				organizerName = data.organizer.displayName;
+			}
+			if(data.organizer.email == $("#userId").text()){
+				self = true;
+			}else{
+				self = false;
+			}
+			var organizer = makeAttendeeForm_detail(false,organizerName, data.organizer.email, true,organizerResponse,self);
+			$("#attendeeList").prepend(organizer);
 		}
-		var organizerName = "";
-		if(data.organizer.displayName != null){
-			organizerName = data.organizer.displayName;
-		}
-		if(data.organizer.self != null){
-			self = true;
-		}else{
-			self = false;
-		}
-		var organizer = makeAttendeeForm_detail(false,organizerName, data.organizer.email, true,organizerResponse,self);
+		
 		$("#attendeeList").append(text);
-		$("#attendeeList").prepend(organizer);
+		
 	}
-	getCalendarList_detail();
+	
 }
 
 
@@ -428,6 +441,18 @@ function checkTime_detail(){
 		}
 	}
 }
+//캘린더 리스트 바뀐 여부
+function changeCalendarList_detail(select){
+	var val = $("#calendarList_detail>option:selected").val();
+	var id = $("#userId").text();
+	if($("#attendeeList").children().length > 0 && $("#calendarList_detail>option:selected").text() ==val){//primary 선택
+		if(id != val){//다른 사람 id
+			$("attendeeList").children().eq(0).children().eq(3).text("");
+		}else{
+			
+		}
+	}
+}
 	//document.getElementById('startTimePicker').value = "15:21:00";
 function addAttendee_detail(input){
 	var regExp = /([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
@@ -454,7 +479,20 @@ function addAttendee_detail(input){
 }	
 //<li><button type="button" class="optionalBtn btn" value="false">필수</button><span class="attendeeName"> 이름 </span><span class="email"> 이메일 </span><span>주최자</span>
 function makeAttendeeForm_detail(optional, name, email, organizer,response,self){
-	var text = "<li class='attendee'><button type='button' class='optionalBtn btn' value="+optional+" onclick='changeOptionalBtn_detail(this);'>";
+	var text = "<li class='attendee";
+	var mainCalendar = false;
+	if($("#isOrganizerCalendar").text() != ""){
+		mainCalendar = true;
+		console.log("AA");
+	}
+	if(self){
+		text += " selfAttendee";
+	}
+	text +="'><button type='button' class='optionalBtn btn' value="+optional+" onclick='changeOptionalBtn_detail(this);'";
+	if(!mainCalendar){//메인 캘린더가 아닌 경우에는 수정 불가
+		text += " disabled";
+	}
+	text += ">";
 	if(optional){
 		text += "선택";
 	}else{
@@ -473,8 +511,10 @@ function makeAttendeeForm_detail(optional, name, email, organizer,response,self)
 		$("option[value="+response+"]").attr("selected", "selected");
 	}
 	text += ">"+getResponseStatus(response)+"</span>";
-	text += "<button type='button' class='btn btn-info' onclick='$(this).parent().remove();'>X</button>";
 	
+	if(mainCalendar){//메인 캘린더가 아닌 경우에는 수정 불가
+		text += "<button type='button' class='btn btn-info' onclick='$(this).parent().remove();'>X</button>";
+	}
 	return text;
 }
 //참석자의 선택, 필수 여부
@@ -541,54 +581,28 @@ function makeTimeForm(hour, min, sec){
 }
 
 function submitInput_detail(){
-	var input = new Object();
-	input.summary = $("#summary_detail").val().toString();
-	input.startDate = $("#startDatePicker").val().toString();
-	input.startDateTime = $("#startTimePicker").val().toString();
-	input.endDate = $("#endDatePicker").val().toString();
-	input.endDateTime = $("#endTimePicker").val().toString();
-	input.allDay = $("#allDayCheckBox").is(":checked").toString();
-	input.location = $("#location_detail").val().toString();
-	input.description = $("#description_detail").text().toString();
-	var size = $("[data-alarmNum]").attr("data-alarmNum");
 	
 	var overrides = new Array();
-	
+	var size = $("[data-alarmNum]").attr('data-alarmNum');
 	for(var i=0;i<size;i++){
 		var override = new Object();
-		override["method"] = $("[name='overrides["+i+"].method']").val().toString();
-		override["minutes"] = (parseInt($("[name='overrides["+i+"].minutes']").val()));
+		override.method = $("[name='overrides["+i+"].method']").val().toString();
+		override.minutes = (parseInt($("[name='overrides["+i+"].minutes']").val()));
 		overrides.push(override);
 	}
-	input.overrides = overrides;
-	
-	input.calendars = $("#calendarList_detail").val().toString();
-	input.eventId = $("#eventId_detail").val().toString();
-	input.calendarId = $("#calendarId_detail").val().toString();
-	
+
 	var size = $("li.attendee").length;
-	var field=["optional","email","organizer","responseStatus","self"];
 	var attendees = new Array();
 	for(var i=0;i<size;i++){
 		var index = 0;
 		var email = "";
 		var li = $("li.attendee").eq(i);
 		var attendee = new Object();
-		attendee.optional = li.children().eq(0).val();
+		attendee.optional = (li.children().eq(0).val()=="true");
 		var emailStr = li.children().eq(2).text();
 		email = emailStr.substring(1,emailStr.length-1);
 		attendee.email = email;
-		var organizer = false;
-		if(li.children().eq(3).text() == "주최자"){
-			organizer = true;
-		}
-		attendee.organizer = organizer;
 		attendee.responseStatus = getResponseStatus(li.children().eq(4).text());
-		var self = false;
-		if(email == $("#userId").text()){
-			self = true;
-		}
-		attendee.self=self;
 		attendees.push(attendee);
 	}	
 	var inputJSON={
@@ -599,28 +613,46 @@ function submitInput_detail(){
 		"endDateTime" : $("#endTimePicker").val().toString(),
 		"allDay" : $("#allDayCheckBox").is(":checked"),
 		"location" : $("#location_detail").val().toString(),
-		"description" : $("#description_detail").text().toString(),
+		"description" : $("#description_detail").val().toString(),
 		"overrides" : overrides,
 		"attendees" : attendees,
 		"calendars" : $("#calendarList_detail").val().toString(),
 		"eventId" : $("#eventId_detail").val().toString(),
 		"calendarId" : $("#calendarId_detail").val().toString()
 		};
-	var reminderJSON={"method":"popup","minutes":10};
 	
-	var test = JSON.stringify(inputJSON);
-	var obj = JSON.parse(test);
-	console.log(test);
+	var data = JSON.stringify(inputJSON);
+	
 	var baseUrl = "http://localhost:8080";
 	$.ajax({
 		url: baseUrl+"/updateEvent",
 		type:'POST',
-		data: test,
+		data: data,
 		contentType : "application/json; charset=UTF-8",
 		success:function(data){
-			if(data==true){
-				history.pushState(data,"SimpleCalendar","http://localhost:8080/m/"+ $("#startDatePicker").val());
-				console.log($(".pushCalendarBtn").attr('name'));
+			if(data=="true"){
+				var type = location.pathname.split('/')[4];
+				var date =  $("#startDatePicker").val();
+				var strDate =date.split("-");
+				
+				switch(type){
+				case 'd':
+					break;
+				case 'w':
+					break;
+				case 'm':
+					changeStyle("month");
+					requestMonthlyCalendar(strDate[0],strDate[1],strDate[2],true);
+					history.pushState(data,"SimpleCalendar","http://localhost:8080/m/"+date);
+					break;
+				case 'l':
+					changeStyle("list");
+					requestListCalendar(strDate[0],strDate[1],strDate[2],true);
+					history.pushState(data,"SimpleCalendar","http://localhost:8080/l/"+date);
+					break;
+				}
+			}else{
+				alert(data);
 			}
 		}
 	});

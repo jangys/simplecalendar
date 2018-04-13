@@ -440,7 +440,7 @@
 				$("#container_EventDetail").css('display','inline-block');
 				var calendarId = $("#btnDeleteEvent").attr("data-calendarid");
 				var eventId = $("#btnDeleteEvent").attr("data-eventid");
-				history.pushState(data,"Simple Calendar-Add/Update Event","http://localhost:8080/event/"+calendarId+"/"+eventId);
+				history.pushState(data,"Simple Calendar-Add/Update Event","http://localhost:8080/event/"+calendarId+"/"+eventId+"/"+location.pathname.split('/')[1]);
 				loadEventDetail();
 			}
 		});
@@ -459,7 +459,7 @@
 				$("#container_EventDetail").css('display','inline-block');
 				var calendarId = $("#addEventDate").attr('value');
 				var eventId = "addEvent";
-				history.pushState(data,"Simple Calendar-Add/Update Event","http://localhost:8080/event/"+calendarId+"/"+eventId);
+				history.pushState(data,"Simple Calendar-Add/Update Event","http://localhost:8080/event/"+calendarId+"/"+eventId+"/"+location.pathname.split('/')[1]);
 				loadEventDetail();
 			}
 		});

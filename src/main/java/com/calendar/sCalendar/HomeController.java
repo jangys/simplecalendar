@@ -42,7 +42,6 @@ public class HomeController {
 		logger.info("Welcome home! The client locale is {}.", locale);
 		return "index";
 	}
-	
 	@RequestMapping(value = "/m/{date}", method = RequestMethod.GET)
 	public String refreshMonthPage(@PathVariable String date, Locale locale, Model model) {
 		return "index";
@@ -59,11 +58,18 @@ public class HomeController {
 	public String refreshListPage(@PathVariable String date, Locale locale, Model model) {
 		return "index";
 	}
-	
-	@RequestMapping(value = "/event/{calendarId}/{eventId}", method = RequestMethod.GET)
-	public String refreshEventPage(@PathVariable String calendarId, @PathVariable String eventId,Locale locale, Model model) {
+	@RequestMapping(value = "/event/{calendarId}/{eventId}/{type}", method = RequestMethod.GET)
+	public String refreshEventPage(@PathVariable String calendarId, @PathVariable String eventId,@PathVariable String type,Locale locale, Model model) {
 		return "index";
 	}
-		
+	
+	@RequestMapping(value = "/showEventPage")
+	public String showEventPage(HttpServletRequest requset, Locale locale, Model model) {
+		return "EventDetail";
+	}
+	@RequestMapping(value = "/showAddEventPage")
+	public String showAddEventPage(HttpServletRequest requset, Locale locale, Model model) {
+		return "EventDetail";
+	}	
 
 }

@@ -1,6 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=EUC-KR"
     pageEncoding="UTF-8"%>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=EUC-KR">
@@ -22,6 +22,9 @@
 			<span>메모</span><textarea id="description_detail" class="form-control" rows="5" id="memo" style="display:block; width:84%;" name="description"></textarea> <br/><br>
 			<span>알람</span><ul id="alarmList" style="list-style: none; padding:0% 0%; display:none;" data-alarmNum="0"></ul>
 			<button id="btnAddAlarm" class="btn btn-info" type="button" onclick="addAlarm_detail()">알람 추가</button><br><br>
+			<span>캘린더</span><select class="form-control" id="calendarList_detail" name="calendars" onchange="changeCalendarList_detail(this);"></select><br><br>
+			<span>초기 생성자 : </span><span id="creator_detail"></span><br><br>
+			<span id="isOrganizerCalendar"></span><br>
 			<span>참석자</span><input id="attendee" class="form-fontrol" type="email" onkeypress="addAttendee_detail(this);" >
 			<span style="margin-left:10%;">내 참석 여부 </span>
 			<select id="responseList" class="form-control" style="display:inline; width:135px;" onchange="changeMyResponseStatus_detail(this);">
@@ -34,7 +37,6 @@
 			<br>
 			<ul id="attendeeList" style="list-style:none; padding: 0% 0%; " data-attNum="0">
 				</ul>
-			<span>캘린더</span><select class="form-control" id="calendarList_detail" name="calendars"></select>
 			<input id="calendarId_detail" type="text" style="display:none;" name="calendarId">
 			<input id="eventId_detail" type="text" style="display:none;" name="eventId">
 			<br/><br/>
