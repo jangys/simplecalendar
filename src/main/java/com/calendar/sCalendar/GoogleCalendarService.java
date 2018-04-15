@@ -174,7 +174,6 @@ public class GoogleCalendarService {
           tempDTO.setAccessRole(calendarListEntry.getAccessRole());
           result.add(tempDTO);
         }
-	      
 	      return result;
 	}
 	
@@ -294,6 +293,7 @@ class callable implements Callable<ArrayList<EventDTO>>{
                 tempDTO.setLocation(event.getLocation());
                 tempDTO.setDescription(event.getDescription());
                 tempDTO.setAttendees(event.getAttendees());
+                tempDTO.setOrganizer(event.getOrganizer().getEmail());
 //                if(event.getReminders() != null)
 //                	System.out.println(event.getSummary()+" , "+event.getReminders().toPrettyString());
                 result.add(tempDTO);

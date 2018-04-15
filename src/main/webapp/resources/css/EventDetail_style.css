@@ -1,5 +1,9 @@
 @charset "EUC-KR";
-span{
+.detail_span{
+	margin-right: 10px;
+}
+/*참석자 리스트 부분 span*/
+.attendeeSpan{
 	margin-right: 10px;
 }
 /*내용 들어가는 부분*/

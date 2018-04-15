@@ -52,10 +52,6 @@
 		font-weight: bold;
 		font-size:20px;
 	}
-	a{
-		color:white;
-		
-	}
 	li{
 		overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 	}
@@ -206,7 +202,7 @@
 	#showEventSummary{
 		position : absolute;
 		width : 450px;
-		height : 250px;
+		height : 200px;
 		top : 30%;
 		left : 30%;
 		background-color: white;
@@ -231,19 +227,40 @@
 	/*일정 요약 header*/
 	#eventSummary_Header{
 		width:100%;
-		height:15%;
+		height:20%;
 		margin: 0% 0%;
 	}
 	/*일정 요약 contents*/
 	#eventSummary_Contents{
 		width:100%;
-		height:70%;
+		height:60%;
+	}
+	/*일정 요약 contents안 p*/
+	.eventSummaryContents_p{
+		margin-bottom : 3px;	
+	}
+	/*일정 요약 contents안 span(정보 제목)*/
+	.eventSummaryContents_span{
+		color: #5c5c5c;
+		margin-right : 8px;
 	}
 	/*일정 요약 footer*/
 	#eventSummary_Footer{
 		width:100%;
-		height:15%;
+		height:20%;
 		text-align: center;
+		
+	}
+	/*참석자 목록 보여주는 창*/
+	#showAttendeesList{
+		width:300px;
+		height:140px;
+		border: 1px solid #c3c3c3;
+		position:absolute;
+		background-color: white;
+		top:30%;
+		z-index:11;
+		display:none;
 	}
 	/*오늘 날짜 표시*/
 	.today{
@@ -307,6 +324,11 @@
 		position: relative;
 		z-index:4;
 	}
+	/*링크 마우스 올릴 시 밑줄 없애기*/
+	.noUnderLine:hover{
+		text-decoration: none;
+	}
+	
 	
 	/*List Calendar*/
 	/*일정 들어가는 한 날짜(여러줄)*/
@@ -349,6 +371,7 @@
 		display:inline-block;
 		width:60%;
 	}
+	
 </style>
 </head>
 
@@ -371,7 +394,7 @@
 		</form>
 		<br><br>
 			<input type="text" id="addEventDate" style="display: none;" name="addEventDate">
-			<button class='btn btn-info' id='addBtn' type='button' name='addBtn' value='0' onclick="$('#addEventDate').attr('value',0); clickAddBtn();">일정 추가</button> 
+			<button class='btn btn-info' id='addBtn' type='button' name='addBtn' value='0' onclick="$('#addEventDate').attr('value',0); goToEventPage('add');">일정 추가</button> 
 	</div>
 	<div id="container" style="height:100%;">
 		<div id="monthCalendar">
@@ -389,7 +412,7 @@
 		</div>
 		<div id="listCalendar">
 		</div>
-		<div id="showEventSummary" style="border: 1px solid #c3c3c3">
+		<div id="showEventSummary" class="container" style="border: 1px solid #c3c3c3">
 			<div class = "row" id="eventSummary_Header">
 				<div class = "col-sm-8" id="eventSummary_CalTitle"></div>
 				<div class="col-sm-4" style="text-align: right; padding: 0% 0%;">
@@ -399,10 +422,19 @@
 			<div id="eventSummary_Contents"></div>
 			<div id="eventSummary_Footer">
 				<button id='btnDeleteEvent'class='btn btn-info' type='button' value='deleteEvent' name='delete' onclick="clickDeleteEvent(this)"  style="display: none;">삭제</button>
-					<button id='btnShowEvent' class='btn btn-info' type='button' style="display: none;" onclick="clickbtnShowEvent(this);">상세보기</button>
+					<button id='btnShowEvent' class='btn btn-info' type='button' style="display: none;" onclick="goToEventPage('show');">상세보기</button>
 			</div>
 		</div>
-		<div id="showMoreEventDiv" style="border: 1px solid #c3c3c3;">
+		<div id="showAttendeesList" class="container">
+			<div style="width:95%; height:15%; text-align:right; margin:auto;">
+				<a href="#" class="noUnderLine" style="color:black;" onclick="$('#showAttendeesList').css('display','none'); return false;">X</a>
+			</div>
+			<div id="attendeesList_Contentes" style="overflow-y:scroll; height:72%; width:95%; margin:auto; margin-bottom:8px; margin-top:8px;">
+				<ul id="attendeesList" style="list-style:none;padding:0% 0%;">
+				</ul>
+			</div>
+		</div>
+		<div id="showMoreEventDiv" class="container" style="border: 1px solid #c3c3c3;">
 				<span id="showMoreEvent_Title"></span><button type='button' value='closeMoreEvent' name='close' onclick="clickCloseMoreEvent()" style="font-size: 12px;">X</button>
 			<div id="showMoreEvent_Contents" style="overflow-y: scroll;height:89%;text-align:left;">
 				<ul id="moreEventList" style="list-style: none;padding:0% 0%;">
@@ -413,8 +445,8 @@
 	<div id="container_EventDetail" style="">
 	</div>
 </div>
-
 </div>
+<p style="display:none;" id='userId'></p>
 <script type="text/javascript">
 	function clickCloseMoreEvent(){
 		$('#moreEventList').html('');
@@ -427,39 +459,26 @@
 		$('#btnDeleteEvent').css('display','none');
 		$('#eventSummary_Contents').html('');
 	}
-	function clickbtnShowEvent(button){
+	function goToEventPage(type){
 		$.ajax({
 			url: "http://localhost:8080/showEventPage",
 			dataType: "text",
 			success: function(data){
-				var refine = $("#container_EventDetail").html(data).find("#container_ShowEventDetail");
-				$("#container_EventDetail").html(refine);
-				$("#container").css('display','none');
-				$("#header").css('display','none');
-				$("#side").css('display','none');
-				$("#container_EventDetail").css('display','inline-block');
-				var calendarId = $("#btnDeleteEvent").attr("data-calendarid");
-				var eventId = $("#btnDeleteEvent").attr("data-eventid");
-				history.pushState(data,"Simple Calendar-Add/Update Event","http://localhost:8080/event/"+calendarId+"/"+eventId+"/"+location.pathname.split('/')[1]);
-				loadEventDetail();
-			}
-		});
-	}
-	//evnet에는 addEvent, calendarId에는 기간
-	function clickAddBtn(){
-		$.ajax({
-			url: "http://localhost:8080/showEventPage",
-			dataType: "text",
-			success: function(data){
-				var refine = $("#container_EventDetail").html(data).find("#container_ShowEventDetail");
-				$("#container_EventDetail").html(refine);
-				$("#container").css('display','none');
-				$("#header").css('display','none');
-				$("#side").css('display','none');
-				$("#container_EventDetail").css('display','inline-block');
-				var calendarId = $("#addEventDate").attr('value');
-				var eventId = "addEvent";
-				history.pushState(data,"Simple Calendar-Add/Update Event","http://localhost:8080/event/"+calendarId+"/"+eventId+"/"+location.pathname.split('/')[1]);
+				changeStyle("event",data);
+				var calendarId;
+				var eventId;
+				switch(type){
+					case "add":
+						calendarId = $("#addEventDate").attr('value');
+						eventId = "addEvent";
+						break;
+					case "show":
+						calendarId = $("#btnDeleteEvent").attr("data-calendarid");
+						eventId = $("#btnDeleteEvent").attr("data-eventid");
+						break;
+				}
+				var path = location.pathname.split('/');
+				history.pushState(data,"Simple Calendar-Add/Update Event","http://localhost:8080/event/"+calendarId+"/"+eventId+"/"+path[1]+"&"+path[2]);
 				loadEventDetail();
 			}
 		});

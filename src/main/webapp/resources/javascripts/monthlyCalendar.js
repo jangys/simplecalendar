@@ -112,7 +112,7 @@ function printCalendar(y, m, data,colNum) {
 		var left = $(this).offset().left;
 		var div = $("#showMoreEventDiv");
 		$("#showMoreEvent_Title").html(m+"월 "+clickDate+"일");
-		
+		closeAllDiv();
 		var d = new Date(y,m-1,clickDate,0,0,0,0);
 		clickDate = d.getTime();
 		var clickDateMax = clickDate + 86400000;
@@ -144,6 +144,7 @@ function printCalendar(y, m, data,colNum) {
 	});
 }
 function drawCalendar(year,month,data){
+	console.log("drawCalendar");
 	calColNumAndPrintCalendar(year, month, data);
 	$(window).resize(function(){
 		calColNumAndPrintCalendar(year, month, data);
@@ -179,7 +180,7 @@ function mouseDownDate(td){
 	$(td).attr('class','clickDate');
 	var start = parseInt($('#firstClick').attr('data-dateIndex'));
 	var end = parseInt($(td).attr('data-dateIndex'));
-	
+	closeAllDiv();
 	for(var i=first; i<= start-1; i++){
 		$("[data-dateIndex="+i+"]").attr('class','');
 	}
@@ -221,20 +222,38 @@ function mouseUpDate(td,drag){
 	date += (parseInt($(".clickDate:last").attr('data-dateIndex'))-startDay+1);
 	console.log(date);
 	$("#addEventDate").attr('value',date);
-	clickAddBtn();
+	goToEventPage("add");
 	$(".clickDate").removeClass("clickDate");
 	//document.getElementById("addForm").submit();
 }
 
 
-function makeEventTitleForm(data,color,more){
+function makeEventTitleForm(data,color,more,responseStatus){
 	var text = "<span class='eventTime'>";
 	if(data.startTime[3] != -1){
 		var hour = data.startTime[3];
 		var min = data.startTime[4];
 		text += changeTimeForm(hour, min);
 	}
-	text +=" </span><a title='"+isNull(data.summary)+"'style='color:"+color+"'";
+	text +=" </span><a title='"+isNull(data.summary)+"'style='";
+	if(responseStatus != undefined){
+		switch(responseStatus){
+			case "accepted":
+				text +="color:white'";
+				break;
+			case "declined":
+				text += "color:"+color+"; text-decoration:line-through;'";
+				break;
+			case "tentative":
+				text += "color:black'";
+				break;
+			case "needsAction":
+				text += "color:"+color+"'";
+				break;
+		}
+	}else{
+		text += "color:"+color+"'";
+	}
 	text += " onClick ='";
 	if(more){
 		text += " clickEventTitle(this,false);"
@@ -266,6 +285,23 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 				break;
 			}
 		}
+		var responseStatus = null;
+		var me = -1;
+		if(data[i].attendees != null){
+			for(var y=0; y<data[i].attendees.length;y++){
+				if(data[i].attendees[y].email == data[i].calendarID){
+					responseStatus = data[i].attendees[y].responseStatus;
+				}
+				if(data[i].attendees[y].email == $("#userId").text()){
+					me = y;
+				}
+			}
+			if(responseStatus == null){
+				if(data[i].calendarID == data[i].organizer && me != -1){//현재 달력이 마스터 달력이고 참석자에 본인이 있는 경우
+					responseStatus = data[i].attendees[me].responseStatus;
+				}
+			}
+		}
 		if(data[i].startTime[1] < month || data[i].startTime[0] < year){//2017-12 ~ 2018-3
 			index = startIndex;
 		}else{
@@ -277,7 +313,12 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 		}else{
 			endDateIndex = data[i].endTime[2] + startIndex -1;
 		}
-		var title = "<div class='eventTitleLink' onclick='clickEvent(this);'>"+makeEventTitleForm(data[i],"white",false);
+		var title = "<div class='eventTitleLink' onclick='clickEvent(this);'>";
+		if(responseStatus == null){
+			title += makeEventTitleForm(data[i],"white",false);
+		}else{
+			title += makeEventTitleForm(data[i],colorCode,false,responseStatus);
+		}
 		
 		if(startDateIndex == endDateIndex){//하루 일정
 			var col = $("[data-index="+startDateIndex+"]:eq(0)").attr("data-col");
@@ -285,7 +326,7 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 				 setAddTd(startDateIndex, col);
 				//$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").addClass('moreEvent');
 			}else{//일정 세팅 그리기
-				setEventTd(startDateIndex, col, title, colorCode, 0);
+				setEventTd(startDateIndex, col, title, colorCode, 0,responseStatus);
 			}
 		}else{//이어지는 일정
 			var weekNum = 6;
@@ -305,7 +346,7 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 					if(col == colNum - 1){//마지막 줄인 경우
 						 setAddTd(startDateIndex, col);
 					}else{//일정 세팅 그리기
-						setEventTd(startDateIndex, col, title, colorCode, colspan);
+						setEventTd(startDateIndex, col, title, colorCode, colspan,responseStatus);
 					}
 					index++;
 					while(index <= endDateIndex){
@@ -339,9 +380,9 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 						 setAddTd(index, col);
 					}else{//일정 칸 설정 
 						if(index == startDateIndex){
-							setEventTd(startDateIndex, col, title, colorCode, colspan);
+							setEventTd(startDateIndex, col, title, colorCode, colspan,responseStatus);
 						}else{
-							setEventTd(index, col, title, colorCode, colspan);
+							setEventTd(index, col, title, colorCode, colspan,responseStatus);
 						}
 					}
 					index++;
@@ -361,7 +402,7 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 					if(col == colNum-1){//더보기 링크
 						 setAddTd(index, col);
 					}else{
-						 setEventTd(index, col, title, colorCode, colspan);
+						 setEventTd(index, col, title, colorCode, colspan,responseStatus);
 					}
 					index++;
 					while(index <= endDateIndex){
@@ -379,12 +420,46 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 	}//for-i
 }
 
-function setEventTd(index, col, title, colorCode, colspan){
+function setEventTd(index, col, title, colorCode, colspan,responseStatus){
 	var td = $("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)");
 	td.html(title);
-	td.css('background-color',colorCode);
-	td.css('border-bottom','1px solid white');
-	td.css('border-top','1px solid white');
+	if(responseStatus == null){
+		td.css('background-color',colorCode);
+		td.css('border-bottom','1px solid white');
+		td.css('border-top','1px solid white');
+		td.css('font-weight','bold');
+	}else{
+		switch(responseStatus){
+			case "accepted":
+				td.css('background-color',colorCode);
+				td.css('border-bottom','1px solid white');
+				td.css('border-top','1px solid white');
+				break;
+			case "declined":
+				td.css('background-color','white');
+				td.css('border','2px solid '+colorCode);
+				td.css('font-weight','bold');
+				break;
+			case "tentative":
+				td.css('background-color','white');
+				td.css('border','2px solid '+colorCode);
+				var background = "linear-gradient(-45deg";
+				var start = 25;
+				for(var i=0;i<3;i++){
+					background += ",white "+start+"%,"+colorCode+" 0,"+" white "+(start+2)+"%";
+					start += 25;
+				}
+				background +=')';
+				td.css('background-image',background);
+				td.css('background-size','30px 30px');
+				break;
+			case "needsAction":
+				td.css('background-color','white');
+				td.css('border','2px solid '+colorCode);
+				td.css('font-weight','bold');
+				break;
+		}
+	}
 	td.attr("colspan",colspan);
 	td.attr("class","eventFill");
 	td.removeAttr("data-index");
@@ -400,117 +475,6 @@ function setAddTd(index, col){
 	td.html(temp);
 }
 
-function clickEventTitle(title,scroll){
-	var data = JSON.parse($(title).next().attr('data-information'));
-	var calendar = $("[data-originalCalendarId = '"+title.getAttribute('data-calendarId')+"']");
-	var contents = "<p class='eventSummaryContents_p'> 제목 : "+isNull(data.summary)+"</p>";
-	contents += "<p class='eventSummaryContents_p'> 일시 : "+data.startTime[0]+"."+addZero(data.startTime[1])+"."+addZero(data.startTime[2]);
-	var check = -1;
-	for(var i = 0;i<5;i++){
-		if(data.startTime[i] != data.endTime[i]){
-			check = i;
-			break;
-		}
-	}
-	var endTimeString;
-	if(check == -1){
-		contents += "</p>";
-	}else{
-		endTimeString = data.endTime[0]+"."+addZero(data.endTime[1])+"."+addZero(data.endTime[2]);
-		if(data.startTime[3] != -1){//시간이 있는 경우
-			contents += " " +changeTimeForm(data.startTime[3],data.startTime[4]) + " ~ ";
-			if(check != 3){//같은 날이 아닌 경우
-				contents += endTimeString;
-			}
-			contents += " " +changeTimeForm(data.endTime[3],data.endTime[4]);	//시간 추가
-		}else{//시간이 없는 경우
-			contents += " ~ "+endTimeString;
-		}
-		contents += "</p>";
-	}
-	contents += "<p class='eventSummaryContents_p'> 장소 : "+isNull(data.location)+"</p>";
-	contents += "<p class='eventSummaryContents_p'> 내용 : "+isNull(data.description)+"</p>";
-	
-	$('#eventSummary_Contents').html(contents);
-	if(calendar.attr('data-accessRole') == "owner" || calendar.attr('data-accessRole') == "writer"){
-		var text = "<input type='text' name='calendarId' style='display:none' value='"+title.getAttribute('data-calendarId')+"' />";
-		text += "<input type='text' name='eventId' style='display:none' value='"+title.getAttribute('data-eventId')+"' />";
-		text += "<button id='btnShowEvent' class='btn btn-info' type='submit'>상세보기</button>";
-		$('#btnDeleteEvent').css('display','inline');
-		$('#btnShowEvent').css('display','inline');
-		$('#btnDeleteEvent').attr('data-calendarId',title.getAttribute('data-calendarId'));
-		$('#btnDeleteEvent').attr('data-eventId',title.getAttribute('data-eventId'));
-		$('#showEvent_Form').html(text);
-	}else{
-		$('#btnDeleteEvent').css('display','none');
-		$('#btnShowEvent').css('display','none');
-	}
-	var div = $('#showEventSummary');
-	var topPosition = event.pageY;
-	if(scroll){
-		topPosition -=$('#container').offset().top*5.5;
-	}else{
-		topPosition -=$('#container').offset().top*4;
-	}
-	var leftPosition = event.pageX-$('#container').offset().left*1.5;
-	var scrollHeight = $(document).scrollTop();
-	
-	if(leftPosition > $('#container').width()-430){
-		leftPosition = $('#container').width()-430;
-	}
-	if(topPosition < -5.7){//화면이 위로 넘어가지 않게
-		topPosition = -5.7;
-	}
-	if(topPosition < scrollHeight && scrollHeight != 0){//스크롤이 아래로 내력갔을때 계산한 값이 스크롤 위치보다 작으면
-		console.log("top : "+topPosition);
-		topPosition += 200;	//위치에서 이벤트 요약정보 창 높이 만큼 더하기
-	}
-	if(topPosition >  $('#container').height()-230){
-		topPosition =  $('#container').height()-230;
-	}
-//	console.log("width : "+(leftPosition) + " , "+"height : "+(topPosition)+" / "+$('#container').width()+" , "+$('#container').height());
-	div.css('top',topPosition);
-	div.css('left',leftPosition);	//스크린 width따라 위치 조정
-	div.css('display','block');
-}
-function clickDeleteEvent(button){
-	var result;
-	var baseUrl = "http://localhost:8080";
-	var data={
-			"calendarId" : button.getAttribute('data-calendarId'),
-			"eventId" : button.getAttribute('data-eventId')
-		};
-	result= confirm('정말 삭제하시겠습니까?');
-	if(result == true){
-		console.log("delete");
-		$.ajax({
-			url:baseUrl+"/deleteEvent",
-			type:'GET',
-			data : data,
-			dataType :"json",
-			contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-			success:function(data){
-				if(data == true){
-					alert('삭제가 완료되었습니다.');
-					$(this).attr('disabled',false);
-					//location.reload();
-					$("#showEventSummary").css('display','none');
-					getList();
-					count=0;
-				}
-				else{
-					alert(data);
-					$(this).attr('disabled',false);
-					count=0;
-				}
-			}
-		});
-	}else{
-		alert('취소 되었습니다.');
-		$(this).attr('disabled',false);
-		count=0;
-	}
-}
 function addZero(data){
 	var result = "";
 	if(data < 10){

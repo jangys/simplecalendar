@@ -16,7 +16,8 @@ public class EventDTO {
 	private String location;
 	private String description;
 	private List<EventAttendee> attendees;
-
+	private String organizer;
+	
 	public void setCalendarID(String calendarID) {
 		this.calendarID = calendarID;
 	}
@@ -82,6 +83,10 @@ public class EventDTO {
 	public void setAttendees(List<EventAttendee> attendees) {
 		this.attendees = attendees;
 	}
+	public void setOrganizer(String organizer) {
+		this.organizer = organizer;
+	}
+	
 	public String getCalendarID() {
 		return calendarID;
 	}
@@ -111,5 +116,8 @@ public class EventDTO {
 	}
 	public List<EventAttendee> getAttendees(){
 		return attendees;
+	}
+	public String getOrganizer() {
+		return organizer;
 	}
 }

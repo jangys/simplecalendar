@@ -149,7 +149,9 @@ function showEvent_detail(data){
 		var organizerResponse="accepted";
 		var self = false;
 		var organizerEmail = data.organizer.email;
-		
+		if($("#userId").text() != $("#calendarId_detail").val()){
+			$("#attendeesDiv_detail").css('display','none');
+		}
 		if($("#calendarId_detail").val() == data.organizer.email){//먼저 메인 캘린더 여부 체크
 			$("#isOrganizerCalendar").text("이 캘린더가 초대 일정의 원본을 가지고 있는 메인 캘린더 입니다.");
 		}
@@ -190,7 +192,6 @@ function showEvent_detail(data){
 			var organizer = makeAttendeeForm_detail(false,organizerName, data.organizer.email, true,organizerResponse,self);
 			$("#attendeeList").prepend(organizer);
 		}
-		
 		$("#attendeeList").append(text);
 		
 	}
@@ -459,14 +460,14 @@ function addAttendee_detail(input){
 	if(event.keyCode == 13){
 		if($(input).val().match(regExp)){
 			if($("#attendeeList").children().length == 0 && $(input).val() != $("#userId").text()){
-				var text = makeAttendeeForm_detail(false,"",$("#userId").text(),true,"accepted",false);
+				var text = makeAttendeeForm_detail(false,"",$("#userId").text(),true,"accepted",true,true);
 				$("#attendeeList").append(text);
 			}
 			if($(input).val() == $("#userId").text()){//본인이 추가
 				var text = makeAttendeeForm_detail(false,"",$("#userId").text(),true,"accepted",true);
 				$("#attendeeList").append(text);
 			}else{
-				var text = makeAttendeeForm_detail(false, "", $(input).val(), false ,"needsAction",false);
+				var text = makeAttendeeForm_detail(false, "", $(input).val(), false ,"needsAction",false,true);
 				$("#attendeeList").append(text);
 			}
 			input.value = "";
@@ -478,18 +479,17 @@ function addAttendee_detail(input){
 	}
 }	
 //<li><button type="button" class="optionalBtn btn" value="false">필수</button><span class="attendeeName"> 이름 </span><span class="email"> 이메일 </span><span>주최자</span>
-function makeAttendeeForm_detail(optional, name, email, organizer,response,self){
+function makeAttendeeForm_detail(optional, name, email, organizer,response,self,add){
 	var text = "<li class='attendee";
 	var mainCalendar = false;
 	if($("#isOrganizerCalendar").text() != ""){
 		mainCalendar = true;
-		console.log("AA");
 	}
 	if(self){
 		text += " selfAttendee";
 	}
 	text +="'><button type='button' class='optionalBtn btn' value="+optional+" onclick='changeOptionalBtn_detail(this);'";
-	if(!mainCalendar){//메인 캘린더가 아닌 경우에는 수정 불가
+	if(!mainCalendar && add == undefined){//메인 캘린더가 아닌 경우에는 수정 불가 본인이 추가할 경우는 수정 가능.
 		text += " disabled";
 	}
 	text += ">";
@@ -512,7 +512,7 @@ function makeAttendeeForm_detail(optional, name, email, organizer,response,self)
 	}
 	text += ">"+getResponseStatus(response)+"</span>";
 	
-	if(mainCalendar){//메인 캘린더가 아닌 경우에는 수정 불가
+	if(mainCalendar || add == true){//메인 캘린더가 아닌 경우에는 수정 불가
 		text += "<button type='button' class='btn btn-info' onclick='$(this).parent().remove();'>X</button>";
 	}
 	return text;
@@ -579,7 +579,26 @@ function makeTimeForm(hour, min, sec){
 	
 	return result;
 }
-
+function clickCancel_detail(){
+	var typeStr = location.pathname.split('/')[4].split("&");
+	var date =  $("#startDatePicker").val();
+	var type = typeStr[0];
+	var strDate =typeStr[1].split("-");
+	switch(type){
+	case 'd':
+		break;
+	case 'w':
+		break;
+	case 'm':
+		changeStyle("month");
+		requestMonthlyCalendar(strDate[0],strDate[1],strDate[2],false);
+		break;
+	case 'l':
+		changeStyle("list");
+		requestListCalendar(strDate[0],strDate[1],strDate[2],false);
+		break;
+	}
+}
 function submitInput_detail(){
 	
 	var overrides = new Array();
@@ -631,10 +650,9 @@ function submitInput_detail(){
 		contentType : "application/json; charset=UTF-8",
 		success:function(data){
 			if(data=="true"){
-				var type = location.pathname.split('/')[4];
+				var type = location.pathname.split('/')[4].split('&')[0];
 				var date =  $("#startDatePicker").val();
 				var strDate =date.split("-");
-				
 				switch(type){
 				case 'd':
 					break;
@@ -642,13 +660,11 @@ function submitInput_detail(){
 					break;
 				case 'm':
 					changeStyle("month");
-					requestMonthlyCalendar(strDate[0],strDate[1],strDate[2],true);
-					history.pushState(data,"SimpleCalendar","http://localhost:8080/m/"+date);
+					requestMonthlyCalendar(strDate[0],strDate[1],strDate[2],false);
 					break;
 				case 'l':
 					changeStyle("list");
-					requestListCalendar(strDate[0],strDate[1],strDate[2],true);
-					history.pushState(data,"SimpleCalendar","http://localhost:8080/l/"+date);
+					requestListCalendar(strDate[0],strDate[1],strDate[2],false);
 					break;
 				}
 			}else{

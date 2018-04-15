@@ -1,9 +1,5 @@
 
-
-function saveIsCheck(){
-	
-}
-function getCalendarList(){
+function getCalendarList(reload){
 	var baseUrl = "http://localhost:8080";
 	$.ajax({
 		url:baseUrl+"/CalendarList",
@@ -11,10 +7,15 @@ function getCalendarList(){
 		dataType :"json",
 		success:function(data){
 			printCalendarList(data);
-			getList();
+			if(!reload){
+				requestData();
+			}else{
+				reloadPage();
+			}
 		}
 	});
 }
+
 //<label><input type="checkbox" value="1">Option1</label>
 function printCalendarList(data){
 	var checkList = "";
@@ -25,6 +26,9 @@ function printCalendarList(data){
 		checkList += "<label"+" style='color:white; background-color:"+colorCode+"'><input type='checkbox' value = '"+data[i].id+"' data-originalCalendarId = '"+data[i].id+"'";
 		if(data[i].check == true){
 			checkList +=" checked";
+		}
+		if(data[i].primary){
+			$("#userId").text(data[i].id);
 		}
 		checkList +=" onClick='clickCheckbox(this)' data-colorCode = '"+colorCode+"' data-accessRole = '"+data[i].accessRole+"'>"+data[i].summary+"</label><br/>";
 	}

@@ -64,7 +64,8 @@ function printList(year,month,data){
 			}
 			text +="</div>";
 			text += "<div class='listSummary'>"+"<a title='"+isNull(data[i].summary)+"'style='color:black' onClick ='clickEventTitle(this,true); return false;' href='#' data-eventId =";
-			text += data[i].eventID+" data-calendarId = "+data[i].calendarID+">"+isNull(data[i].summary)+"</a>"+"</div>";
+			text += data[i].eventID+" data-calendarId = "+data[i].calendarID+">"+isNull(data[i].summary)+"</a>";
+			text += "<span style='display:none;' data-information='"+JSON.stringify(data[i])+"'></span></div>";
 			text += "</div>";
 			div.append(text);
 		}

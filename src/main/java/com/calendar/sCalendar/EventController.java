@@ -31,6 +31,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.Calendar.Events.Get;
+import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Event.Reminders;
 import com.google.api.services.calendar.model.EventAttendee;
@@ -40,34 +41,9 @@ import com.google.api.services.calendar.model.EventReminder;
 @Controller
 public class EventController {
 	
-	@RequestMapping(value = "/MonthlyCalendar/{date}")
-	public @ResponseBody ArrayList<EventDTO> getEventList(@PathVariable String date, Locale locale, Model model,HttpServletRequest request){
-		ArrayList<EventDTO> eventList = new ArrayList<>();
-		GoogleCalendarService gcs = new GoogleCalendarService();
-		Date curDate = new Date();
-		String[] temp = date.split("-");
-		int year = 0;
-		int month = 0;
-		if(date != null) {
-			year = Integer.parseInt(temp[0]);
-			month = Integer.parseInt(temp[1]);
-		}else {
-			year = curDate.getYear()+1900;
-			month = curDate.getMonth()+1;
-		}
-		//System.out.println(year+" , "+month);
-		try {
-			eventList = gcs.getEvent_Month(new CalendarController().getCheckedCalendarList(request),year,month);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return eventList;
-	}
 	//월 뷰 요청
 		@RequestMapping(value = "/monthly/{year}/{month}/{date}")
-		public @ResponseBody ArrayList<EventDTO> getBackMonthEventList(@PathVariable int year,@PathVariable int month,@PathVariable int date, Model model,HttpServletResponse response,HttpServletRequest request)throws Exception{
+		public @ResponseBody ArrayList<EventDTO> getMonthEventList(@PathVariable int year,@PathVariable int month,@PathVariable int date, Model model,HttpServletResponse response,HttpServletRequest request)throws Exception{
 			ArrayList<EventDTO> eventList = new ArrayList<>();
 			GoogleCalendarService gcs = new GoogleCalendarService();
 			try {
@@ -118,6 +94,33 @@ public class EventController {
 		return result;
 	}
 	
+	//내 응답 상태만 수정
+	@RequestMapping(value="/updateResponseStatus",method = RequestMethod.POST)
+	public @ResponseBody String updateResponseStatus(UpdateResponseDTO dto, Model model) {
+		String result="true";
+		GoogleCalendarService gcs = new GoogleCalendarService();
+		try {
+			Calendar service = gcs.getCalendarService();
+			Event event = service.events().get(dto.getCalendarId(), dto.getEventId()).execute();
+			java.util.List<EventAttendee> listAttendees = event.getAttendees();
+			int size = listAttendees.size();
+			ArrayList<EventAttendee> attendees = new ArrayList<EventAttendee>();
+			for(EventAttendee attendee : listAttendees) {
+				if(attendee.getEmail().equals(dto.getUserId())) {
+					System.out.println(dto.getResponseStatus());
+					attendee.setResponseStatus(dto.getResponseStatus());
+				}
+				attendees.add(attendee);
+			}
+			event.setAttendees(attendees);
+			service.events().update(dto.getCalendarId(), event.getId(), event).execute();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			result = getErrorMessage(e.getMessage());
+		}
+		return result;
+	}
 	//수정
 	@RequestMapping(value="/updateEvent",method = RequestMethod.POST)
 	public @ResponseBody String updateEvent(@RequestBody EventInputDTO dto, HttpServletRequest request, Model model) {
@@ -203,8 +206,8 @@ public class EventController {
 		}else{
 			try {
 				service = gcs.getCalendarService();
-				Event upDateEvent = service.events().get(calendarId, eventId).execute();
-				upDateEvent.setSummary(dto.getSummary())
+				Event updateEvent = service.events().get(calendarId, eventId).execute();
+				updateEvent.setSummary(dto.getSummary())
 				.setLocation(dto.getLocation())
 				.setDescription(dto.getDescription())
 				.setStart(start)
@@ -212,11 +215,11 @@ public class EventController {
 				.setReminders(reminders)
 				.setAttendees(dto.getAttendees())
 				;
-				service.events().update(calendarId, upDateEvent.getId(), upDateEvent).execute();
+				service.events().update(calendarId, updateEvent.getId(), updateEvent).execute();
 				String newCalendarId = dto.getCalendars();
 				if(!newCalendarId.equals(calendarId)) {
 					System.out.println("move"+newCalendarId);
-					service.events().move(calendarId, upDateEvent.getId(), newCalendarId).execute();
+					service.events().move(calendarId, updateEvent.getId(), newCalendarId).execute();
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
