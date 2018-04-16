@@ -273,8 +273,8 @@ function makeAlarmForm_detail(alarmIndex, method, minutes){
 		text += ">"+optionText[i]+"</option>";
 	}
 	text += "</select>";
-	text += "<span> 전</span>"
-	text += "<button type='button' class='btn btn-info' onclick='removeAlarm_detail(this);'>X</button>";
+	text += "<span class='detail_span'> 전</span>"
+	text += "<a href='#' style='color:black;' class='noUnderLine' onclick='removeAlarm_detail(this); return false;'>X</a>";
 	text += "</li>";
 	return text;
 }
@@ -513,7 +513,7 @@ function makeAttendeeForm_detail(optional, name, email, organizer,response,self,
 	text += ">"+getResponseStatus(response)+"</span>";
 	
 	if(mainCalendar || add == true){//메인 캘린더가 아닌 경우에는 수정 불가
-		text += "<button type='button' class='btn btn-info' onclick='$(this).parent().remove();'>X</button>";
+		text += "<a href='#' style='color:black;' class='noUnderLine' onclick='$(this).parent().remove(); return false;'>X</a>";
 	}
 	return text;
 }

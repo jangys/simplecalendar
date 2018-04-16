@@ -13,4 +13,6 @@ public class CalculateCalendar {
 		}
 		return result;
 	}
+	public void getRecurDateList() {
+	}
 }

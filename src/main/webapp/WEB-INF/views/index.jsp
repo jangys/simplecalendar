@@ -232,8 +232,9 @@
 	}
 	/*일정 요약 contents*/
 	#eventSummary_Contents{
-		width:100%;
+		width: 93%;
 		height:60%;
+		margin: 0 auto;
 	}
 	/*일정 요약 contents안 p*/
 	.eventSummaryContents_p{
@@ -242,7 +243,7 @@
 	/*일정 요약 contents안 span(정보 제목)*/
 	.eventSummaryContents_span{
 		color: #5c5c5c;
-		margin-right : 8px;
+		margin-right : 15px;
 	}
 	/*일정 요약 footer*/
 	#eventSummary_Footer{
@@ -412,7 +413,7 @@
 		</div>
 		<div id="listCalendar">
 		</div>
-		<div id="showEventSummary" class="container" style="border: 1px solid #c3c3c3">
+		<div id="showEventSummary" style="border: 1px solid #c3c3c3">
 			<div class = "row" id="eventSummary_Header">
 				<div class = "col-sm-8" id="eventSummary_CalTitle"></div>
 				<div class="col-sm-4" style="text-align: right; padding: 0% 0%;">
@@ -421,11 +422,11 @@
 			</div>
 			<div id="eventSummary_Contents"></div>
 			<div id="eventSummary_Footer">
-				<button id='btnDeleteEvent'class='btn btn-info' type='button' value='deleteEvent' name='delete' onclick="clickDeleteEvent(this)"  style="display: none;">삭제</button>
-					<button id='btnShowEvent' class='btn btn-info' type='button' style="display: none;" onclick="goToEventPage('show');">상세보기</button>
+				<button id='btnDeleteEvent'class='btn btn-info' type='button' value='deleteEvent' name='delete' onclick="clickDeleteEvent(this)"  style="display: none; height:95%; line-height: 5px;">삭제</button>
+					<button id='btnShowEvent' class='btn btn-info' type='button' style="display: none; height:95%; line-height: 5px;" onclick="goToEventPage('show');">상세보기</button>
 			</div>
 		</div>
-		<div id="showAttendeesList" class="container">
+		<div id="showAttendeesList">
 			<div style="width:95%; height:15%; text-align:right; margin:auto;">
 				<a href="#" class="noUnderLine" style="color:black;" onclick="$('#showAttendeesList').css('display','none'); return false;">X</a>
 			</div>
@@ -434,7 +435,7 @@
 				</ul>
 			</div>
 		</div>
-		<div id="showMoreEventDiv" class="container" style="border: 1px solid #c3c3c3;">
+		<div id="showMoreEventDiv" style="border: 1px solid #c3c3c3;">
 				<span id="showMoreEvent_Title"></span><button type='button' value='closeMoreEvent' name='close' onclick="clickCloseMoreEvent()" style="font-size: 12px;">X</button>
 			<div id="showMoreEvent_Contents" style="overflow-y: scroll;height:89%;text-align:left;">
 				<ul id="moreEventList" style="list-style: none;padding:0% 0%;">

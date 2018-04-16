@@ -339,7 +339,7 @@ function clickEventTitle(title,scroll){
 			}
 		}
 		contents += "<span style='color:#5c5c5c'>수락"+responseCount["accepted"]+"명, 거절"+responseCount["declined"]+"명, 미정"+responseCount["tentative"]+"명, 대기"+responseCount["needsAction"]+"명) </span>";
-		contents += "<a href='#' id='attendeesList_a' style='color:black' title='참석자 목록 보기'>참석목록</a>";
+		
 		contents += "</p>";
 		if(me != -1 && (data.organizer == data.calendarID || data.calendarID == $("#userId").text())){
 			contents += "<p class='eventSummaryContents_p'><span class='eventSummaryContents_span'>내 응답</span>";
@@ -347,7 +347,7 @@ function clickEventTitle(title,scroll){
 			var myResponse = getResponseStatus(data.attendees[me].responseStatus);
 			var link = "";
 			for(var i=0;i<3;i++){
-				link +="<a href='#'";
+				link +="<a href='#' class='updateResponseLink_Summ'";
 				if(response[i] == myResponse){
 					link += "style='color:#f0af00; font-weight:bold;"
 				}else{
@@ -355,7 +355,8 @@ function clickEventTitle(title,scroll){
 				}
 				link += " margin-right:5px;' onclick='updateResponse(this); return false;'>"+response[i]+"</a>";
 			}
-			contents += link+"</p>";
+			contents += link;
+			contents += "<span style='margin-left:110px;'><a href='#' id='attendeesList_a' style='color:black' title='참석자 목록 보기'>참석자 목록</a></span></p>";
 		}
 	}
 	$('#eventSummary_Contents').html(contents);
@@ -488,6 +489,7 @@ function clickDeleteEvent(button){
 function updateResponse(response){
 	var baseUrl = "http://localhost:8080";
 	var response = getResponseStatus($(response).text());
+	$(".updateResponseLink_Summ").css('pointer-events','none');
 	var data = {
 			"calendarId" : $("#btnDeleteEvent").attr('data-calendarid'),
 			"eventId" : $("#btnDeleteEvent").attr('data-eventid'),
@@ -509,6 +511,7 @@ function updateResponse(response){
 				alert(data);
 				closeAllDiv();
 			}
+			$(".updateResponseLink_Summ").css('pointer-events','');
 		}
 	});
 	return false;

@@ -147,7 +147,17 @@ function drawCalendar(year,month,data){
 	console.log("drawCalendar");
 	calColNumAndPrintCalendar(year, month, data);
 	$(window).resize(function(){
-		calColNumAndPrintCalendar(year, month, data);
+		var height = $("#container").height();
+		if(height <= 744 && height > 610){
+			calColNumAndPrintCalendar(year, month, data);
+		}else if(height <= 610 && height > 508){
+			calColNumAndPrintCalendar(year, month, data);
+		}else if(height <= 508 && height > 385){
+			calColNumAndPrintCalendar(year, month, data);
+		}else if(height <= 385){
+			calColNumAndPrintCalendar(year, month, data);
+		}
+		
 	});
 	
 }
@@ -289,7 +299,7 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 		var me = -1;
 		if(data[i].attendees != null){
 			for(var y=0; y<data[i].attendees.length;y++){
-				if(data[i].attendees[y].email == data[i].calendarID){
+				if(data[i].attendees[y].email == data[i].calendarID && data[i].attendees[y].email == $("#userId").text()){
 					responseStatus = data[i].attendees[y].responseStatus;
 				}
 				if(data[i].attendees[y].email == $("#userId").text()){
@@ -427,7 +437,6 @@ function setEventTd(index, col, title, colorCode, colspan,responseStatus){
 		td.css('background-color',colorCode);
 		td.css('border-bottom','1px solid white');
 		td.css('border-top','1px solid white');
-		td.css('font-weight','bold');
 	}else{
 		switch(responseStatus){
 			case "accepted":
