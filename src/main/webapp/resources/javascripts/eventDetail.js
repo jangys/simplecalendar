@@ -154,6 +154,17 @@ function showEvent_detail(data){
 		}
 		if($("#calendarId_detail").val() == data.organizer.email){//먼저 메인 캘린더 여부 체크
 			$("#isOrganizerCalendar").text("이 캘린더가 초대 일정의 원본을 가지고 있는 메인 캘린더 입니다.");
+			var size = data.attendees.length;
+			var me = -1;
+			for(var i=0;i<size;i++){
+				if($("#userId").text() == data.attendees[i].email){
+					me = i;
+					break;
+				}
+			}
+			if(me != -1){//primary calendar에 내가 있는 경우
+				$("#attendeesDiv_detail").css('display','');
+			}
 		}
 		
 		for(var i=0;i<size;i++){

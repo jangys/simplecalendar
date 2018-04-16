@@ -2,6 +2,8 @@ package com.calendar.sCalendar;
 
 import java.util.List;
 
+import javax.print.DocFlavor.STRING;
+
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.EventAttendee;
 
@@ -17,6 +19,7 @@ public class EventDTO {
 	private String description;
 	private List<EventAttendee> attendees;
 	private String organizer;
+	private List<String> recurrence;
 	
 	public void setCalendarID(String calendarID) {
 		this.calendarID = calendarID;
@@ -86,7 +89,9 @@ public class EventDTO {
 	public void setOrganizer(String organizer) {
 		this.organizer = organizer;
 	}
-	
+	public void setRecurrence(List<String> recurrence) {
+		this.recurrence = recurrence;
+	}
 	public String getCalendarID() {
 		return calendarID;
 	}
@@ -119,5 +124,8 @@ public class EventDTO {
 	}
 	public String getOrganizer() {
 		return organizer;
+	}
+	public List<String> getRecurrence(){
+		return recurrence;
 	}
 }

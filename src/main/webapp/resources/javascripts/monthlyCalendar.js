@@ -455,7 +455,7 @@ function setEventTd(index, col, title, colorCode, colspan,responseStatus){
 				var background = "linear-gradient(-45deg";
 				var start = 25;
 				for(var i=0;i<3;i++){
-					background += ",white "+start+"%,"+colorCode+" 0,"+" white "+(start+2)+"%";
+					background += ",white "+start+"%,"+colorCode+" 0,"+" white "+(start+4)+"%";
 					start += 25;
 				}
 				background +=')';

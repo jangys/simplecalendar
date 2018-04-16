@@ -18,6 +18,7 @@ import com.google.api.services.calendar.model.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -174,6 +175,7 @@ public class GoogleCalendarService {
           tempDTO.setAccessRole(calendarListEntry.getAccessRole());
           result.add(tempDTO);
         }
+      
 	      return result;
 	}
 	
@@ -276,8 +278,10 @@ class callable implements Callable<ArrayList<EventDTO>>{
             System.out.println("Upcoming events");
             for (Event event : items) {
                 DateTime start = event.getStart().getDateTime();
+                boolean isDateOnly = false;
                 if (start == null) {
                     start = event.getStart().getDate();
+                    isDateOnly = true;
                 }
                 DateTime end = event.getEnd().getDateTime();
                 if(end == null) {
@@ -294,9 +298,23 @@ class callable implements Callable<ArrayList<EventDTO>>{
                 tempDTO.setDescription(event.getDescription());
                 tempDTO.setAttendees(event.getAttendees());
                 tempDTO.setOrganizer(event.getOrganizer().getEmail());
-//                if(event.getReminders() != null)
-//                	System.out.println(event.getSummary()+" , "+event.getReminders().toPrettyString());
-                result.add(tempDTO);
+                tempDTO.setRecurrence(event.getRecurrence());
+                if(event.getRecurrence() != null) {
+                	Date d = new Date(now.getValue());
+                	try {
+						ArrayList<EventDTO> list = new CalculateRecurrence().getRecurrenceEvents(isDateOnly, tempDTO, d.getYear(), d.getMonth());
+						if(list != null) {
+							result.addAll(list);
+						}else {
+							result.add(tempDTO);
+						}
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+                }else {
+                	result.add(tempDTO);
+                }
             }
         }
         return result;
