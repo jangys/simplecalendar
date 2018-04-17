@@ -8,7 +8,7 @@ function loadEventDetail(){
 		if($('#calendarId_detail').attr('value') == "0"){
 			document.getElementById('startDatePicker').valueAsDate = date;
 			document.getElementById('endDatePicker').valueAsDate = date;
-			
+			showRecurrenceList(date);
 			document.getElementById('startTimePicker').value = makeTimeForm(date.getHours(),0,0);
 			if(date.getHours() == 23){
 				document.getElementById('endTimePicker').value = makeTimeForm(date.getHours(),30,0);
@@ -22,6 +22,7 @@ function loadEventDetail(){
 			var strEndDate = str[1].split("-");
 			var startDate = new Date(parseInt(strStartDate[0]),parseInt(strStartDate[1])-1,parseInt(strStartDate[2]),12);
 			var endDate = new Date(parseInt(strEndDate[0]),parseInt(strEndDate[1])-1,parseInt(strEndDate[2]),12);
+			showRecurrenceList(startDate);
 			document.getElementById('startDatePicker').valueAsDate = startDate;
 			document.getElementById('endDatePicker').valueAsDate = endDate;
 			document.getElementById('startTimePicker').value = makeTimeForm(date.getHours(),0,0);
@@ -108,18 +109,21 @@ function showEvent_detail(data){
 	
 	$('#summary_detail').attr('value',data.summary);
 	var date;
+	var start;
 	if(data.start.date != null){
-		date = new Date(data.start.date.value);	
+		start = new Date(data.start.date.value);	
 		$("#allDayCheckBox").attr('checked',true);
 		$("#allDayCheckBox").attr('value',true);
 		resetTimePicker_detail();
+		showRecurrenceList(start);
 	}else{
 		console.log(new Date(data.start.dateTime.value));
-		date = new Date(data.start.dateTime.value);	
-		document.getElementById('startTimePicker').value = makeTimeForm(date.getHours(),date.getMinutes(),0);
+		start = new Date(data.start.dateTime.value);	
+		document.getElementById('startTimePicker').value = makeTimeForm(start.getHours(),start.getMinutes(),0);
+		showRecurrenceList(start);
 	}
 	
-	document.getElementById('startDatePicker').valueAsDate = new Date(date.getFullYear(),date.getMonth(),date.getDate(),12);
+	document.getElementById('startDatePicker').valueAsDate = new Date(start.getFullYear(),start.getMonth(),start.getDate(),12);
 	var end;
 	if(data.end.date != null){
 		end = data.end.date.value; 
@@ -205,8 +209,23 @@ function showEvent_detail(data){
 		}
 		$("#attendeeList").append(text);
 		
+	}//if-attendee
+	if(data.recurrence != null){
+		var option = $("#recurrenceList_detail").children();
+		var isIn = false;
+		for(var i=0;i<option.length;i++){
+			if(option.eq(i).attr('data-rrule') == data.recurrence[0]){
+				option.eq(i).attr('selected','selected');
+				isIn = true;
+			}
+		}
+		if(!isIn){
+			var temp = data.recurrence[0].split(':');
+			var rrule = temp[1];
+			var text = "<option data-rrule='RRULE:"+rrule+"' selected>"+covertRRULEInKorean(rrule,start.getMonth()+1,start.getDate())+"</option>";
+			$("#recurrenceList_detail").append(text);
+		}
 	}
-	
 }
 
 

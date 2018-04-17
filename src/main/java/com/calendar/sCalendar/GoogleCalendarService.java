@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
@@ -259,6 +260,8 @@ class callable implements Callable<ArrayList<EventDTO>>{
 	public ArrayList<EventDTO> call() {
         Events events = null;
         ArrayList<EventDTO> result = new ArrayList<EventDTO>();
+        ArrayList<EventDTO> recurrence = new ArrayList<EventDTO>();
+        HashMap<String, Object> recurrenceEXDATE = new HashMap<>(); 
 		try {
 			com.google.api.services.calendar.Calendar service =
                     new GoogleCalendarService().getCalendarService();
@@ -277,16 +280,43 @@ class callable implements Callable<ArrayList<EventDTO>>{
         	// System.out.println(now.toString());
             System.out.println("Upcoming events");
             for (Event event : items) {
-                DateTime start = event.getStart().getDateTime();
+                DateTime start = null;
                 boolean isDateOnly = false;
-                if (start == null) {
-                    start = event.getStart().getDate();
-                    isDateOnly = true;
+                if(event.getStart() != null) {
+                	if(event.getStart().getDateTime() != null) {
+                		start = event.getStart().getDateTime();
+                	}else {
+                		start = event.getStart().getDate();
+                		isDateOnly = true;
+                	}
+                }else {
+                	start = new DateTime(now.getValue());
                 }
-                DateTime end = event.getEnd().getDateTime();
-                if(end == null) {
-                	end = event.getEnd().getDate();
+                if(event.getRecurringEventId() != null) {
+            		String eventId = event.getRecurringEventId();
+            		ArrayList<String> exdate = new ArrayList<>();
+            		if(recurrenceEXDATE.get(eventId) != null) {
+            			exdate = (ArrayList<String>) recurrenceEXDATE.get(eventId);
+            		}
+            		exdate.add(event.getId().substring(event.getId().length()-8));
+//            		System.out.println(event.getId().substring(event.getId().length()-8));
+        			recurrenceEXDATE.put(eventId, exdate);
+        			if(event.getStatus() != null && event.getStatus().equals("cancelled")) {
+        				continue;
+        			}
+            	}
+            
+                DateTime end = null;
+                if(event.getEnd() != null) {
+                	if(event.getEnd().getDateTime() != null) {
+                		end = event.getEnd().getDateTime();
+                	}else {
+                		end = event.getEnd().getDate();
+                	}
+                }else {
+                	end = new DateTime(now.getValue());
                 }
+
                // System.out.printf("%s (%s)\n", event.getSummary(), start.toString());
                 EventDTO tempDTO = new EventDTO();
                 tempDTO.setCalendarID(id);
@@ -297,14 +327,20 @@ class callable implements Callable<ArrayList<EventDTO>>{
                 tempDTO.setLocation(event.getLocation());
                 tempDTO.setDescription(event.getDescription());
                 tempDTO.setAttendees(event.getAttendees());
-                tempDTO.setOrganizer(event.getOrganizer().getEmail());
+                String email = "";
+                if(event.getOrganizer() != null) {
+                	email = event.getOrganizer().getEmail();
+                }
+                tempDTO.setOrganizer(email);
                 tempDTO.setRecurrence(event.getRecurrence());
                 if(event.getRecurrence() != null) {
                 	Date d = new Date(now.getValue());
+                	System.out.println("origin event : "+start.toString()+" , "+end.toString());
                 	try {
+                		ArrayList<String> exdateList = (ArrayList<String>)recurrenceEXDATE.get(event.getId());
 						ArrayList<EventDTO> list = new CalculateRecurrence().getRecurrenceEvents(isDateOnly, tempDTO, d.getYear(), d.getMonth());
 						if(list != null) {
-							result.addAll(list);
+							recurrence.addAll(list);
 						}else {
 							result.add(tempDTO);
 						}
@@ -315,7 +351,45 @@ class callable implements Callable<ArrayList<EventDTO>>{
                 }else {
                 	result.add(tempDTO);
                 }
+            }//for
+            String noEXDATE = "";
+            int index = 0;
+            ArrayList<Integer> removeIndex = new ArrayList<>();
+            for(EventDTO temp : recurrence) {
+            	if(noEXDATE.equals(temp.getEventID())) {
+            		continue;
+            	}
+            	if(!recurrenceEXDATE.containsKey(temp.getEventID())) {
+            		noEXDATE = temp.getEventID();
+            	}else {
+            		ArrayList<String> exdateList = (ArrayList<String>) recurrenceEXDATE.get(temp.getEventID());
+            		//더 효율적인 방법?
+            		String date = temp.getStartTime()[0]+"";
+            		if(temp.getStartTime()[1] < 10) {
+            			date += "0";
+            		}
+            		date += temp.getStartTime()[1]+"";
+            		if(temp.getStartTime()[2] < 10) {
+            			date += "0";
+            		}
+            		date += temp.getStartTime()[2]+"";
+//            		System.out.println(exdateList.get(0)+" , "+date);
+            		for(String exdate : exdateList) {
+            			if(exdate.equals(date)) {
+            				System.out.println(date + " ,"+index);
+            				removeIndex.add(index);
+            				break;
+            			}
+            		}
+            	}
+            	index++;
+            }//for-recurrence
+            int remove = 0;
+            for(int i : removeIndex) {
+            	recurrence.remove(i-remove);	//list라서 뒤에 있는 것들이 앞으로 나옴.
+            	remove++;
             }
+            result.addAll(recurrence);
         }
         return result;
 	}

@@ -147,22 +147,12 @@ function drawCalendar(year,month,data){
 	console.log("drawCalendar");
 	calColNumAndPrintCalendar(year, month, data);
 	$(window).resize(function(){
-		var height = $("#container").height();
-		if(height <= 744 && height > 610){
-			calColNumAndPrintCalendar(year, month, data);
-		}else if(height <= 610 && height > 508){
-			calColNumAndPrintCalendar(year, month, data);
-		}else if(height <= 508 && height > 385){
-			calColNumAndPrintCalendar(year, month, data);
-		}else if(height <= 385){
-			calColNumAndPrintCalendar(year, month, data);
-		}
-		
+		calColNumAndPrintCalendar(year, month, data,true);
 	});
-	
 }
-function calColNumAndPrintCalendar(year, month, data){
+function calColNumAndPrintCalendar(year, month, data,resize){
 	//높이에 따른 세로 갯수
+	var originColNum = parseInt($("#monthCalendar").attr('data-colnum'));
 	var colNum = 6;	//0번째 줄은 무조건 날짜
 	var height = $("#container").height();
 	if(height <= 744 && height > 610){
@@ -174,7 +164,9 @@ function calColNumAndPrintCalendar(year, month, data){
 	}else if(height <= 385){
 		colNum = 2;
 	}
-	console.log(colNum);
+	if(originColNum == colNum && resize)
+		return;
+	$("#monthCalendar").attr('data-colnum',colNum);
 	printCalendar(year,month,data,colNum);
 }
 //날짜 칸을 마우스가 처음으로 눌렀을 때

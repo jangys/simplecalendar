@@ -53,11 +53,13 @@ public class EventDTO {
 		this.end = end;
 		endTime = new int[5];
 		String strEnd = new DateTime(end).toString();
+		
 		endTime[0] = Integer.parseInt(strEnd.substring(0, 4));
 		endTime[1] = Integer.parseInt(strEnd.substring(5,7));
 		endTime[2] = Integer.parseInt(strEnd.substring(8,10));
 		
 		if(!isDateOnly) {//시간이 있는 경우 
+			System.out.println(strEnd + " , "+end);
 			endTime[3] = Integer.parseInt(strEnd.substring(11,13));
 			endTime[4] = Integer.parseInt(strEnd.substring(14,16));
 			//System.out.println("hour : "+endTime[3]+" , min : "+endTime[4]);

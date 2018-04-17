@@ -18,6 +18,11 @@
 				 <input id="endTimePicker" class="form-control timePick_detail" type="time" name="endDateTime" onclick="resetTimePicker_detail();"  onblur="checkTime_detail();">
 			 <label><input id="allDayCheckBox" type='checkbox' name="allDay" onclick="resetTimePicker_detail();"> 종일</label>
 			 <br/><br/>
+			 <span class='detail_span'>반복</span>
+			 <select id="recurrenceList_detail" class="form-control" style="width:160px;">
+			 	<option data-rrule="none">없음</option>
+			 </select>
+			 <br/><br/>
 			<span class='detail_span'>장소</span><input id="location_detail" class="form-control" type="text" name="location" ><br/><br>
 			<span class='detail_span'>메모</span><textarea id="description_detail" class="form-control" rows="5" id="memo" style="display:block; width:84%;" name="description"></textarea> <br/><br>
 			<span class='detail_span'>알람</span><ul id="alarmList" style="list-style: none; padding:0% 0%; display:none;" data-alarmNum="0"></ul>

@@ -14,6 +14,7 @@
 <script src="/javascripts/sideBar.js" charset="utf-8"></script>
 <script src="/javascripts/commonContents.js" charset="utf-8"></script>
 <script src="/javascripts/listCalendar.js" charset="utf-8"></script>
+<script src="/javascripts/convertRRULE.js" charset="utf-8"></script>
 <script src="/javascripts/eventDetail.js" charset="utf-8"></script>
 
 <title>Simple Calendar</title>
@@ -398,7 +399,7 @@
 			<button class='btn btn-info' id='addBtn' type='button' name='addBtn' value='0' onclick="$('#addEventDate').attr('value',0); goToEventPage('add');">일정 추가</button> 
 	</div>
 	<div id="container" style="height:100%;">
-		<div id="monthCalendar">
+		<div id="monthCalendar" data-colnum='0'>
 			<table id="week">
 				<tr id="dayLine">
 					<th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th>

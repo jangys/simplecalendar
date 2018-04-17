@@ -27,6 +27,7 @@ public class CalculateRecurrence {
 		int size = event.getRecurrence().size();
 		//여러날 일정 반복인 경우 기간이 28일 넘어가면 그 전날부터 조사. 
 		for(int i=0;i<size;i++) {
+			System.out.println(event.getRecurrence());
 			Recur recur = new Recur(event.getRecurrence().get(i).substring(6));
 			DateTime startDate = null;
 			startDate = new DateTime();
@@ -36,9 +37,9 @@ public class CalculateRecurrence {
 			}else {
 				startDate.setTime(event.getStart());
 			}
-			Date endDate = null;
+			Date periodEndDate = null;
 			if(recur.getUntil() != null) {
-				endDate = recur.getUntil();
+				periodEndDate = recur.getUntil();
 			}
 			DateTime endTime = new DateTime();
 			endTime.setTime(event.getEnd());
@@ -49,34 +50,61 @@ public class CalculateRecurrence {
 			start = startDate.getTime();
 			duration = (int) ((end - start)/86400000);
 			
-			if(endDate == null || endDate.getMonth() > (month+1) || endDate.getYear() > year) {
-				endDate = new Date();
-				endDate.setMonth(month);
-				endDate.setYear(year);
-				endDate.setDate(getLastDay(year, month+1));
+			if(periodEndDate == null || periodEndDate.getMonth() > month || periodEndDate.getYear() > year) {
+				periodEndDate = new Date();
+				int m = month+1;
+				int y = year;
+				if(month == 12) {
+					y++;
+					m = 0;
+				}
+				periodEndDate.setMonth(m);
+				periodEndDate.setYear(y);
+				periodEndDate.setDate(1);
 			}
-			System.out.println("year = "+year+", month = "+month);
 			Date periodStartDate = new Date();
-			if(duration < 28) {
-				periodStartDate = new Date(new java.util.Date(year,month,1,9,0).getTime());
+			if(duration != 0) {
+				int previousMonth = duration/29 + 1;
+				int m = month - previousMonth;
+				int y = year;
+				while(m < 0) {
+					y--;
+					m += 11;
+				}
+				periodStartDate = new Date(new java.util.Date(y,m,1,9,0).getTime());
+				
 			}else {
 				int m = month -1;
 				int y = year;
 				if(m == -1) {
-					m = 12;
+					m = 11;
 					y = year-1;
 				}
 				periodStartDate = new Date(new java.util.Date(y,m,1,9,0).getTime());
 			}
-//			System.out.println(recur+", "+startDate+", "+periodStartDate+", "+endDate);
-			DateList dateList = recur.getDates(startDate, periodStartDate, endDate, Value.DATE_TIME);
+//			System.out.println(recur+", "+startDate+", "+periodStartDate+", "+periodEndDate);
+			DateList dateList = recur.getDates(startDate, periodStartDate, periodEndDate, Value.DATE_TIME);
 //			System.out.println(dateList.toString());
 			int dateSize = dateList.size();
 			
 //			System.out.println(endTime.toString()+", "+startDate.toString()+", "+duration+", "+dateSize);
-			
 			for(int j=0;j<dateSize;j++) {
+				Date origin = dateList.get(j);
+//				System.out.println("recurrence date : "+origin.toString());
 				EventDTO copyEvent = new EventDTO();
+				if(isDateOnly) {
+					long resultEnd = origin.getTime()+86400000l*(duration+1);
+					copyEvent.setEnd(resultEnd, isDateOnly);
+				}else {
+					long rest = 0;
+					rest = (end-start)%86400000l;
+					long resultEnd = origin.getTime()+86400000l*(duration)+rest;
+					copyEvent.setEnd(resultEnd, isDateOnly);
+				}
+				if((copyEvent.getEndTime()[1] - 1)< month || copyEvent.getEndTime()[0] < year+1900) {//끝 날짜가 현재 보고 있는 날짜보다 전이면 리스트에 넣지 않음
+					continue;
+				}
+				
 				copyEvent.setSummary(event.getSummary());
 				copyEvent.setAttendees(event.getAttendees());
 				copyEvent.setCalendarID(event.getCalendarID());
@@ -85,16 +113,9 @@ public class CalculateRecurrence {
 				copyEvent.setLocation(event.getLocation());
 				copyEvent.setOrganizer(event.getOrganizer());
 				copyEvent.setRecurrence(event.getRecurrence());
-				Date origin = dateList.get(j);
-//				System.out.println(origin.getTime());
+				
 				copyEvent.setStart(origin.getTime(),isDateOnly);
-				if(isDateOnly) {
-					copyEvent.setEnd(origin.getTime()+86400000*(duration+1), isDateOnly);
-				}else {
-					long rest = 0;
-					rest = end%86400000;
-					copyEvent.setEnd(origin.getTime()+86400000*(duration)+rest, isDateOnly);
-				}
+
 				list.add(copyEvent);
 //				for(int x=0;x<list.size();x++) {
 //					System.out.println(list.get(x).getStartTime()[2]);
