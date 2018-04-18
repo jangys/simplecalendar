@@ -22,7 +22,7 @@ public class CalculateRecurrence {
 		System.out.println(dateList.toString());
 	}
 	@SuppressWarnings("deprecation")
-	public ArrayList<EventDTO> getRecurrenceEvents(boolean isDateOnly, EventDTO event, int year, int month) throws ParseException{
+	public ArrayList<EventDTO> getRecurrenceEvents(boolean isDateOnly, EventDTO event, int year, int month,ArrayList<Integer> exdateList) throws ParseException{
 		ArrayList<EventDTO> list = new ArrayList<EventDTO>();
 		int size = event.getRecurrence().size();
 		//여러날 일정 반복인 경우 기간이 28일 넘어가면 그 전날부터 조사. 
@@ -88,9 +88,18 @@ public class CalculateRecurrence {
 			int dateSize = dateList.size();
 			
 //			System.out.println(endTime.toString()+", "+startDate.toString()+", "+duration+", "+dateSize);
+			int exdateIndex = 0;
+			int exdateListSize = -1;
+			if(exdateList != null) {
+				exdateListSize = exdateList.size();
+			}
 			for(int j=0;j<dateSize;j++) {
 				Date origin = dateList.get(j);
 //				System.out.println("recurrence date : "+origin.toString());
+				if(exdateIndex < exdateListSize && origin.toString().substring(0,8).equals(exdateList.get(exdateIndex).toString())) {//예외 날짜에 있는것 제외
+					exdateIndex++;
+					continue;
+				}
 				EventDTO copyEvent = new EventDTO();
 				if(isDateOnly) {
 					long resultEnd = origin.getTime()+86400000l*(duration+1);

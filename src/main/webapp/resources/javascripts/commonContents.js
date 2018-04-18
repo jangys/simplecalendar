@@ -284,15 +284,29 @@ function clickEventTitle(title,scroll){
 	closeAllDiv();
 	var data = JSON.parse($(title).next().attr('data-information'));
 	if(data.attendees != null){
-		$("#showEventSummary").height(250);
-		$("#eventSummary_Header").css('height','15%');
-		$("#eventSummary_Contents").css('height','70%');
-		$("#eventSummary_Footer ").css('height','15%');
+		if(data.recurrence == null){
+			$("#showEventSummary").height(250);
+			$("#eventSummary_Header").css('height','15%');
+			$("#eventSummary_Contents").css('height','70%');
+			$("#eventSummary_Footer ").css('height','15%');
+		}else{
+			$("#showEventSummary").height(260);
+			$("#eventSummary_Header").css('height','12%');
+			$("#eventSummary_Contents").css('height','76%');
+			$("#eventSummary_Footer ").css('height','12%');
+		}
 	}else{
-		$("#showEventSummary").height(200);
-		$("#eventSummary_Header").css('height','20%');
-		$("#eventSummary_Contents").css('height','60%');
-		$("#eventSummary_Footer ").css('height','20%');
+		if(data.recurrence == null){
+			$("#showEventSummary").height(200);
+			$("#eventSummary_Header").css('height','20%');
+			$("#eventSummary_Contents").css('height','60%');
+			$("#eventSummary_Footer ").css('height','20%');
+		}else{
+			$("#showEventSummary").height(225);
+			$("#eventSummary_Header").css('height','18%');
+			$("#eventSummary_Contents").css('height','64%');
+			$("#eventSummary_Footer ").css('height','18%');
+		}
 	}
 	var calendar = $("[data-originalCalendarId = '"+title.getAttribute('data-calendarId')+"']");
 	var contents = "<p class='eventSummaryContents_p'><span class='eventSummaryContents_span'>제목</span>"+isNull(data.summary)+"</p>";
@@ -319,6 +333,12 @@ function clickEventTitle(title,scroll){
 			contents += " ~ "+endTimeString;
 		}
 		contents += "</p>";
+	}
+	if(data.recurrence != null){
+		contents += "<p class='eventSummaryContents_p eventSummaryRecurrence'><span class='eventSummaryContents_span'>반복 </span> ";
+		var temp = data.recurrence[0].split(':');
+		var rrule = temp[1];
+		contents += covertRRULEInKorean(rrule,data.startTime[1],data.startTime[2])+"</p>";
 	}
 	contents += "<p class='eventSummaryContents_p'><span class='eventSummaryContents_span'>장소</span>"+isNull(data.location)+"</p>";
 	contents += "<p class='eventSummaryContents_p'><span class='eventSummaryContents_span'>내용</span>"+isNull(data.description)+"</p>";
@@ -400,6 +420,10 @@ function clickEventTitle(title,scroll){
 	div.css('top',topPosition);
 	div.css('left',leftPosition);	//스크린 width따라 위치 조정
 	div.css('display','block');
+	
+	//일시 부분에 날짜 정보 추가
+	$(".eventSummaryContents_p:eq(1)").attr('data-startdate',data.startTime[0]+"-"+addZero(data.startTime[1])+"-"+addZero(data.startTime[2]));
+	$(".eventSummaryContents_p:eq(1)").attr('data-enddate',data.endTime[0]+"-"+addZero(data.endTime[1])+"-"+addZero(data.endTime[2]));
 	
 	$("#attendeesList_a").click(function(){
 		var list = $("#attendeesList");

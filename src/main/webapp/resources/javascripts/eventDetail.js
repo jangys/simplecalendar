@@ -66,6 +66,7 @@ function getCalendarList_detail(getEvent){
 					}else{
 						if(data[i].id == $("#calendarId_detail").attr('value')){
 							text += "selected";
+							$("#calendarList_detail").attr('data-originalvalue',data[i].id);
 						}
 					}
 					if(data[i].primary){
@@ -106,24 +107,42 @@ function getEvent_detail(){
 
 //이벤트 정보 input에 출력
 function showEvent_detail(data){
-	
 	$('#summary_detail').attr('value',data.summary);
+	$('#summary_detail').attr('data-originalValue',data.summary);
 	var date;
 	var start;
+	var recurStart;
+	var recurEnd;
+	var path = location.pathname.split('/')[4].split('&');
+	if(path.length == 4){
+		recurStart=path[2].split('-');
+		recurEnd=path[3].split('-');
+	}
 	if(data.start.date != null){
-		start = new Date(data.start.date.value);	
+		start = data.start.date.value;
 		$("#allDayCheckBox").attr('checked',true);
 		$("#allDayCheckBox").attr('value',true);
+		$("#allDayCheckBox").attr('data-originalValue',true);
 		resetTimePicker_detail();
-		showRecurrenceList(start);
 	}else{
-		console.log(new Date(data.start.dateTime.value));
-		start = new Date(data.start.dateTime.value);	
-		document.getElementById('startTimePicker').value = makeTimeForm(start.getHours(),start.getMinutes(),0);
-		showRecurrenceList(start);
+		start = data.start.dateTime.value;
+		$("#allDayCheckBox").attr('data-originalValue',false);
+		var d = new Date(data.start.dateTime.value);	
+		var time = makeTimeForm(d.getHours(),d.getMinutes(),0);
+		document.getElementById('startTimePicker').value = time;
+		$("#startTimePicker").attr('data-originalValue',time);
 	}
-	
-	document.getElementById('startDatePicker').valueAsDate = new Date(start.getFullYear(),start.getMonth(),start.getDate(),12);
+	var startDate;
+	if(path.length == 4){
+		startDate = new Date(recurStart[0],recurStart[1]-1,recurStart[2]);
+	}else{
+		startDate = new Date(start);
+	}
+	showRecurrenceList(startDate);
+	var valueDate = new Date(startDate.getFullYear(),startDate.getMonth(),startDate.getDate(),12);	//시간 있는 날짜인 경우 9시 이전이면 그 전날을 표시하기 때문
+	document.getElementById('startDatePicker').valueAsDate = valueDate;
+	$("#startDatePicker").attr('data-originalValue',valueDate);
+	$("#startDatePicker").attr('data-originalDateValue',start);
 	var end;
 	if(data.end.date != null){
 		end = data.end.date.value; 
@@ -133,18 +152,30 @@ function showEvent_detail(data){
 	}else{
 		end = data.end.dateTime.value;
 		date = new Date(end);
-		document.getElementById('endTimePicker').value = makeTimeForm(date.getHours(),date.getMinutes(),0);
+		var time = makeTimeForm(date.getHours(),date.getMinutes(),0);
+		document.getElementById('endTimePicker').value = time;
+		$("#endTimePicker").attr('data-originalValue',time);
 	}
-	date = new Date(end);
-	document.getElementById('endDatePicker').valueAsDate = new Date(date.getFullYear(),date.getMonth(),date.getDate(),12);
+	if(path.length == 4){
+		date = new Date(recurEnd[0],recurEnd[1]-1,recurEnd[2]);
+	}else{
+		date = new Date(end);
+	}
+	var valueDate = new Date(date.getFullYear(),date.getMonth(),date.getDate(),12);
+	document.getElementById('endDatePicker').valueAsDate = valueDate;
+	$("#endDatePicker").attr('data-originalValue',valueDate);
+	$("#endDatePicker").attr('data-originalDateValue',end);
 	if(data.location != null){
-		$('#location_detail').attr('value',data.location);		
+		$('#location_detail').attr('value',data.location);
+		$("#location_detail").attr('data-originalValue',data.location);
 	}
 	if(data.description != null){
 		$('#description_detail').val(data.description);
+		$("#description_detail").attr('data-originalValue',data.description);
 	}
 	if(data.reminders.overrides != null || data.reminders.useDefault){
 		showAlarm_detail(data.reminders.useDefault,data);
+		$("#alarmList").attr('data-originalValue',JSON.stringify(data.reminders));
 	}
 	$("#creator_detail").text(data.creator.email);
 	if(data.attendees != null){
@@ -153,6 +184,7 @@ function showEvent_detail(data){
 		var organizerResponse="accepted";
 		var self = false;
 		var organizerEmail = data.organizer.email;
+		$("#attendeeList").attr('data-originalValue',JSON.stringify(data.attendees));
 		if($("#userId").text() != $("#calendarId_detail").val()){
 			$("#attendeesDiv_detail").css('display','none');
 		}
@@ -211,10 +243,11 @@ function showEvent_detail(data){
 		
 	}//if-attendee
 	if(data.recurrence != null){
+		$("#recurrenceList_detail").attr('data-originalValue',data.recurrence[0]);
 		var option = $("#recurrenceList_detail").children();
 		var isIn = false;
 		for(var i=0;i<option.length;i++){
-			if(option.eq(i).attr('data-rrule') == data.recurrence[0]){
+			if(option.eq(i).val() == data.recurrence[0]){
 				option.eq(i).attr('selected','selected');
 				isIn = true;
 			}
@@ -222,10 +255,11 @@ function showEvent_detail(data){
 		if(!isIn){
 			var temp = data.recurrence[0].split(':');
 			var rrule = temp[1];
-			var text = "<option data-rrule='RRULE:"+rrule+"' selected>"+covertRRULEInKorean(rrule,start.getMonth()+1,start.getDate())+"</option>";
+			var text = "<option value='RRULE:"+rrule+"' selected>"+covertRRULEInKorean(rrule,startDate.getMonth()+1,startDate.getDate())+"</option>";
 			$("#recurrenceList_detail").append(text);
 		}
 	}
+	$("#previousData_detail").text(JSON.stringify(data));
 }
 
 
@@ -419,14 +453,14 @@ function resetTimePicker_detail(){
 		$('#startTimePicker').css('display','none');
 		$('#endTimePicker').css('display','none');
 		$("#allDayCheckBox").attr('value',true);
-		var date=  new Date();
+	} else{
+		var date = new Date();
 		document.getElementById('startTimePicker').value = makeTimeForm(date.getHours(),0,0);
 		if(date.getHours() == 23){
 			document.getElementById('endTimePicker').value = makeTimeForm(date.getHours(),30,0);
 		}else{
 			document.getElementById('endTimePicker').value = makeTimeForm(date.getHours()+1,0,0);
 		}
-	} else{
 		$('#startTimePicker').css('display','inline');
 		$('#endTimePicker').css('display','inline');
 		$("#allDayCheckBox").attr('value',false);
@@ -439,6 +473,7 @@ function checkDate_detail(){
 	if(startDate.getTime() > endDate.getTime()){
 		document.getElementById('endDatePicker').valueAsDate = new Date(startDate.getTime());
 	}
+	showRecurrenceList(startDate);
 }
 //시간 유효성 체크. 시작 시간 기준으로 맞춤
 function checkTime_detail(){
@@ -471,6 +506,7 @@ function checkTime_detail(){
 			document.getElementById('endTimePicker').value = makeTimeForm(startH+1,startM,0);
 		}
 	}
+	
 }
 //캘린더 리스트 바뀐 여부
 function changeCalendarList_detail(select){
@@ -610,6 +646,7 @@ function makeTimeForm(hour, min, sec){
 	return result;
 }
 function clickCancel_detail(){
+	console.log("cancel");
 	var typeStr = location.pathname.split('/')[4].split("&");
 	var date =  $("#startDatePicker").val();
 	var type = typeStr[0];
@@ -629,10 +666,121 @@ function clickCancel_detail(){
 		break;
 	}
 }
+function checkInputChange(input){
+	if($("#eventId_detail").val() == "addEvent"){
+		return true;
+	}
+	var previous = JSON.parse($("#previousData_detail").text());
+	if(input.summary != previous.summary){
+		return true;
+	}
+	var start = "";
+	var startTime = "";
+	var date;
+
+	var startSplit = input.startDate.split("-");
+	start = new Date(startSplit[0],startSplit[1]-1,startSplit[2],12).toString();
+	if($("#startDatePicker").attr('data-originalvalue') != start){
+		return true;
+	}
+	var end = "";
+	var date;
+	var endTime = "";
+
+	var endSplit = input.endDate.split("-");
+	end = new Date(endSplit[0],endSplit[1]-1,endSplit[2],12).toString();
+	if($("#endDatePicker").attr('data-originalvalue') != end){
+		return true;
+	}
+	if(previous.start.dateTime != null){
+		startTime = $("#startTimePicker").attr('data-originalvalue');
+	}
+	if(startTime != input.startDateTime){
+		return true;
+	}
+	if(previous.end.dateTime != null){
+		endTime = $("#endTimePicker").attr('data-originalvalue');
+	}
+	if(endTime != input.endDateTime){
+		return true;
+	}
+	if(previous.recurrence == undefined && input.recurrence != null){
+		return true;
+	}
+	if(previous.recurrence != undefined && previous.recurrence[0] != input.recurrence){
+		return true;
+	}
+	var location = "";
+	if(previous.location != undefined){
+		location = previous.location;
+	}
+	if(location != input.location){
+		return true;
+	}
+	var description = "";
+	if(previous.description != undefined){
+		description = previous.description;
+	}
+	if(description != input.description){
+		return true;
+	}
+	var useDefault = false;
+	if(input.overrides.length == 2){
+		if(input.overrides[0].method == "popup" && input.overrides[0].minutes == 30){
+			if(input.overrides[1].method == "email" && input.overrides[1].minutes == 10){
+				useDefault = true;
+			}
+		}
+	}
+	if(previous.reminders.useDefault != useDefault){
+		return true;
+	}
+	//console.log(JSON.stringify(previous.reminders.overrides));
+	//console.log(JSON.stringify(input.overrides));
+	if(!useDefault && ((previous.reminders.overrides == undefined && input.overrides.length != 0) ||(previous.reminders.overrides != undefined && JSON.stringify(previous.reminders.overrides) != JSON.stringify(input.overrides)))){
+		return true;
+	}
+	if($("#calendarId_detail").val() != input.calendars){
+		return true;
+	}
+	if(previous.attendees == undefined && input.attendees.length != 0){
+		return true;
+	}
+	if(previous.attendees != undefined){
+		if(previous.attendees.length != input.attendees.length){
+			return true;
+		}
+		for(var i=0;i<input.attendees.length;i++){
+			var isIn = false;
+			for(var j=0;j<previous.attendees.length;j++){
+				if(input.attendees[i].email == previous.attendees[j].email){
+					isIn = true;
+					var optional = false;
+					if(previous.attendees[j].optional != undefined){
+						optional = true;
+					}
+					if(input.attendees[i].optional !=optional){
+						return true;
+					}
+					if(input.attendees[i].responseStatus != previous.attendees[j].responseStatus){
+						return true;
+					}
+					continue;
+				}
+			}
+			if(!isIn){
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 function submitInput_detail(){
-	
+
 	var overrides = new Array();
 	var size = $("[data-alarmNum]").attr('data-alarmNum');
+	console.log(size);
 	for(var i=0;i<size;i++){
 		var override = new Object();
 		override.method = $("[name='overrides["+i+"].method']").val().toString();
@@ -654,6 +802,12 @@ function submitInput_detail(){
 		attendee.responseStatus = getResponseStatus(li.children().eq(4).text());
 		attendees.push(attendee);
 	}	
+	var recurrence = $("#recurrenceList_detail").val();
+	console.log(recurrence);
+	if(recurrence == "none"){
+		recurrence = null;
+	}
+	
 	var inputJSON={
 		"summary" : $("#summary_detail").val().toString(),
 		"startDate" : $("#startDatePicker").val().toString(),
@@ -665,14 +819,55 @@ function submitInput_detail(){
 		"description" : $("#description_detail").val().toString(),
 		"overrides" : overrides,
 		"attendees" : attendees,
+		"recurrence" : recurrence,
+		"updateType" : 0,
 		"calendars" : $("#calendarList_detail").val().toString(),
 		"eventId" : $("#eventId_detail").val().toString(),
 		"calendarId" : $("#calendarId_detail").val().toString()
 		};
-	
+	if(!checkInputChange(inputJSON)){
+		clickCancel_detail();
+		return;
+	}else{
+		console.log("true");
+		var start;
+		var startSplit = inputJSON.startDate.split("-");
+		start = new Date(startSplit[0],startSplit[1]-1,startSplit[2],12).toString();
+		if($("#startDatePicker").attr('data-originalvalue') != start){
+			$("[name='userType']:eq(1)").parent().css('display','none');
+		}else{
+			$("[name='userType']:eq(1)").parent().css('display','inline-block');
+		}
+		if($("#recurrenceList_detail").attr('data-originalValue') != undefined){
+			$("#recurUpdateDiv").css('display','block');
+			$("#recurUpdateBtn_detail").click(function(){
+				var updateTypeStr = $("[name='userType']:checked").val();
+				var updateType = 0;
+				switch(updateTypeStr){
+				case "ONLYTHIS":
+					updateType = 1;
+					break;
+				case "ALL":
+					updateType = 2;
+					break;
+				case "NEXT":
+					updateType = 3;
+					break;
+				}
+				inputJSON.updateType = updateType;
+				submitData(inputJSON);
+			});
+		}
+	}
+	if($("#recurrenceList_detail").attr('data-originalValue') == undefined){
+		submitData(inputJSON);
+	}
+}
+function submitData(inputJSON){
 	var data = JSON.stringify(inputJSON);
 	
 	var baseUrl = "http://localhost:8080";
+	console.log(inputJSON);
 	$.ajax({
 		url: baseUrl+"/updateEvent",
 		type:'POST',
@@ -702,6 +897,4 @@ function submitInput_detail(){
 			}
 		}
 	});
-	
-	
 }

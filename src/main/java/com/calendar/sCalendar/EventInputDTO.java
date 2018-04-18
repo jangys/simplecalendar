@@ -17,9 +17,16 @@ public class EventInputDTO {
 	private String useDefault;		//email 10분전, popup 30분전
 	private List<EventReminder> overrides;
 	private List<EventAttendee> attendees;
+	private String recurrence;
+	private int updateType;
 	private String calendars;
 	private String eventId;
 	private String calendarId;
+	
+	//for updateType
+	public static final int ONLYTHIS = 1;
+	public static final int ALL = 2;
+	public static final int NEXT = 3;
 	
 	public void setSummary(String summary) {
 		this.summary = summary;
@@ -54,6 +61,12 @@ public class EventInputDTO {
 	}
 	public void setAttendees(List<EventAttendee> attendees) {
 		this.attendees = attendees;
+	}
+	public void setRecurrence(String recurrence) {
+		this.recurrence = recurrence;
+	}
+	public void setUpdateType(int updateType) {
+		this.updateType = updateType;
 	}
 	public void setCalendars(String calendars) {
 		this.calendars = calendars;
@@ -97,6 +110,12 @@ public class EventInputDTO {
 	}
 	public List<EventAttendee> getAttendees() {
 		return attendees;
+	}
+	public String getRecurrence() {
+		return recurrence;
+	}
+	public int getUpdateType() {
+		return updateType;
 	}
 	public String getCalendars() {
 		return calendars;

@@ -19,7 +19,7 @@
 			 <label><input id="allDayCheckBox" type='checkbox' name="allDay" onclick="resetTimePicker_detail();"> 종일</label>
 			 <br/><br/>
 			 <span class='detail_span'>반복</span>
-			 <select id="recurrenceList_detail" class="form-control" style="width:160px;">
+			 <select id="recurrenceList_detail" class="form-control" style="width:180px;">
 			 	<option data-rrule="none">없음</option>
 			 </select>
 			 <br/><br/>
@@ -48,6 +48,23 @@
 			<br/>
 			<button id="btnSave_detail" class="btn btn-info" type="button" name="save" value="true" onclick="submitInput_detail();">저장</button>
 			<button id="btnCancel_detail" class="btn btn-info" type="button" onclick="clickCancel_detail();">취소</button>
+			<p id="previousData_detail" style='display:none;'></p>
+	</div>
+	<div id="recurUpdateDiv">
+		<div style="width:100%; height:22.5%; text-align:right; padding:1%; ">
+			<button type='button' class="btn btn-info" onclick="$('#recurUpdateDiv').css('display','none');">X</button>
+		</div>
+		<div style="width:100%; height:55%; text-align:left; padding: 3%;">
+			<form>
+				<label><input type="radio" name="userType" checked="checked" value="ONLYTHIS">이 일정만 변경</label><br>
+				<label><input type="radio" name="userType" value="ALL">모든 반복 일정들 변경</label><br>
+				<label><input type="radio" name="userType" value="NEXT">이 일정과 향후 반복 일정들 변경</label>
+			</form>
+		</div>
+		<div style="width:100%; height:22.5%; text-align:center; padding-bottom:1%;">
+			<button type='button' class="btn btn-info" id='recurUpdateBtn_detail'>확인</button>
+			<button type='button' class="btn btn-info" style='margin-left:5px;' onclick="$('#recurUpdateDiv').css('display','none');">취소</button>
+		</div>
 	</div>
 </div>
 </body>

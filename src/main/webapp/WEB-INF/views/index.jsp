@@ -61,6 +61,7 @@
 	#title{
 		padding-left: 3%;
 		padding-top: 1%;
+		min-width: 540px;
 	}
 	/*일, 주, 월, 목록 선택하는 버튼 div*/
 	#btnList{
@@ -197,7 +198,8 @@
 	#container_EventDetail{
 		padding : 1% 1%;
 		width:100%;
-		
+		position: relative;
+		z-index: 1;
 	}
 	/*일정 요약 보여주는 작은 창*/
 	#showEventSummary{
@@ -330,8 +332,10 @@
 	.noUnderLine:hover{
 		text-decoration: none;
 	}
-	
-	
+	/*이벤트 요약 정보에서 반복 일정 정보*/
+	.eventSummaryRecurrence{
+		font-size: small;
+	}	
 	/*List Calendar*/
 	/*일정 들어가는 한 날짜(여러줄)*/
 	.listRowGroup{
@@ -480,7 +484,11 @@
 						break;
 				}
 				var path = location.pathname.split('/');
-				history.pushState(data,"Simple Calendar-Add/Update Event","http://localhost:8080/event/"+calendarId+"/"+eventId+"/"+path[1]+"&"+path[2]);
+				var url = "http://localhost:8080/event/"+calendarId+"/"+eventId+"/"+path[1]+"&"+path[2];
+				if($(".eventSummaryRecurrence").length == 1){
+					url += "&"+$(".eventSummaryContents_p:eq(1)").attr('data-startdate')+"&"+$(".eventSummaryContents_p:eq(1)").attr('data-enddate');
+				}
+				history.pushState(data,"Simple Calendar-Add/Update Event",url);
 				loadEventDetail();
 			}
 		});

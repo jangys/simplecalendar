@@ -59,7 +59,6 @@ public class EventDTO {
 		endTime[2] = Integer.parseInt(strEnd.substring(8,10));
 		
 		if(!isDateOnly) {//시간이 있는 경우 
-			System.out.println(strEnd + " , "+end);
 			endTime[3] = Integer.parseInt(strEnd.substring(11,13));
 			endTime[4] = Integer.parseInt(strEnd.substring(14,16));
 			//System.out.println("hour : "+endTime[3]+" , min : "+endTime[4]);

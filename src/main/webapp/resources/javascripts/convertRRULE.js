@@ -8,14 +8,14 @@ function showRecurrenceList(startDate){
 	var startDay = firstDate.getDay();
 	var weekNum = Math.floor((startDay+date-1)/7 +1);
 	var week = weekNum > 1 ? weekNum:"";
-	var text = "";
+	var text = "<option value='none'>없음</option>";
 	//매일, 매주 요일,매주 주중(월-금), 매월 몇번째 요일, 매월 일,매년
 	var rrule = ["FREQ=DAILY","FREQ=WEEKLY;BYDAY="+day,"FREQ=WEEKY;BYDAY=MO,TU,WE,TH,FR","FREQ=MONTHLY;BYDAY="+week+day,"FREQ=MONTHLY","FREQ=YEARLY"];
 	var size = rrule.length;
 	for(var i=0;i<size;i++){
-		text += "<option data-rrule='RRULE:"+rrule[i]+"'>"+covertRRULEInKorean(rrule[i],month,date)+"</option>";
+		text += "<option value='RRULE:"+rrule[i]+"'>"+covertRRULEInKorean(rrule[i],month,date)+"</option>";
 	}
-	select.append(text);
+	select.html(text);
 }
 
 function convertDay(day,type,toKorean){

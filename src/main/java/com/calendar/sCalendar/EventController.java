@@ -135,10 +135,13 @@ public class EventController {
 		System.out.println(dto.getSummary());
 		String[] strStartDate = dto.getStartDate().split("-");
 		String[] strEndDate = dto.getEndDate().split("-");
-		if(dto.getAllDay() != null) {
+		System.out.println(dto.getAllDay());
+		System.out.println(dto.getStartDateTime());
+		System.out.println(dto.getEndDateTime());
+		if(dto.getAllDay().equals("true")) {
 			Date startD;
 			startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]),9,0);	//timezone만큼 시간 설정해야함.
-			System.out.println(startD.toString());
+		//	System.out.println(startD.toString());
 			start.setDate(new DateTime(true,startD.getTime(),startD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
 			
 		}else {
@@ -148,7 +151,7 @@ public class EventController {
 					Integer.parseInt(strStartDateTime[0]), Integer.parseInt(strStartDateTime[1]));
 			start.setDateTime(new DateTime(startD)).setTimeZone("Asia/Seoul");
 		}
-		if(dto.getAllDay() != null) {
+		if(dto.getAllDay().equals("true")) {
 			Date endD;
 			endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]),9,0);
 			DateTime endDate = new DateTime(endD);
@@ -180,12 +183,16 @@ public class EventController {
 			reminders.setOverrides(dto.getOverrides());
 		}
 		reminders.setUseDefault(useDefault);
-		System.out.println(dto.getAttendees().size());
-		
+		System.out.println("update type : "+dto.getUpdateType());
+		ArrayList<String> recurrence = new ArrayList<String>();
+		if(dto.getRecurrence() != null) {
+			recurrence.add(dto.getRecurrence());
+		}
+		System.out.println(reminders.getUseDefault());
 		if(eventId.equals("addEvent")){//일정을 입력한 경우
 			try {
+				System.out.println("e  "+reminders.getUseDefault());
 				service = gcs.getCalendarService();
-
 				Event event = new Event()
 						.setSummary(dto.getSummary())
 						.setLocation(dto.getLocation())
@@ -194,6 +201,7 @@ public class EventController {
 						.setEnd(end)
 						.setReminders(reminders)
 						.setAttendees(dto.getAttendees())
+						.setRecurrence(recurrence)
 						;
 				String newCalendarId = dto.getCalendars();
 				service.events().insert(newCalendarId, event).execute();
@@ -207,13 +215,16 @@ public class EventController {
 			try {
 				service = gcs.getCalendarService();
 				Event updateEvent = service.events().get(calendarId, eventId).execute();
+				System.out.println("dd  "+reminders.getUseDefault());
 				updateEvent.setSummary(dto.getSummary())
+				.setSummary(dto.getSummary())
 				.setLocation(dto.getLocation())
 				.setDescription(dto.getDescription())
 				.setStart(start)
 				.setEnd(end)
 				.setReminders(reminders)
 				.setAttendees(dto.getAttendees())
+				.setRecurrence(recurrence)
 				;
 				service.events().update(calendarId, updateEvent.getId(), updateEvent).execute();
 				String newCalendarId = dto.getCalendars();
