@@ -16,6 +16,7 @@ public class EventInputDTO {
 	private String description;
 	private String useDefault;		//email 10분전, popup 30분전
 	private List<EventReminder> overrides;
+	private List<EventReminder> defaultReminders;
 	private List<EventAttendee> attendees;
 	private String recurrence;
 	private int updateType;
@@ -58,6 +59,9 @@ public class EventInputDTO {
 	//EventReminder-> method, minutes(0~40320 4weeks) 최대 5개
 	public void setOverrides(List<EventReminder> overrides) {
 		this.overrides = overrides;
+	}
+	public void setDefaultReminders(List<EventReminder> defaultReminders) {
+		this.defaultReminders = defaultReminders;
 	}
 	public void setAttendees(List<EventAttendee> attendees) {
 		this.attendees = attendees;
@@ -107,6 +111,9 @@ public class EventInputDTO {
 	}
 	public List<EventReminder> getOverrides() {
 		return overrides;
+	}
+	public List<EventReminder> getDefaultReminders(){
+		return defaultReminders;
 	}
 	public List<EventAttendee> getAttendees() {
 		return attendees;

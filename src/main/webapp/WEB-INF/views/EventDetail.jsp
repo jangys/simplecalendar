@@ -19,7 +19,7 @@
 			 <label><input id="allDayCheckBox" type='checkbox' name="allDay" onclick="resetTimePicker_detail();"> 종일</label>
 			 <br/><br/>
 			 <span class='detail_span'>반복</span>
-			 <select id="recurrenceList_detail" class="form-control" style="width:180px;">
+			 <select id="recurrenceList_detail" class="form-control" style="width:180px;" data-beforeSelect="none">
 			 	<option data-rrule="none">없음</option>
 			 </select>
 			 <br/><br/>
@@ -64,6 +64,54 @@
 		<div style="width:100%; height:22.5%; text-align:center; padding-bottom:1%;">
 			<button type='button' class="btn btn-info" id='recurUpdateBtn_detail'>확인</button>
 			<button type='button' class="btn btn-info" style='margin-left:5px;' onclick="$('#recurUpdateDiv').css('display','none');">취소</button>
+		</div>
+	</div>
+	<div id="makeRecurDiv">
+		<div style="width:100%; height:15%; text-align:right; padding:1%; ">
+			<button type='button' class="btn btn-info" onclick="$('#makeRecurDiv').css('display','none');">X</button>
+		</div>
+		<div style="width:100%; height:70%; text-align:left; padding: 3%;">
+			<div>
+				<span>
+					<input type="number" class="form-control" min="0" id="inputInterval_detail" style="width:150px;">
+				</span>
+				<span>
+					<select id="freqSelect_detail" class="form-control" style='width:100px;'>
+						<option value="date">일</option>
+						<option value="week">주</option>
+						<option value="month">개월</option>
+						<option value="year">년</option>
+					</select>
+				</span>
+			</div>
+			<div id = "bydayDiv_detail">
+				<label><input type="checkbox" name="recurDay" value="MO">월</label>
+				<label><input type="checkbox" name="recurDay" value="TU">화</label>
+				<label><input type="checkbox" name="recurDay" value="WE">수</label>
+				<label><input type="checkbox" name="recurDay" value="TH">목</label>
+				<label><input type="checkbox" name="recurDay" value="FR">금</label>
+				<label><input type="checkbox" name="recurDay" value="SA">토</label>
+				<label><input type="checkbox" name="recurDay" value="SU">일</label>
+			</div>
+			<div id = "recurMonth_detail">
+				<label><input type="radio" name="recurMonth" value="day"></label>
+				<label><input type="radio" name="recurMonth" value="date"></label>
+			</div>
+			<div id="endDateDiv_detail">
+				<p>종료일</p>
+				<label><input id="noEndDate_detail"type="radio" name="recurUntil" value="none">없음</label><br/>
+				<label><input type="radio" name="recurUntil" value="date">날짜</label>
+				<input id="endDate_detail"type="date" id="recurDatePicker" class="form-control" style="width:180px;">
+				<br/>
+				<label><input type="radio" name="recurUntil" value="count">횟수</label>
+				<input id="endDateCount_detail" type="number" class="form-control" min="0" id="inputCount_detail" style="width:100px;">
+				<span>번 까지</span>
+				<br/>
+			</div>
+		</div>
+		<div style="width:100%; height:15%; text-align:center; padding-bottom:1%;">
+			<button type='button' class="btn btn-info" id='makeRecurBtn_detail'>확인</button>
+			<button type='button' class="btn btn-info" style='margin-left:5px;' onclick="$('#makeRecurDiv').css('display','none');">취소</button>
 		</div>
 	</div>
 </div>

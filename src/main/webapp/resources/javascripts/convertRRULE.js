@@ -15,6 +15,17 @@ function showRecurrenceList(startDate){
 	for(var i=0;i<size;i++){
 		text += "<option value='RRULE:"+rrule[i]+"'>"+covertRRULEInKorean(rrule[i],month,date)+"</option>";
 	}
+	text += "<option value='custom'>맞춤 선택..</option>";
+	$('#recurrenceList_detail').change(function() {
+		var select = $("#recurrenceList_detail");
+		if(select.val() == "custom"){
+			console.log(startDate.getFullYear()+","+month+","+date);
+			showMakeRecurDiv(startDate,weekNum);
+		}else{
+			select.attr('data-beforeSelect',select.val());
+		}
+			
+	});
 	select.html(text);
 }
 
@@ -55,13 +66,11 @@ function convertDay(day,type,toKorean){
 	}
 	return "";
 }
-
-function covertRRULEInKorean(strRrule,month,date){
+function convertRRULEToObject(strRrule){
 	var rruleSplit = strRrule.split(';');
 	var size = rruleSplit.length;
-	var result = "";
 	var rrule = new Object();
-	for(var i=0;i<size;i++){//until은  빼기
+	for(var i=0;i<size;i++){
 		var temp = rruleSplit[i].split('=');
 		var name = temp[0];
 		var value = temp[1];
@@ -69,12 +78,22 @@ function covertRRULEInKorean(strRrule,month,date){
 			rrule.FREQ = value;
 		}else if(name == "INTERVAL"){
 			rrule.INTERVAL = value;
+		}else if(name == "COUNT"){
+			rrule.COUNT = value;
+		}else if(name == "UNTIL"){
+			rrule.UNTIL = value;
 		}else if(name == "BYMONTH"){
 			console.log("BYMONTH 존재");
 		}else{
 			rrule.BYDAY = value;
 		}
 	}
+	return rrule;
+}
+function covertRRULEInKorean(strRrule,month,date){
+	var result = "";
+	var rrule = convertRRULEToObject(strRrule);
+
 	if(rrule.INTERVAL != undefined){
 		result += rrule.INTERVAL;
 		if(rrule.FREQ == "MONTHLY"){
@@ -107,7 +126,6 @@ function covertRRULEInKorean(strRrule,month,date){
 			result += " "+date+"일";
 		}
 	}else{
-		
 		if(rrule.BYDAY.length == 3){//몇번째 요일
 			result += " "+rrule.BYDAY.substring(0,1)+"번째 ";
 			result += convertDay(rrule.BYDAY.substring(1,3),"en",true);
@@ -126,7 +144,43 @@ function covertRRULEInKorean(strRrule,month,date){
 			}
 		}
 		
-	}
+	}//BYDAY
 	
+	if(rrule.UNTIL != undefined){
+		$("#recurrenceList_detail").width(300);
+		result += ": "+rrule.UNTIL.substring(0,4)+"년"+rrule.UNTIL.substring(4,6)+"월"+rrule.UNTIL.substring(6,8)+"일 까지";
+	}else{
+		$("#recurrenceList_detail").width(180);
+	}
+	if(rrule.COUNT != undefined){
+		$("#recurrenceList_detail").width(250);
+		result += ": "+value+"번 까지";
+	}else{
+		$("#recurrenceList_detail").width(180);
+	}
 	return result;
+}
+function showMakeRecurDiv(startDate,weeknum){
+	var select = $("#recurrenceList_detail");
+	var selected = select.attr('data-beforeSelect');
+	var originalValue = select.attr('data-originalvalue');
+	var selectFreq = $("#freqSelect_detail");
+	var byday = $("#bydayDiv_detail");
+	console.log(selected + " , "+originalValue);
+	if(selected == "none"){
+		if(originalValue == undefined){
+			$("#inputInterval_detail").val(1);
+			selectFreq.children().eq(1).attr('selected','selected');
+			byday.css('display','block');
+			byday.children().eq(0).children().eq(0).prop('checked',true);
+			$("#noEndDate_detail").prop('checked',true);
+			$("#endDate_detail").attr('disabled',true);
+			$("#endDateCount_detail").attr('disabled',true);
+		}else{
+			var rrule = convertRRULEToObject(originalValue.split(":")[1]);
+			
+		}
+	}else{
+		var rrule = convertRRULEToObject(selected.split(":")[1]);
+	}
 }

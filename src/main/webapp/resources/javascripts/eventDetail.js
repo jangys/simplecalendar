@@ -30,7 +30,6 @@ function loadEventDetail(){
 		}
 		
 		$("#allDayCheckBox").attr('value',false);
-		showAlarm_detail(true);
 		getCalendarList_detail(false);
 	}else{
 		getCalendarList_detail(true);
@@ -59,18 +58,21 @@ function getCalendarList_detail(getEvent){
 			for(var i=0;i<size;i++){
 				if(data[i].accessRole == "writer" || data[i].accessRole == "owner"){
 					text += "<option value='"+data[i].id+"'";
-					if($("#eventId_detail").attr('value')=="addEvent"){
+					if($("#eventId_detail").attr('value')=="addEvent"){//이벤트 생성인 경우
 						if(data[i].primary){
 							text += "selected";
 						}
 					}else{
-						if(data[i].id == $("#calendarId_detail").attr('value')){
+						if(data[i].id == $("#calendarId_detail").attr('value')){//이벤트 수정인 경우 이벤트의 캘린더가 선택되도록
 							text += "selected";
 							$("#calendarList_detail").attr('data-originalvalue',data[i].id);
 						}
 					}
 					if(data[i].primary){
 						$("#userId").text(data[i].id);
+						if(!getEvent){
+							showAlarm_detail(true,null,data[i].id);
+						}
 					}
 					text += ">"+data[i].summary+"</option>";
 				}
@@ -174,7 +176,7 @@ function showEvent_detail(data){
 		$("#description_detail").attr('data-originalValue',data.description);
 	}
 	if(data.reminders.overrides != null || data.reminders.useDefault){
-		showAlarm_detail(data.reminders.useDefault,data);
+		showAlarm_detail(data.reminders.useDefault,data,$("#calendarId_detail").val());
 		$("#alarmList").attr('data-originalValue',JSON.stringify(data.reminders));
 	}
 	$("#creator_detail").text(data.creator.email);
@@ -249,6 +251,7 @@ function showEvent_detail(data){
 		for(var i=0;i<option.length;i++){
 			if(option.eq(i).val() == data.recurrence[0]){
 				option.eq(i).attr('selected','selected');
+				$("#recurrenceList_detail").attr('data-beforeSelect',data.recurrence[0]);
 				isIn = true;
 			}
 		}
@@ -256,6 +259,7 @@ function showEvent_detail(data){
 			var temp = data.recurrence[0].split(':');
 			var rrule = temp[1];
 			var text = "<option value='RRULE:"+rrule+"' selected>"+covertRRULEInKorean(rrule,startDate.getMonth()+1,startDate.getDate())+"</option>";
+			$("#recurrenceList_detail").attr('data-beforeSelect',data.recurrence[0]);
 			$("#recurrenceList_detail").append(text);
 		}
 	}
@@ -264,14 +268,20 @@ function showEvent_detail(data){
 
 
 //<select class="form-control" id="calendarList" name="calendars">
-function showAlarm_detail(useDefault, data){
+//return은 alarm add할때 아무것도 없는 상태에서 추가 버튼 눌렀을때 defaultReminder가 나오도록 했는데 defaultReminder가 비었는지를 판단하기 위함
+function showAlarm_detail(useDefault, data,calendarId){
 	var text = "";
 	var size = 0;
 	if(useDefault == true){
-		text += makeAlarmForm_detail(0,"popup",30);
-		text += makeAlarmForm_detail(1,"email",10);
-		size = 2;
-		$("[data-alarmnum]").attr("data-alarmnum",2);
+		var defaultReminder = new Object();
+		if($("[data-originalcalendarid='"+calendarId+"']").attr('data-defaultreminders') != undefined){
+			defaultReminder = JSON.parse($("[data-originalcalendarid='"+calendarId+"']").attr('data-defaultreminders'));
+		}
+		size = defaultReminder.length;
+		for(var i=0;i<size;i++){
+			text += makeAlarmForm_detail(i,defaultReminder[i].method,defaultReminder[i].minutes);
+		}
+		$("[data-alarmnum]").attr("data-alarmnum",size);
 	}else{
 		 size = data.reminders.overrides.length;
 		for(var i=0;i<size;i++){
@@ -283,6 +293,7 @@ function showAlarm_detail(useDefault, data){
 		$("#alarmList").css('display','block');
 	}
 	$("#alarmList").html(text);
+	return text;
 }
 function makeAlarmForm_detail(alarmIndex, method, minutes){
 	var text = "";
@@ -362,12 +373,16 @@ function removeAlarm_detail(btn){
 function addAlarm_detail(){
 	var alarmIndex = parseInt($("[data-alarmnum]").attr('data-alarmnum'));
 	var text = makeAlarmForm_detail(alarmIndex,"popup",10);
+	var result = "";
 	if(alarmIndex == 0){
 		$("#alarmList").css('display','block');
+		result = showAlarm_detail(true,null,$("#calendarList_detail").val());
 	}
-	if(text != ""){
-		$("#alarmList").append(text);
-		$("[data-alarmnum]").attr('data-alarmnum',alarmIndex+1);
+	if(result == ""){
+		if(text != ""){
+			$("#alarmList").append(text);
+			$("[data-alarmnum]").attr('data-alarmnum',alarmIndex+1);
+		}
 	}
 }
 //알람 숫자 입력칸 유효성 체크
@@ -807,7 +822,7 @@ function submitInput_detail(){
 	if(recurrence == "none"){
 		recurrence = null;
 	}
-	
+	var calendarId = $("#calendarList_detail").val().toString();
 	var inputJSON={
 		"summary" : $("#summary_detail").val().toString(),
 		"startDate" : $("#startDatePicker").val().toString(),
@@ -818,10 +833,11 @@ function submitInput_detail(){
 		"location" : $("#location_detail").val().toString(),
 		"description" : $("#description_detail").val().toString(),
 		"overrides" : overrides,
+		"defaultReminders" : JSON.parse($("[data-originalcalendarid='"+calendarId+"']").attr('data-defaultreminders')),
 		"attendees" : attendees,
 		"recurrence" : recurrence,
 		"updateType" : 0,
-		"calendars" : $("#calendarList_detail").val().toString(),
+		"calendars" : calendarId,
 		"eventId" : $("#eventId_detail").val().toString(),
 		"calendarId" : $("#calendarId_detail").val().toString()
 		};
@@ -833,10 +849,21 @@ function submitInput_detail(){
 		var start;
 		var startSplit = inputJSON.startDate.split("-");
 		start = new Date(startSplit[0],startSplit[1]-1,startSplit[2],12).toString();
-		if($("#startDatePicker").attr('data-originalvalue') != start){
+		var end;
+		var endSplit = inputJSON.endDate.split("-");
+		end = new Date(endSplit[0],endSplit[1]-1,endSplit[2],12).toString();
+		if($("#startDatePicker").attr('data-originalvalue') != start || $("#endDatePicker").attr('data-originalvalue') != end){
 			$("[name='userType']:eq(1)").parent().css('display','none');
 		}else{
 			$("[name='userType']:eq(1)").parent().css('display','inline-block');
+		}
+		//반복 규칙이 바뀐 경우
+		console.log($("#recurrenceList_detail").attr('data-originalvalue'));
+		if($("#recurrenceList_detail").attr('data-originalvalue') != recurrence){
+			$("[name='userType']:eq(0)").parent().css('display','none');
+			$("[name='userType']:eq(1)").prop('checked',true);
+		}else{
+			$("[name='userType']:eq(0)").parent().css('display','inline-block');
 		}
 		if($("#recurrenceList_detail").attr('data-originalValue') != undefined){
 			$("#recurUpdateDiv").css('display','block');

@@ -167,15 +167,17 @@ public class EventController {
 		//System.out.println(startDate.toString());
 		//String[] strStartDateTime = request.getParameter("startDateTime").split(":");
 		//알람 default 체크
-		boolean useDefault = false;
+		boolean useDefault = true;
 		if(dto.getOverrides() != null) {
-			if(dto.getOverrides().size() == 2) {
-				EventReminder eventReminder = dto.getOverrides().get(0);
-				if(eventReminder.getMethod().equals("popup") && eventReminder.getMinutes()== 30) {
-					EventReminder eventReminderTwo = dto.getOverrides().get(1);
-					if(eventReminderTwo.getMethod().equals("email") && eventReminderTwo.getMinutes() == 10) {
-						useDefault = true;
+			if(dto.getOverrides().size() == dto.getDefaultReminders().size()) {
+				int index = 0;
+				for(EventReminder eventReminder : dto.getOverrides()) {
+					EventReminder defaultReminder = dto.getDefaultReminders().get(index);
+					if(!eventReminder.getMethod().equals(defaultReminder.getMethod()) || eventReminder.getMinutes() != defaultReminder.getMinutes()) {
+						useDefault = false;
+						break;
 					}
+					index++;
 				}
 			}
 		}

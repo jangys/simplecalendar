@@ -1,5 +1,8 @@
 package com.calendar.sCalendar;
 
+import java.util.List;
+
+import com.google.api.services.calendar.model.EventReminder;
 
 public class CalendarDTO {
 	private String id;
@@ -8,6 +11,7 @@ public class CalendarDTO {
 	private String colorId;
 	private boolean primary;
 	private String accessRole;
+	private List<EventReminder> defaultReminders;
 	
 	public void setId(String id) {
 		this.id = id;
@@ -27,6 +31,9 @@ public class CalendarDTO {
 	public void setAccessRole(String accessRole) {
 		this.accessRole = accessRole;
 	}
+	public void setDefaultReminders(List<EventReminder> defaultReminders) {
+		this.defaultReminders = defaultReminders;
+	}
 	public String getId() {
 		return id;
 	}
@@ -44,5 +51,8 @@ public class CalendarDTO {
 	}
 	public String getAccessRole() {
 		return accessRole;
+	}
+	public List<EventReminder> getDefaultReminders(){
+		return defaultReminders;
 	}
 }

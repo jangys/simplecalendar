@@ -24,6 +24,7 @@ function printCalendarList(data){
 	for(var i=0;i<size;i++){
 		var colorCode = colorList[parseInt(data[i].colorId)%colorList.length];
 		checkList += "<label"+" style='color:white; background-color:"+colorCode+"'><input type='checkbox' value = '"+data[i].id+"' data-originalCalendarId = '"+data[i].id+"'";
+		checkList += "data-defaultReminders='"+JSON.stringify(data[i].defaultReminders)+"'";
 		if(data[i].check == true){
 			checkList +=" checked";
 		}

@@ -168,6 +168,7 @@ public class GoogleCalendarService {
           tempDTO.setSummary(calendarListEntry.getSummary());
           tempDTO.setCheck(true);
           tempDTO.setColorId(calendarListEntry.getColorId());
+          tempDTO.setDefaultReminders(calendarListEntry.getDefaultReminders());
           boolean primary = true;
           if(calendarListEntry.getPrimary() == null) {
         	  primary = false;
@@ -299,8 +300,14 @@ class callable implements Callable<ArrayList<EventDTO>>{
             		if(recurrenceEXDATE.get(eventId) != null) {
             			exdate = (ArrayList<Integer>) recurrenceEXDATE.get(eventId);
             		}
-            		exdate.add(Integer.parseInt(event.getId().substring(event.getId().length()-8)));
-//            		System.out.println(event.getId().substring(event.getId().length()-8));
+            	//	exdate.add(Integer.parseInt(event.getId().substring(event.getId().length()-8)));
+            		String date;
+            		if(event.getOriginalStartTime().getDate() != null) {
+            			date = event.getOriginalStartTime().getDate().toString().replaceAll("-", "");
+            		}else {
+            			date = event.getOriginalStartTime().getDateTime().toString().substring(0, 10).replaceAll("-", "");
+            		}
+            		exdate.add(Integer.parseInt(date));
         			recurrenceEXDATE.put(eventId, exdate);
         			if(event.getStatus() != null && event.getStatus().equals("cancelled")) {
         				continue;
