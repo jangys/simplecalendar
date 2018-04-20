@@ -11,6 +11,8 @@ public class EventInputDTO {
 	private String startDateTime;
 	private String endDate;
 	private String endDateTime;
+	private long[] originalStartDate;
+	private long[] originalEndDate;
 	private String allDay;
 	private String location;
 	private String description;
@@ -43,6 +45,12 @@ public class EventInputDTO {
 	}
 	public void setEndDateTime(String endDateTime) {
 		this.endDateTime = endDateTime;
+	}
+	public void setOriginalStartDate(long[] originalStartDate) {
+		this.originalStartDate = originalStartDate;
+	}
+	public void setOriginalEndDate(long[] originalEndDate) {
+		this.originalEndDate = originalEndDate;
 	}
 	public void setAllDay(String allDay) {
 		this.allDay = allDay;
@@ -97,6 +105,12 @@ public class EventInputDTO {
 	public String getEndDateTime() {
 		return endDateTime;
 	}
+	public long[] getOriginalStartDate() {
+		return originalStartDate;
+	}
+	public long[] getOriginalEndDate() {
+		return originalEndDate;
+	}
 	public String getAllDay() {
 		return allDay;
 	}
@@ -133,5 +147,6 @@ public class EventInputDTO {
 	public String getCalendarId() {
 		return calendarId;
 	}
+
 }
 

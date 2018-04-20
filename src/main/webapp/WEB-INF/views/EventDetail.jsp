@@ -11,7 +11,7 @@
 	<div id="contents_detail">
 			<span class='detail_span'>제목</span><input id="summary_detail" class="form-control" type="text" name="summary"><br><br>
 			<span class='detail_span'>일시</span>
-				<input id="startDatePicker" class="form-control datePick_detail" type="date" name="startDate" required onblur="checkDate_detail();">
+				<input id="startDatePicker" class="form-control datePick_detail" type="date" name="startDate" required onblur="checkDate_detail(true);">
 				 <input id="startTimePicker" class="form-control timePick_detail" type="time" name="startDateTime" onclick="resetTimePicker_detail();" onblur="checkTime_detail();">
 				<span> - </span>
 				<input id="endDatePicker" class="form-control datePick_detail" type="date" name="endDate" required onblur="checkDate_detail();">
@@ -68,7 +68,7 @@
 	</div>
 	<div id="makeRecurDiv">
 		<div style="width:100%; height:15%; text-align:right; padding:1%; ">
-			<button type='button' class="btn btn-info" onclick="$('#makeRecurDiv').css('display','none');">X</button>
+			<button type='button' class="btn btn-info" onclick="$('#makeRecurDiv').css('display','none'); $('#recurrenceList_detail').children().eq(0).prop('selected',true);">X</button>
 		</div>
 		<div style="width:100%; height:70%; text-align:left; padding: 3%;">
 			<div>
@@ -77,10 +77,10 @@
 				</span>
 				<span>
 					<select id="freqSelect_detail" class="form-control" style='width:100px;'>
-						<option value="date">일</option>
-						<option value="week">주</option>
-						<option value="month">개월</option>
-						<option value="year">년</option>
+						<option value="DAILY">일</option>
+						<option value="WEEKLY">주</option>
+						<option value="MONTHLY">개월</option>
+						<option value="YEARLY">년</option>
 					</select>
 				</span>
 			</div>
@@ -94,24 +94,24 @@
 				<label><input type="checkbox" name="recurDay" value="SU">일</label>
 			</div>
 			<div id = "recurMonth_detail">
-				<label><input type="radio" name="recurMonth" value="day"></label>
-				<label><input type="radio" name="recurMonth" value="date"></label>
+				<label><input type="radio" name="recurMonth" value="date"><span></span></label>
+				<label><input type="radio" name="recurMonth" value="day"><span></span></label>
 			</div>
 			<div id="endDateDiv_detail">
 				<p>종료일</p>
 				<label><input id="noEndDate_detail"type="radio" name="recurUntil" value="none">없음</label><br/>
-				<label><input type="radio" name="recurUntil" value="date">날짜</label>
-				<input id="endDate_detail"type="date" id="recurDatePicker" class="form-control" style="width:180px;">
+				<label><input type="radio" name="recurUntil" value="UNTIL">날짜</label>
+				<input id="endDate_detail"type="date" id="recurDatePicker" class="form-control" style="width:180px;" onblur="checkEndDate_detail();">
 				<br/>
-				<label><input type="radio" name="recurUntil" value="count">횟수</label>
+				<label><input type="radio" name="recurUntil" value="COUNT">횟수</label>
 				<input id="endDateCount_detail" type="number" class="form-control" min="0" id="inputCount_detail" style="width:100px;">
 				<span>번 까지</span>
 				<br/>
 			</div>
 		</div>
 		<div style="width:100%; height:15%; text-align:center; padding-bottom:1%;">
-			<button type='button' class="btn btn-info" id='makeRecurBtn_detail'>확인</button>
-			<button type='button' class="btn btn-info" style='margin-left:5px;' onclick="$('#makeRecurDiv').css('display','none');">취소</button>
+			<button type='button' class="btn btn-info" id='makeRecurBtn_detail' onclick="saveCustomRRULE();">확인</button>
+			<button type='button' class="btn btn-info" style='margin-left:5px;' onclick="$('#makeRecurDiv').css('display','none'); $('#recurrenceList_detail').children().eq(0).prop('selected',true);">취소</button>
 		</div>
 	</div>
 </div>

@@ -20,8 +20,8 @@ function loadEventDetail(){
 			var str = $('#calendarId_detail').attr('value').split("~");
 			var strStartDate = str[0].split("-");
 			var strEndDate = str[1].split("-");
-			var startDate = new Date(parseInt(strStartDate[0]),parseInt(strStartDate[1])-1,parseInt(strStartDate[2]),12);
-			var endDate = new Date(parseInt(strEndDate[0]),parseInt(strEndDate[1])-1,parseInt(strEndDate[2]),12);
+			var startDate = new Date(parseInt(strStartDate[0]),parseInt(strStartDate[1])-1,parseInt(strStartDate[2]),9);
+			var endDate = new Date(parseInt(strEndDate[0]),parseInt(strEndDate[1])-1,parseInt(strEndDate[2]),9);
 			showRecurrenceList(startDate);
 			document.getElementById('startDatePicker').valueAsDate = startDate;
 			document.getElementById('endDatePicker').valueAsDate = endDate;
@@ -140,20 +140,22 @@ function showEvent_detail(data){
 	}else{
 		startDate = new Date(start);
 	}
-	showRecurrenceList(startDate);
-	var valueDate = new Date(startDate.getFullYear(),startDate.getMonth(),startDate.getDate(),12);	//시간 있는 날짜인 경우 9시 이전이면 그 전날을 표시하기 때문
+	showRecurrenceList(new Date(start));
+	var valueDate = new Date(startDate.getFullYear(),startDate.getMonth(),startDate.getDate(),9);	//시간 있는 날짜인 경우 9시 이전이면 그 전날을 표시하기 때문
 	document.getElementById('startDatePicker').valueAsDate = valueDate;
-	$("#startDatePicker").attr('data-originalValue',valueDate);
+	$("#startDatePicker").attr('data-originalValue',valueDate.getTime());
 	$("#startDatePicker").attr('data-originalDateValue',start);
 	var end;
 	if(data.end.date != null){
 		end = data.end.date.value; 
+		$("#endDatePicker").attr('data-originalDateValue',end);
 		if(data.end.date.dateOnly){
 			end -= 86400000;
 		}
 	}else{
 		end = data.end.dateTime.value;
 		date = new Date(end);
+		$("#endDatePicker").attr('data-originalDateValue',end);
 		var time = makeTimeForm(date.getHours(),date.getMinutes(),0);
 		document.getElementById('endTimePicker').value = time;
 		$("#endTimePicker").attr('data-originalValue',time);
@@ -163,10 +165,10 @@ function showEvent_detail(data){
 	}else{
 		date = new Date(end);
 	}
-	var valueDate = new Date(date.getFullYear(),date.getMonth(),date.getDate(),12);
+	var valueDate = new Date(date.getFullYear(),date.getMonth(),date.getDate(),9);
 	document.getElementById('endDatePicker').valueAsDate = valueDate;
-	$("#endDatePicker").attr('data-originalValue',valueDate);
-	$("#endDatePicker").attr('data-originalDateValue',end);
+	$("#endDatePicker").attr('data-originalValue',valueDate.getTime());
+	
 	if(data.location != null){
 		$('#location_detail').attr('value',data.location);
 		$("#location_detail").attr('data-originalValue',data.location);
@@ -250,7 +252,7 @@ function showEvent_detail(data){
 		var isIn = false;
 		for(var i=0;i<option.length;i++){
 			if(option.eq(i).val() == data.recurrence[0]){
-				option.eq(i).attr('selected','selected');
+				option.eq(i).prop('selected',true);
 				$("#recurrenceList_detail").attr('data-beforeSelect',data.recurrence[0]);
 				isIn = true;
 			}
@@ -260,7 +262,7 @@ function showEvent_detail(data){
 			var rrule = temp[1];
 			var text = "<option value='RRULE:"+rrule+"' selected>"+covertRRULEInKorean(rrule,startDate.getMonth()+1,startDate.getDate())+"</option>";
 			$("#recurrenceList_detail").attr('data-beforeSelect',data.recurrence[0]);
-			$("#recurrenceList_detail").append(text);
+			$("#recurCustomOption").before(text);
 		}
 	}
 	$("#previousData_detail").text(JSON.stringify(data));
@@ -482,13 +484,15 @@ function resetTimePicker_detail(){
 	}
 }
 //날짜 유효성 체크. 시작 날짜 기준으로 맞춤
-function checkDate_detail(){
+function checkDate_detail(start){
 	var startDate = new Date($("#startDatePicker").val());
 	var endDate = new Date($("#endDatePicker").val());
 	if(startDate.getTime() > endDate.getTime()){
 		document.getElementById('endDatePicker').valueAsDate = new Date(startDate.getTime());
 	}
-	showRecurrenceList(startDate);
+	if(start){
+		//showRecurrenceList(startDate);
+	}
 }
 //시간 유효성 체크. 시작 시간 기준으로 맞춤
 function checkTime_detail(){
@@ -694,8 +698,8 @@ function checkInputChange(input){
 	var date;
 
 	var startSplit = input.startDate.split("-");
-	start = new Date(startSplit[0],startSplit[1]-1,startSplit[2],12).toString();
-	if($("#startDatePicker").attr('data-originalvalue') != start){
+	start = new Date(startSplit[0],startSplit[1]-1,startSplit[2],9);
+	if($("#startDatePicker").attr('data-originalvalue') != start.getTime()){
 		return true;
 	}
 	var end = "";
@@ -703,8 +707,8 @@ function checkInputChange(input){
 	var endTime = "";
 
 	var endSplit = input.endDate.split("-");
-	end = new Date(endSplit[0],endSplit[1]-1,endSplit[2],12).toString();
-	if($("#endDatePicker").attr('data-originalvalue') != end){
+	end = new Date(endSplit[0],endSplit[1]-1,endSplit[2],9);
+	if($("#endDatePicker").attr('data-originalvalue') != end.getTime()){
 		return true;
 	}
 	if(previous.start.dateTime != null){
@@ -822,6 +826,15 @@ function submitInput_detail(){
 	if(recurrence == "none"){
 		recurrence = null;
 	}
+	//var originalStart = $("#startDatePicker").attr('data-originalDateValue')+new Date($("#startDatePicker").val()).getTime()-$("#startDatePicker").attr('data-originalValue');
+	//var originalEnd = $("#endDatePicker").attr('data-originalDateValue')+new Date($("#endDatePicker").val()).getTime()-$("#endDatePicker").attr('data-originalValue');
+	var originalStart = new Array();
+	originalStart.push($("#startDatePicker").attr('data-originalDateValue'));
+	originalStart.push($("#startDatePicker").attr('data-originalValue'));
+	var originalEnd = new Array();
+	originalEnd.push($("#endDatePicker").attr('data-originalDateValue'));
+	originalEnd.push($("#endDatePicker").attr('data-originalValue'));
+	
 	var calendarId = $("#calendarList_detail").val().toString();
 	var inputJSON={
 		"summary" : $("#summary_detail").val().toString(),
@@ -829,6 +842,8 @@ function submitInput_detail(){
 		"startDateTime" : $("#startTimePicker").val().toString(),
 		"endDate" :  $("#endDatePicker").val().toString(),
 		"endDateTime" : $("#endTimePicker").val().toString(),
+		"originalStartDate" : originalStart,
+		"originalEndDate" :  originalEnd,
 		"allDay" : $("#allDayCheckBox").is(":checked"),
 		"location" : $("#location_detail").val().toString(),
 		"description" : $("#description_detail").val().toString(),
@@ -848,11 +863,11 @@ function submitInput_detail(){
 		console.log("true");
 		var start;
 		var startSplit = inputJSON.startDate.split("-");
-		start = new Date(startSplit[0],startSplit[1]-1,startSplit[2],12).toString();
+		start = new Date(startSplit[0],startSplit[1]-1,startSplit[2],9);
 		var end;
 		var endSplit = inputJSON.endDate.split("-");
-		end = new Date(endSplit[0],endSplit[1]-1,endSplit[2],12).toString();
-		if($("#startDatePicker").attr('data-originalvalue') != start || $("#endDatePicker").attr('data-originalvalue') != end){
+		end = new Date(endSplit[0],endSplit[1]-1,endSplit[2],9);
+		if($("#startDatePicker").attr('data-originalvalue') != start.getTime()){
 			$("[name='userType']:eq(1)").parent().css('display','none');
 		}else{
 			$("[name='userType']:eq(1)").parent().css('display','inline-block');
@@ -894,7 +909,6 @@ function submitData(inputJSON){
 	var data = JSON.stringify(inputJSON);
 	
 	var baseUrl = "http://localhost:8080";
-	console.log(inputJSON);
 	$.ajax({
 		url: baseUrl+"/updateEvent",
 		type:'POST',

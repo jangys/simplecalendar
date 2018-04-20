@@ -138,29 +138,46 @@ public class EventController {
 		System.out.println(dto.getAllDay());
 		System.out.println(dto.getStartDateTime());
 		System.out.println(dto.getEndDateTime());
+		long originalStart = dto.getOriginalStartDate()[0]-dto.getOriginalStartDate()[1];
 		if(dto.getAllDay().equals("true")) {
 			Date startD;
 			startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]),9,0);	//timezone만큼 시간 설정해야함.
 		//	System.out.println(startD.toString());
-			start.setDate(new DateTime(true,startD.getTime(),startD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
-			
+			if(dto.getUpdateType() == EventInputDTO.ALL) {
+				start.setDate(new DateTime(true,originalStart+startD.getTime(),startD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+			}else {
+				start.setDate(new DateTime(true,startD.getTime(),startD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+			}
 		}else {
-			String[] strStartDateTime = dto.getStartDateTime().split(":");
-			System.out.println(dto.getStartDateTime());
-			Date startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]), 
-					Integer.parseInt(strStartDateTime[0]), Integer.parseInt(strStartDateTime[1]));
-			start.setDateTime(new DateTime(startD)).setTimeZone("Asia/Seoul");
+				String[] strStartDateTime = dto.getStartDateTime().split(":");
+				System.out.println(dto.getStartDateTime());
+				Date startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]), 
+						Integer.parseInt(strStartDateTime[0]), Integer.parseInt(strStartDateTime[1]));
+				if(dto.getUpdateType() == EventInputDTO.ALL) {
+					start.setDateTime(new DateTime(startD.getTime()+originalStart)).setTimeZone("Asia/Seoul");
+				}else {
+					start.setDateTime(new DateTime(startD)).setTimeZone("Asia/Seoul");
+				}
 		}
+		long originalEnd = dto.getOriginalEndDate()[0]-dto.getOriginalEndDate()[1];
 		if(dto.getAllDay().equals("true")) {
 			Date endD;
 			endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]),9,0);
-			DateTime endDate = new DateTime(endD);
-			end.setDate(new DateTime(true,endD.getTime()+86400000l,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+			if(dto.getUpdateType() == EventInputDTO.ALL) {
+				end.setDate(new DateTime(true,endD.getTime()+86400000l+originalEnd,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+			}else {
+				end.setDate(new DateTime(true,endD.getTime()+86400000l,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+			}
+			
 		}else {
 			String[] strEndDateTime = dto.getEndDateTime().split(":");
 			Date endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]), 
 					Integer.parseInt(strEndDateTime[0]), Integer.parseInt(strEndDateTime[1]));
-			end.setDateTime(new DateTime(endD)).setTimeZone("Asia/Seoul");
+			if(dto.getUpdateType() == EventInputDTO.ALL) {
+				end.setDateTime(new DateTime(endD.getTime()+originalEnd)).setTimeZone("Asia/Seoul");
+			}else {
+				end.setDateTime(new DateTime(endD)).setTimeZone("Asia/Seoul");
+			}
 		}
 		System.out.println(start.toString());
 		System.out.println(end.toString());
