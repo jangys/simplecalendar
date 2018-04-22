@@ -2,6 +2,7 @@ package com.calendar.sCalendar;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
@@ -11,6 +12,7 @@ import net.fortuna.ical4j.model.DateList;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.parameter.Value;
+import net.fortuna.ical4j.model.property.ExDate;
 
 public class CalculateRecurrence {
 	public void example() throws ParseException {
@@ -25,10 +27,29 @@ public class CalculateRecurrence {
 	public ArrayList<EventDTO> getRecurrenceEvents(boolean isDateOnly, EventDTO event, int year, int month,ArrayList<Integer> exdateList) throws ParseException{
 		ArrayList<EventDTO> list = new ArrayList<EventDTO>();
 		int size = event.getRecurrence().size();
+		for(int i=0;i<size;i++) {
+			String rule = event.getRecurrence().get(i).substring(0,6);
+			if(rule.equals("EXDATE")){
+				String date = event.getRecurrence().get(i).split(":")[1];
+				if(exdateList == null) {
+					exdateList = new ArrayList<Integer>();
+				}
+				exdateList.add(Integer.parseInt(date.substring(0, 8)));
+			}
+		}
+		if(exdateList != null) {
+			Collections.sort(exdateList);
+		}
 		//여러날 일정 반복인 경우 기간이 28일 넘어가면 그 전날부터 조사. 
 		for(int i=0;i<size;i++) {
 			System.out.println(event.getRecurrence());
-			Recur recur = new Recur(event.getRecurrence().get(i).substring(6));
+			Recur recur = null;
+			String rule = event.getRecurrence().get(i).substring(0,6);
+			if(rule.equals("RRULE:")) {
+				recur = new Recur(event.getRecurrence().get(i).substring(6));
+			}else if(rule.equals("EXDATE")){
+				continue;
+			}
 			DateTime startDate = null;
 			startDate = new DateTime();
 			

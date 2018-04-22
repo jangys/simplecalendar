@@ -20,7 +20,7 @@ public class EventInputDTO {
 	private List<EventReminder> overrides;
 	private List<EventReminder> defaultReminders;
 	private List<EventAttendee> attendees;
-	private String recurrence;
+	private List<String> recurrence;
 	private int updateType;
 	private String calendars;
 	private String eventId;
@@ -74,7 +74,7 @@ public class EventInputDTO {
 	public void setAttendees(List<EventAttendee> attendees) {
 		this.attendees = attendees;
 	}
-	public void setRecurrence(String recurrence) {
+	public void setRecurrence(List<String> recurrence) {
 		this.recurrence = recurrence;
 	}
 	public void setUpdateType(int updateType) {
@@ -132,7 +132,7 @@ public class EventInputDTO {
 	public List<EventAttendee> getAttendees() {
 		return attendees;
 	}
-	public String getRecurrence() {
+	public List<String> getRecurrence() {
 		return recurrence;
 	}
 	public int getUpdateType() {

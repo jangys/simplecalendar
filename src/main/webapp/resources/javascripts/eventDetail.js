@@ -3,6 +3,16 @@ function loadEventDetail(){
 	var path = location.pathname.split('/');
 	$('#calendarId_detail').attr('value',path[2]);
 	$('#eventId_detail').attr('value',path[3]);
+	//시간 선택창 만들기
+	var text ="";
+	var hour = 0;
+	var min = 0;
+	for(var i=0;i<48;i++){
+		text += "<div class='timePicker' value='"+makeTimeForm(hour,min,0)+"'data-order="+i+">"+changeTimeForm(hour,min)+"</div>";
+		hour = min == 30? hour+1 : hour;
+		min = min == 0? 30:0;
+	}
+	$('#timePickerDiv').html(text);
 	if($('#eventId_detail').attr('value') == "addEvent"){//그냥 삽입인 경우
 		var date = new Date();
 		if($('#calendarId_detail').attr('value') == "0"){
@@ -247,23 +257,35 @@ function showEvent_detail(data){
 		
 	}//if-attendee
 	if(data.recurrence != null){
-		$("#recurrenceList_detail").attr('data-originalValue',data.recurrence[0]);
+		var rrule = data.recurrence[0];
+		var size = data.recurrence.length;
+		if(size > 1){
+			for(var i=0;i<size;i++){
+				if(data.recurrence[i].substring(0,5) == "RRULE"){
+					rrule = data.recurrence[i];
+					break;
+				}
+			}
+		}
+		console.log("rrule = "+rrule);
+		$("#recurrenceList_detail").attr('data-originalValue',rrule);
 		var option = $("#recurrenceList_detail").children();
 		var isIn = false;
 		for(var i=0;i<option.length;i++){
-			if(option.eq(i).val() == data.recurrence[0]){
+			if(option.eq(i).val() == rrule){
 				option.eq(i).prop('selected',true);
-				$("#recurrenceList_detail").attr('data-beforeSelect',data.recurrence[0]);
+				$("#recurrenceList_detail").attr('data-beforeSelect',rrule);
 				isIn = true;
 			}
 		}
 		if(!isIn){
-			var temp = data.recurrence[0].split(':');
-			var rrule = temp[1];
-			var text = "<option value='RRULE:"+rrule+"' selected>"+covertRRULEInKorean(rrule,startDate.getMonth()+1,startDate.getDate())+"</option>";
-			$("#recurrenceList_detail").attr('data-beforeSelect',data.recurrence[0]);
+			var temp = rrule.split(':');
+			var rruleSplit = temp[1];
+			var text = "<option value='RRULE:"+rruleSplit+"' selected>"+covertRRULEInKorean(rruleSplit,startDate.getMonth()+1,startDate.getDate())+"</option>";
+			$("#recurrenceList_detail").attr('data-beforeSelect',rrule);
 			$("#recurCustomOption").before(text);
 		}
+		$("#recurrenceList_detail").attr('data-moreInformation',JSON.stringify(data.recurrence));
 	}
 	$("#previousData_detail").text(JSON.stringify(data));
 }
@@ -281,13 +303,13 @@ function showAlarm_detail(useDefault, data,calendarId){
 		}
 		size = defaultReminder.length;
 		for(var i=0;i<size;i++){
-			text += makeAlarmForm_detail(i,defaultReminder[i].method,defaultReminder[i].minutes);
+			text += makeAlarmForm_detail(i,defaultReminder[i].method,defaultReminder[i].minutes,$("#allDayCheckBox").prop('checked'));
 		}
 		$("[data-alarmnum]").attr("data-alarmnum",size);
 	}else{
 		 size = data.reminders.overrides.length;
 		for(var i=0;i<size;i++){
-			text += makeAlarmForm_detail(i,data.reminders.overrides[i].method,data.reminders.overrides[i].minutes);
+			text += makeAlarmForm_detail(i,data.reminders.overrides[i].method,data.reminders.overrides[i].minutes,$("#allDayCheckBox").prop('checked'));
 		}
 		$("[data-alarmnum]").attr("data-alarmnum",size);
 	}
@@ -297,7 +319,7 @@ function showAlarm_detail(useDefault, data,calendarId){
 	$("#alarmList").html(text);
 	return text;
 }
-function makeAlarmForm_detail(alarmIndex, method, minutes){
+function makeAlarmForm_detail(alarmIndex, method, minutes,allDay){
 	var text = "";
 	if(alarmIndex == 5){
 		return "";
@@ -312,9 +334,11 @@ function makeAlarmForm_detail(alarmIndex, method, minutes){
 		text += "<option value='email' selected>이메일</option>";
 	}
 	text += "</select>";
+	text += "<input type='number' name='overrides["+alarmIndex+"].minutes' min='0' max='40320' style='display:none;' value="+minutes+">";
 	var hour = 0;
 	var type;
 	var result = minutes;
+
 	if(minutes >= 60){
 		hour = minutes/60;
 		if(parseInt(hour) === hour){
@@ -337,20 +361,71 @@ function makeAlarmForm_detail(alarmIndex, method, minutes){
 			type = "min";
 		}
 	}
-	var optionValue=["min","hour","day","week"];
-	var optionText=["분","시간","일","주"];
-	text += "<input type='number' name='overrides["+alarmIndex+"].minutes' min='0' max='40320' style='display:none;' value="+minutes+">";
-	text += "<input type='number' id='inputNumber'min='0' value="+result+" onblur='checkMinutes_detail(this);'>";
-	text += "<select class='form-control selectType_detail' onchange='changeType_detail(this);'>";
-	for(var i=0;i<4;i++){
-		text += "<option value="+optionValue[i];
-		if(optionValue[i] == type){
-			text += " selected";
+	if(allDay){
+		var week;
+		var date;
+		var hour;
+		var remainder_hour;
+		var remainder_min;
+		var remainder;
+		var isDate = true;
+		if(minutes >= 60){
+			hour = parseInt(minutes/60);
+			if(hour >= 24){
+				date = parseInt(hour /24) + 1;	//전날 기준
+				if(date >= 7){
+					week = parseInt(date/7);
+					result = week;
+					remainder = minutes - week*60*24*7;
+					isDate = false;
+				}else{
+					result = date;
+					remainder = minutes - date*60*24;
+				}
+				remainder = remainder+24*60;	//하루 전이라서 표현만 하루전으로 하고 실제 계산은 돌려놓기
+			}else{
+				result = 1;
+				remainder = minutes;
+			}
+		}else{
+			result = 1;
+			remainder = minutes;
 		}
-		text += ">"+optionText[i]+"</option>";
+		
+		remainder_hour = 24 - parseInt(remainder/60);
+		remainder_min = remainder%60;
+		if(remainder_min != 0){
+			remainder_hour--;
+		}
+		//console.log("result = "+result + " ,"+"remainder = "+remainder_hour+ " , "+remainder_min);
+		text += "<input type='number' class='form-control selectType_detail' style='margin-right:0;' min='1' max='28' value="+result+" onblur='checkMinutes_detail(this,true);'>";
+		text += "<select class='form-control selectType_detail' onchange='changeType_detail(this,true);'>";
+		if(isDate){
+			text += "<option name='alarm_allDay' value='day' selected>일</option>";
+			text += "<option name='alarm_allDay' value='week'>주</option>";
+		}else{
+			text += "<option name='alarm_allDay' value='day'>일</option>";
+			text += "<option name='alarm_allDay' value='week' selected>주</option>";
+		}
+		text += "</select>";
+		text += "<span class='detail_span'>전</span>";
+		text += "<input type='time' class='form-control timePick_detail' value='"+makeTimeForm(remainder_hour,remainder_min,0)+"' onblur='convertTime_alarm(this);'>";
+		//text += "<input type='text' class='form-control selectType_detail' onclick='showTimePicker(this,true);' onkeyup='convertTime(this);' onblur='showTimePicker(this,false);'>";
+	}else{
+		var optionValue=["min","hour","day","week"];
+		var optionText=["분","시간","일","주"];
+		text += "<input type='number' id='inputNumber_detail'min='0' value="+result+" onblur='checkMinutes_detail(this);'>";
+		text += "<select class='form-control selectType_detail' onchange='changeType_detail(this);'>";
+		for(var i=0;i<4;i++){
+			text += "<option value="+optionValue[i];
+			if(optionValue[i] == type){
+				text += " selected";
+			}
+			text += ">"+optionText[i]+"</option>";
+		}
+		text += "</select>";
+		text += "<span class='detail_span'> 전</span>"
 	}
-	text += "</select>";
-	text += "<span class='detail_span'> 전</span>"
 	text += "<a href='#' style='color:black;' class='noUnderLine' onclick='removeAlarm_detail(this); return false;'>X</a>";
 	text += "</li>";
 	return text;
@@ -374,7 +449,12 @@ function removeAlarm_detail(btn){
 //알람 추가 버튼 눌렀을 시
 function addAlarm_detail(){
 	var alarmIndex = parseInt($("[data-alarmnum]").attr('data-alarmnum'));
-	var text = makeAlarmForm_detail(alarmIndex,"popup",10);
+	var text;
+	if($("#allDayCheckBox").prop('checked')){
+		text = makeAlarmForm_detail(alarmIndex,"popup",900,true);
+	}else{
+		text = makeAlarmForm_detail(alarmIndex,"popup",10,false);
+	}
 	var result = "";
 	if(alarmIndex == 0){
 		$("#alarmList").css('display','block');
@@ -388,11 +468,14 @@ function addAlarm_detail(){
 	}
 }
 //알람 숫자 입력칸 유효성 체크
-function checkMinutes_detail(input){
+function checkMinutes_detail(input,allDay){
 	var num = parseInt(input.value);
 	var result = num;
 	if(num < 0){
 		input.value = 0;
+		if(allDay){
+			input.value = 1;
+		}
 	}else{
 		switch($(input).next().val()){
 		case "min":
@@ -421,9 +504,20 @@ function checkMinutes_detail(input){
 		}
 	}
 	$(input).prev().attr('value',result);
+	if(allDay){
+		result -= 60*24; //표현만 하루 전으로 표현
+		var timeStr = $(input).nextAll(":eq(2)").val().split(":");
+		var hour = 24 - parseInt(timeStr[0]);
+		var min = parseInt(timeStr[1]);
+		if(min != 0){
+			hour --;
+		}
+		$(input).prev().attr('value',result+hour*60+min);
+	}
+		
 }
 //알람 타입(분,시,일,주) 바꼈을 떄
-function changeType_detail(input){
+function changeType_detail(input,allDay){
 	var type = $(input).val();
 	var num = $(input).prev().val();
 	var result = num;
@@ -463,15 +557,56 @@ function changeType_detail(input){
 		break;
 	}
 	$(input).prev().prev().attr('value',result);
+	if(allDay){
+		result -= 60*24; //표현만 하루 전으로 표현
+		var timeStr = $(input).nextAll(":eq(1)").val().split(":");
+		var hour = 24 - parseInt(timeStr[0]);
+		var min = parseInt(timeStr[1]);
+		if(min != 0){
+			hour --;
+		}
+		$(input).prev().prev().attr('value',result+hour*60+min);
+	}
+}
+function convertTime_alarm(time){
+	var timeStr = $(time).val().split(":");
+	var result;
+	var type = $(time).prevAll(":eq(1)").val();
+	var num = $(time).prevAll(":eq(2)").val();
+	switch(type){
+	case "day":
+		result = num*60*24;
+		break;
+	case "week":
+		result = num*60*24*7;
+		break;
+	}
+	result -= 60*24; //표현만 하루 전으로 표현
+	var hour = 24 - parseInt(timeStr[0]);
+	var min = parseInt(timeStr[1]);
+	if(min != 0){
+		hour --;
+	}
+	console.log("type = "+type+", num = "+num);
+	$(time).prevAll(":eq(3)").attr('value',result+hour*60+min);
 }
 //종일 일정 체크 여부에 따른 리셋
 function resetTimePicker_detail(){
-	if($("#allDayCheckBox").prop('checked')){
+	if($("#allDayCheckBox").prop('checked')){//종일
 		$('#startTimePicker').css('display','none');
 		$('#endTimePicker').css('display','none');
 		$("#allDayCheckBox").attr('value',true);
+		$("#alarmList").html('');
+		$("[data-alarmnum]").attr("data-alarmnum",0);
+		if($("#allDayCheckBox").attr('data-originalvalue') == 'true'){
+			if($("#previousData_detail").text() != ''){
+				var previous = JSON.parse($("#previousData_detail").text());
+				showAlarm_detail(previous.reminders.useDefault, previous,$("#calendarList_detail").attr('data-originalvalue'));
+			}
+		}
 	} else{
 		var date = new Date();
+		showAlarm_detail(true,null,$("#calendarList_detail>option:selected").val());
 		document.getElementById('startTimePicker').value = makeTimeForm(date.getHours(),0,0);
 		if(date.getHours() == 23){
 			document.getElementById('endTimePicker').value = makeTimeForm(date.getHours(),30,0);
@@ -481,6 +616,14 @@ function resetTimePicker_detail(){
 		$('#startTimePicker').css('display','inline');
 		$('#endTimePicker').css('display','inline');
 		$("#allDayCheckBox").attr('value',false);
+		$("#alarmList").html('');
+		$("[data-alarmnum]").attr("data-alarmnum",0);
+		if($("#allDayCheckBox").attr('data-originalvalue') == 'false'){
+			if($("#previousData_detail").text() != ''){
+				var previous = JSON.parse($("#previousData_detail").text());
+				showAlarm_detail(previous.reminders.useDefault, previous,$("#calendarList_detail").attr('data-originalvalue'));
+			}
+		}
 	}
 }
 //날짜 유효성 체크. 시작 날짜 기준으로 맞춤
@@ -538,6 +681,7 @@ function changeCalendarList_detail(select){
 			
 		}
 	}
+	showAlarm_detail(true,null,val);
 }
 	//document.getElementById('startTimePicker').value = "15:21:00";
 function addAttendee_detail(input){
@@ -664,6 +808,31 @@ function makeTimeForm(hour, min, sec){
 	
 	return result;
 }
+//아래 시간 선택 창 출력
+function showTimePicker(input,show){
+	var div = $("#timePickerDiv");
+	var top = $(input).offset().top;
+	var left = $(input).offset().left;
+	if(show){
+		div.css('display','block');
+		div.css('top',top+40);
+		div.css('left',left);
+	}else{
+		div.css('display','none');
+	}
+}
+//입력된 값에서 시간, 분 추출
+function convertTime(input){
+	var num = $(input).val().replace(/[^0-9]/g,'');
+	if(num.length <= 2){//시간만 입력
+		var time = makeTimeForm(parseInt(num),0,0);
+		var div = $("div[value='"+time+"']");
+		div.css('background-color','#c3c3c3');
+		var order = parseInt(div.attr('data-order'));
+		console.log(order*20);
+		$('#timePickerDiv').animate({scrollTop : order*20}, 400);
+	}
+}
 function clickCancel_detail(){
 	console.log("cancel");
 	var typeStr = location.pathname.split('/')[4].split("&");
@@ -726,7 +895,7 @@ function checkInputChange(input){
 	if(previous.recurrence == undefined && input.recurrence != null){
 		return true;
 	}
-	if(previous.recurrence != undefined && previous.recurrence[0] != input.recurrence){
+	if(previous.recurrence != undefined && previous.recurrence != input.recurrence){
 		return true;
 	}
 	var location = "";
@@ -744,13 +913,22 @@ function checkInputChange(input){
 		return true;
 	}
 	var useDefault = false;
-	if(input.overrides.length == 2){
-		if(input.overrides[0].method == "popup" && input.overrides[0].minutes == 30){
-			if(input.overrides[1].method == "email" && input.overrides[1].minutes == 10){
-				useDefault = true;
+	var defaultReminder = new Object();
+	if($("[data-originalcalendarid='"+input.calendars+"']").attr('data-defaultreminders') != undefined){
+		defaultReminder = JSON.parse($("[data-originalcalendarid='"+input.calendars+"']").attr('data-defaultreminders'));
+	}
+	var size = defaultReminder.length;
+	var isDefault = true;
+	if(size == input.overrides.length){
+		for(var i=0;i<size;i++){
+			if(input.overrides[i].method != defaultReminder[i].method || input.overrides[i].minutes != defaultReminder[i].minutes){
+				isDefault = false;
+				break;
 			}
 		}
 	}
+	useDefault = isDefault;
+	console.log("useDefault = "+useDefault);
 	if(previous.reminders.useDefault != useDefault){
 		return true;
 	}
@@ -821,7 +999,20 @@ function submitInput_detail(){
 		attendee.responseStatus = getResponseStatus(li.children().eq(4).text());
 		attendees.push(attendee);
 	}	
-	var recurrence = $("#recurrenceList_detail").val();
+	var recurrence = new Array();
+	var originRecurrence = JSON.parse($("#recurrenceList_detail").attr('data-moreInformation'));
+	var originRRULE;
+	for(var i=0;i<originRecurrence.length;i++){
+		if(originRecurrence[i].substring(0,5) == "RRULE"){
+			originRRULE = originRecurrence[i];
+			break;
+		}
+	}
+	if($("#recurrenceList_detail").val() == originRRULE && originRecurrence.length > 1){
+		recurrence = originRecurrence;
+	}else{
+		recurrence.push($("#recurrenceList_detail").val());
+	}
 	console.log(recurrence);
 	if(recurrence == "none"){
 		recurrence = null;
@@ -873,8 +1064,9 @@ function submitInput_detail(){
 			$("[name='userType']:eq(1)").parent().css('display','inline-block');
 		}
 		//반복 규칙이 바뀐 경우
-		console.log($("#recurrenceList_detail").attr('data-originalvalue'));
-		if($("#recurrenceList_detail").attr('data-originalvalue') != recurrence){
+		console.log(originRecurrence);
+		console.log(recurrence);
+		if($("#recurrenceList_detail").attr('data-moreInformation') != JSON.stringify(recurrence)){
 			$("[name='userType']:eq(0)").parent().css('display','none');
 			$("[name='userType']:eq(1)").prop('checked',true);
 		}else{
@@ -891,6 +1083,19 @@ function submitInput_detail(){
 					break;
 				case "ALL":
 					updateType = 2;
+					//이때 EXDATE는 다 지우기
+					if(recurrence.length > 1){
+						var rrule;
+						for(var i=0;i<recurrence.length;i++){
+							if(recurrence[i].substring(0,5) == "RRULE"){
+								rrule = recurrence[i];
+								break;
+							}
+						}
+						recurrence = new Array();
+						recurrence.push(rrule);
+						inputJSON.recurrence = recurrence;
+					}
 					break;
 				case "NEXT":
 					updateType = 3;

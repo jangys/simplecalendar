@@ -135,10 +135,9 @@ public class EventController {
 		System.out.println(dto.getSummary());
 		String[] strStartDate = dto.getStartDate().split("-");
 		String[] strEndDate = dto.getEndDate().split("-");
-		System.out.println(dto.getAllDay());
-		System.out.println(dto.getStartDateTime());
-		System.out.println(dto.getEndDateTime());
 		long originalStart = dto.getOriginalStartDate()[0]-dto.getOriginalStartDate()[1];
+		Date updateStart = new Date();
+		Date updateEnd = new Date();
 		if(dto.getAllDay().equals("true")) {
 			Date startD;
 			startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]),9,0);	//timezone만큼 시간 설정해야함.
@@ -147,6 +146,7 @@ public class EventController {
 				start.setDate(new DateTime(true,originalStart+startD.getTime(),startD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
 			}else {
 				start.setDate(new DateTime(true,startD.getTime(),startD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+				updateStart = startD;
 			}
 		}else {
 				String[] strStartDateTime = dto.getStartDateTime().split(":");
@@ -157,6 +157,7 @@ public class EventController {
 					start.setDateTime(new DateTime(startD.getTime()+originalStart)).setTimeZone("Asia/Seoul");
 				}else {
 					start.setDateTime(new DateTime(startD)).setTimeZone("Asia/Seoul");
+					updateStart = startD;
 				}
 		}
 		long originalEnd = dto.getOriginalEndDate()[0]-dto.getOriginalEndDate()[1];
@@ -167,16 +168,19 @@ public class EventController {
 				end.setDate(new DateTime(true,endD.getTime()+86400000l+originalEnd,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
 			}else {
 				end.setDate(new DateTime(true,endD.getTime()+86400000l,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+				updateEnd = new Date(endD.getTime()+86400000l);
 			}
 			
 		}else {
 			String[] strEndDateTime = dto.getEndDateTime().split(":");
 			Date endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]), 
 					Integer.parseInt(strEndDateTime[0]), Integer.parseInt(strEndDateTime[1]));
-			if(dto.getUpdateType() == EventInputDTO.ALL) {
+			if(dto.getUpdateType() == EventInputDTO.ALL ) {
 				end.setDateTime(new DateTime(endD.getTime()+originalEnd)).setTimeZone("Asia/Seoul");
+				
 			}else {
 				end.setDateTime(new DateTime(endD)).setTimeZone("Asia/Seoul");
+				updateEnd = new Date(endD.getTime()+86400000l);
 			}
 		}
 		System.out.println(start.toString());
@@ -196,8 +200,11 @@ public class EventController {
 					}
 					index++;
 				}
+			}else {
+				useDefault = false;
 			}
 		}
+		System.out.println("useDefault = "+useDefault);
 		if(!useDefault) {
 			reminders.setOverrides(dto.getOverrides());
 		}
@@ -205,7 +212,16 @@ public class EventController {
 		System.out.println("update type : "+dto.getUpdateType());
 		ArrayList<String> recurrence = new ArrayList<String>();
 		if(dto.getRecurrence() != null) {
-			recurrence.add(dto.getRecurrence());
+			recurrence.addAll(dto.getRecurrence());
+		}
+		String exdateStr = (updateStart.getYear()+1900)+addZero(updateStart.getMonth()+1)+addZero(updateStart.getDate());
+		if(!dto.getAllDay().equals("true"))
+			exdateStr += "T"+addZero(updateStart.getHours())+addZero(updateStart.getMinutes())+"00";
+		if(dto.getUpdateType() == EventInputDTO.ONLYTHIS) {
+			//EXDATE;TZID=Asia/Seoul:20180515T120000
+			String exdate = "EXDATE;TZID=Asia/Seoul:"+exdateStr;
+			System.out.println(exdate);
+			recurrence.add(exdate);
 		}
 		System.out.println(reminders.getUseDefault());
 		if(eventId.equals("addEvent")){//일정을 입력한 경우
@@ -235,21 +251,39 @@ public class EventController {
 				service = gcs.getCalendarService();
 				Event updateEvent = service.events().get(calendarId, eventId).execute();
 				System.out.println("dd  "+reminders.getUseDefault());
-				updateEvent.setSummary(dto.getSummary())
-				.setSummary(dto.getSummary())
-				.setLocation(dto.getLocation())
-				.setDescription(dto.getDescription())
-				.setStart(start)
-				.setEnd(end)
-				.setReminders(reminders)
-				.setAttendees(dto.getAttendees())
-				.setRecurrence(recurrence)
-				;
-				service.events().update(calendarId, updateEvent.getId(), updateEvent).execute();
-				String newCalendarId = dto.getCalendars();
-				if(!newCalendarId.equals(calendarId)) {
-					System.out.println("move"+newCalendarId);
-					service.events().move(calendarId, updateEvent.getId(), newCalendarId).execute();
+				if(dto.getUpdateType() == EventInputDTO.ONLYTHIS) {
+					updateEvent
+						.setRecurrence(recurrence);
+					service.events().update(calendarId, updateEvent.getId(), updateEvent).execute();
+					Event event = new Event()
+							.setSummary(dto.getSummary())
+							.setLocation(dto.getLocation())
+							.setDescription(dto.getDescription())
+							.setStart(start)
+							.setEnd(end)
+							.setReminders(reminders)
+							.setAttendees(dto.getAttendees())
+							.setRecurringEventId(eventId)
+							;
+					System.out.println("update only this = "+event.getRecurringEventId());
+					service.events().insert(calendarId, event).execute();
+				}else {
+					updateEvent.setSummary(dto.getSummary())
+					.setSummary(dto.getSummary())
+					.setLocation(dto.getLocation())
+					.setDescription(dto.getDescription())
+					.setStart(start)
+					.setEnd(end)
+					.setReminders(reminders)
+					.setAttendees(dto.getAttendees())
+					.setRecurrence(recurrence)
+					;
+					service.events().update(calendarId, updateEvent.getId(), updateEvent).execute();
+					String newCalendarId = dto.getCalendars();
+					if(!newCalendarId.equals(calendarId)) {
+						System.out.println("move"+newCalendarId);
+						service.events().move(calendarId, updateEvent.getId(), newCalendarId).execute();
+					}
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -269,5 +303,13 @@ public class EventController {
 			System.out.println(errorResult);
 		}
 		return errorResult;
+	}
+	public String addZero(int num) {
+		String result ="";
+		if(num < 10) {
+			result += "0";
+		}
+		result += num;
+		return result;
 	}
 }

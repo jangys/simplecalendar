@@ -50,6 +50,8 @@
 			<button id="btnCancel_detail" class="btn btn-info" type="button" onclick="clickCancel_detail();">취소</button>
 			<p id="previousData_detail" style='display:none;'></p>
 	</div>
+	<div id="timePickerDiv">
+	</div>
 	<div id="recurUpdateDiv">
 		<div style="width:100%; height:22.5%; text-align:right; padding:1%; ">
 			<button type='button' class="btn btn-info" onclick="$('#recurUpdateDiv').css('display','none');">X</button>

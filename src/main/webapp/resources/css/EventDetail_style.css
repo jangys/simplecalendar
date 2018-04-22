@@ -45,6 +45,28 @@
 .selfAttendee{
 	color:#5586EB;
 }
+/*시간 선택 창 안 목록*/
+.timePicker{
+	width:100%;
+	background-color:white;
+}
+/*시간 선택 창 안 목록 마우스 올리면*/
+.timePicker:hover{
+	background-color:#c3c3c3;
+}
+/*시간 선택 창*/
+#timePickerDiv{
+	position:absolute;
+	top:30%;
+	left:35%;
+	border: 1px solid #c3c3c3;
+	background-color:white;
+	z-index: 3;
+	width: 150px;
+	height: 200px;
+	overflow-y:scroll;
+	display:none;
+}
 /*반복 일정 수정 완료 시 나오는 창*/
 #recurUpdateDiv{
 	position:absolute;
