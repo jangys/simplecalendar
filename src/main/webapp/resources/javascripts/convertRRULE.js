@@ -17,7 +17,7 @@ function showRecurrenceList(startDate){
 	text += "<option id='recurCustomOption' value='custom'>맞춤 선택..</option>";
 	$('#recurrenceList_detail').change(function() {
 		var select = $("#recurrenceList_detail");
-		console.log(select.val());
+		//console.log(select.val());
 		if(select.val() == "custom"){
 			$("#makeRecurDiv").css('display','block');
 			showMakeRecurDiv(startDate,weekNum);
@@ -89,6 +89,24 @@ function convertRRULEToObject(strRrule){
 		}
 	}
 	return rrule;
+}
+
+function rruleToString(rrule){
+	var result = "RRULE:";
+	result += "FREQ="+rrule.FREQ;
+	if(rrule.UNTIL != undefined){
+		result += ";UNTIL="+rrule.UNTIL;
+	}
+	if(rrule.COUNT != undefined){
+		result += ";COUNT="+rrule.COUNT;
+	}
+	if(rrule.INTERVAL != undefined){
+		result += ";INTERVAL="+rrule.INTERVAL;
+	}
+	if(rrule.BYDAY != undefined){
+		result += ";BYDAY="+rrule.BYDAY;
+	}
+	return result;
 }
 function covertRRULEInKorean(strRrule,month,date){
 	var result = "";
@@ -171,7 +189,7 @@ function showMakeRecurDiv(startDate,weeknum){
 	month.children().eq(0).children().eq(1).html("매월 "+startDate.getDate()+"일");
 	month.children().eq(1).children().eq(1).html("매월 "+weeknum+"번째 "+convertDay(startDate.getDay(),"number",true));
 	month.children().eq(1).children().eq(1).attr('data-rrule',weeknum+convertDay(startDate.getDay(),"number",false));
-	console.log(originalValue);
+	//console.log(originalValue);
 	if(selected == "none"){
 		if(originalValue == undefined){
 			makeRecurDiv("WEEKLY",1,1);
@@ -294,6 +312,7 @@ function makeRecurDiv_EndDate(type,input){
 		div.children().eq(3).children().eq(0).prop('checked',true);
 		$("#endDate_detail").attr('disabled',false);
 		document.getElementById('endDate_detail').valueAsDate = input;
+		$("")
 		$("#endDateCount_detail").attr('disabled',true);
 		break;
 	case "COUNT":
@@ -338,7 +357,7 @@ function saveCustomRRULE(){
 		}
 		break;
 	}
-	console.log(result);
+	//console.log(result);
 	var option = $("#recurrenceList_detail").children();
 	var isIn = false;
 	for(var i=0;i<option.length;i++){
@@ -373,3 +392,12 @@ function checkRecurCheckBox_detail(){
 		$("#bydayDiv_detail").children().eq(dayIndex).children().eq(0).prop('checked',true);
 	}
 }
+
+function cancelmakeRecurDiv(){
+	$('#makeRecurDiv').css('display','none');
+	var select = $('#recurrenceList_detail');
+	var before = select.attr('data-beforeselect');
+	
+	$("[value='"+before+"']").prop('selected',true);
+}
+

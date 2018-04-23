@@ -127,6 +127,17 @@
 		font-weight: bold;
 		font-size: 20px;
 	}
+	/*링크 기본 색 검은색*/
+	.noUnderLine{
+		color: black;
+	}
+	/*링크 마우스 올릴 시 밑줄 없애기*/
+	.noUnderLine:hover{
+		text-decoration: none;
+		color: #c3c3c3;
+	}
+	
+	
 	/*일정 한 칸*/
 	.event{
 	/*
@@ -297,6 +308,29 @@
 	.week6{
 		height:16.6%;
 	}
+	/*side쪽 미니 캘린더 날짜 한 칸 span*/
+	.miniCalendar_Date{
+		width:14.1%;
+		display:inline-block;
+	}
+	/*side쪽 미니 캘린더 오늘 날짜 표시*/
+	.miniCalendar_today{
+		color:white;
+		width:25px;
+		height:25px;
+		-webkit-border-radius:12.5px;
+		-moz-border-radius:12.5px;
+		background-color:#97D7E5;
+		font-weight:bold;
+	}
+	/*side쪽 미니 캘린더 클릭 날짜 표시*/
+	.miniCalendar_clickDate{
+		width:25px;
+		height:25px;
+		-webkit-border-radius:12.5px;
+		-moz-border-radius:12.5px;
+		background-color:#c3c3c3;
+	}
 	/*캘린더 버튼 눌렀을 시*/
 	.pushCalendarBtn{
 		background-color:black;
@@ -328,14 +362,12 @@
 		position: relative;
 		z-index:4;
 	}
-	/*링크 마우스 올릴 시 밑줄 없애기*/
-	.noUnderLine:hover{
-		text-decoration: none;
-	}
 	/*이벤트 요약 정보에서 반복 일정 정보*/
-	.eventSummaryRecurrence{
+	#eventSummaryRecurrence{
 		font-size: small;
 	}	
+	
+	
 	/*List Calendar*/
 	/*일정 들어가는 한 날짜(여러줄)*/
 	.listRowGroup{
@@ -378,6 +410,18 @@
 		width:60%;
 	}
 	
+	/*반복 일정 수정 완료 시 나오는 창*/
+	#recurUpdateDiv{
+		position:absolute;
+		top:30%;
+		left:35%;
+		border: 1px solid #c3c3c3;
+		background-color:white;
+		z-index: 11;
+		width: 350px;
+		height : 200px;
+		display: none;
+	}
 </style>
 </head>
 
@@ -394,6 +438,15 @@
 </div>
 <div id = "contents"  style="width:100%; min-width: 1200px; height:90%;">
 	<div id = "side" class = "form-horizontal">
+		<div id="miniCalendar" style="width:100%;height:242px; border:1px solid #c3c3c3; margin-bottom:15px;">
+			<div id="miniCalendar_Header" style="width:100%; height:15%; text-align:center; padding-top:2%;">
+				<a href="#" class="noUnderLine" onclick="clickMiniCalendarNextBtn(false); return false;">&lt;</a>
+				<span style="margin:0 1%;"></span>
+				<a href="#" class="noUnderLine" onclick="clickMiniCalendarNextBtn(true); return false;">&gt;</a>
+			</div>
+			<div id="miniCalendar_Contents"style="width:100%; height:85%;">
+			</div>
+		</div>
 		<form>
 			<div id = "checkboxList">
 			</div>
@@ -433,7 +486,7 @@
 		</div>
 		<div id="showAttendeesList">
 			<div style="width:95%; height:15%; text-align:right; margin:auto;">
-				<a href="#" class="noUnderLine" style="color:black;" onclick="$('#showAttendeesList').css('display','none'); return false;">X</a>
+				<a href="#" class="noUnderLine" onclick="$('#showAttendeesList').css('display','none'); return false;">X</a>
 			</div>
 			<div id="attendeesList_Contentes" style="overflow-y:scroll; height:72%; width:95%; margin:auto; margin-bottom:8px; margin-top:8px;">
 				<ul id="attendeesList" style="list-style:none;padding:0% 0%;">
@@ -447,10 +500,25 @@
 				</ul>
 			</div>
 		</div>
+		<div id="recurUpdateDiv">
+			<div style="width:100%; height:22.5%; text-align:right; padding:1%; ">
+				<button type='button' class="btn btn-info" onclick="$('#recurUpdateDiv').css('display','none');">X</button>
+			</div>
+			<div style="width:100%; height:55%; text-align:left; padding: 3%;">
+				<form>
+					<label><input type="radio" name="userType" checked="checked" value="ONLYTHIS">이 일정만 삭제</label><br>
+					<label><input type="radio" name="userType" value="ALL">모든 반복 일정들 삭제</label><br>
+					<label><input type="radio" name="userType" value="NEXT">이 일정과 향후 반복 일정들 삭제</label>
+				</form>
+			</div>
+			<div style="width:100%; height:22.5%; text-align:center; padding-bottom:1%;">
+				<button type='button' class="btn btn-info" id='recurDeleteBtn' onclick="clickDeleteRecurrenceEvent();">확인</button>
+				<button type='button' class="btn btn-info" style='margin-left:5px;' onclick="$('#recurUpdateDiv').css('display','none');">취소</button>
+			</div>
+		</div>
 	</div>
 	<div id="container_EventDetail" style="">
 	</div>
-</div>
 </div>
 <p style="display:none;" id='userId'></p>
 <script type="text/javascript">
@@ -473,20 +541,22 @@
 				changeStyle("event",data);
 				var calendarId;
 				var eventId;
+				var path = location.pathname.split('/');
+				var url ="http://localhost:8080/event/";
 				switch(type){
 					case "add":
 						calendarId = $("#addEventDate").attr('value');
 						eventId = "addEvent";
+						 url += calendarId+"/"+eventId+"/"+path[1]+"&"+path[2];
 						break;
 					case "show":
 						calendarId = $("#btnDeleteEvent").attr("data-calendarid");
 						eventId = $("#btnDeleteEvent").attr("data-eventid");
+						url += calendarId+"/"+eventId+"/"+path[1]+"&"+path[2];
+						if($("#eventSummaryRecurrence").length == 1){//상세보기일때만! 일정 요약창 내용 안지워서 반복 남아 있을 수 있음
+							url += "&"+$(".eventSummaryContents_p:eq(1)").attr('data-startdate')+"&"+$(".eventSummaryContents_p:eq(1)").attr('data-enddate');
+						}
 						break;
-				}
-				var path = location.pathname.split('/');
-				var url = "http://localhost:8080/event/"+calendarId+"/"+eventId+"/"+path[1]+"&"+path[2];
-				if($(".eventSummaryRecurrence").length == 1){
-					url += "&"+$(".eventSummaryContents_p:eq(1)").attr('data-startdate')+"&"+$(".eventSummaryContents_p:eq(1)").attr('data-enddate');
 				}
 				history.pushState(data,"Simple Calendar-Add/Update Event",url);
 				loadEventDetail();

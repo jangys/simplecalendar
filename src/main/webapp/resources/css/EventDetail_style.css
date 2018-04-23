@@ -67,18 +67,7 @@
 	overflow-y:scroll;
 	display:none;
 }
-/*반복 일정 수정 완료 시 나오는 창*/
-#recurUpdateDiv{
-	position:absolute;
-	top:30%;
-	left:35%;
-	border: 1px solid #c3c3c3;
-	background-color:white;
-	z-index: 3;
-	width: 350px;
-	height : 200px;
-	display: none;
-}
+
 /*반복 일정 커스텀마이징*/
 #makeRecurDiv{
 	position:absolute;
@@ -89,5 +78,17 @@
 	z-index: 3;
 	width: 350px;
 	height : 390px;
+	display: none;
+}
+/*반복 일정 수정 완료 시 나오는 창*/
+#recurUpdateDiv_detail{
+	position:absolute;
+	top:30%;
+	left:35%;
+	border: 1px solid #c3c3c3;
+	background-color:white;
+	z-index: 3;
+	width: 350px;
+	height : 200px;
 	display: none;
 }

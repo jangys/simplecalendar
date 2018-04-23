@@ -1,5 +1,5 @@
 
-//달력 출력
+//달력 출력 m = 월-1
 function printCalendar(y, m, data,colNum) {    
 	
    var now = new Date();
@@ -9,7 +9,6 @@ function printCalendar(y, m, data,colNum) {
 
    y = (y != undefined)? y:year;
    m = (m != undefined)? m:month;
-   
    var startDate = new Date(y,m,1);
    var startDay = startDate.getDay();	//시작 요일
    

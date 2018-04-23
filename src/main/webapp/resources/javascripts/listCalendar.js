@@ -7,7 +7,6 @@ function printList(year,month,data){
 	var startDay = startDate.getDay();
 	var lastDate = 31;
 	var dayList = ["일","월","화","수","목","금","토"];
-	console.log(size);
 	if(size == 0){
 		var text="<p style='text-align:center; padding-top:5%;'>일정 없음</p>";
 		$("#listCalendar").html(text);

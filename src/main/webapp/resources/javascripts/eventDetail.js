@@ -130,7 +130,7 @@ function showEvent_detail(data){
 		recurStart=path[2].split('-');
 		recurEnd=path[3].split('-');
 	}
-	if(data.start.date != null){
+	if(data.start.date != undefined){
 		start = data.start.date.value;
 		$("#allDayCheckBox").attr('checked',true);
 		$("#allDayCheckBox").attr('value',true);
@@ -153,7 +153,11 @@ function showEvent_detail(data){
 	showRecurrenceList(new Date(start));
 	var valueDate = new Date(startDate.getFullYear(),startDate.getMonth(),startDate.getDate(),9);	//시간 있는 날짜인 경우 9시 이전이면 그 전날을 표시하기 때문
 	document.getElementById('startDatePicker').valueAsDate = valueDate;
-	$("#startDatePicker").attr('data-originalValue',valueDate.getTime());
+	if(data.start.dateTime != undefined){
+		$("#startDatePicker").attr('data-originalValue',data.start.dateTime.value);
+	}else{
+		$("#startDatePicker").attr('data-originalValue',valueDate.getTime());
+	}
 	$("#startDatePicker").attr('data-originalDateValue',start);
 	var end;
 	if(data.end.date != null){
@@ -177,7 +181,11 @@ function showEvent_detail(data){
 	}
 	var valueDate = new Date(date.getFullYear(),date.getMonth(),date.getDate(),9);
 	document.getElementById('endDatePicker').valueAsDate = valueDate;
-	$("#endDatePicker").attr('data-originalValue',valueDate.getTime());
+	if(data.end.dateTime != undefined){
+		$("#endDatePicker").attr('data-originalValue',data.end.dateTime.value);
+	}else{
+		$("#endDatePicker").attr('data-originalValue',valueDate.getTime());
+	}
 	
 	if(data.location != null){
 		$('#location_detail').attr('value',data.location);
@@ -307,9 +315,12 @@ function showAlarm_detail(useDefault, data,calendarId){
 		}
 		$("[data-alarmnum]").attr("data-alarmnum",size);
 	}else{
-		 size = data.reminders.overrides.length;
-		for(var i=0;i<size;i++){
-			text += makeAlarmForm_detail(i,data.reminders.overrides[i].method,data.reminders.overrides[i].minutes,$("#allDayCheckBox").prop('checked'));
+		size = 0;
+		if(data.reminders.overrides != undefined){//useDefault = false인데 overrides가 없는 경우가 있을 수 있음
+			 size = data.reminders.overrides.length;
+			for(var i=0;i<size;i++){
+				text += makeAlarmForm_detail(i,data.reminders.overrides[i].method,data.reminders.overrides[i].minutes,$("#allDayCheckBox").prop('checked'));
+			}
 		}
 		$("[data-alarmnum]").attr("data-alarmnum",size);
 	}
@@ -458,7 +469,8 @@ function addAlarm_detail(){
 	var result = "";
 	if(alarmIndex == 0){
 		$("#alarmList").css('display','block');
-		result = showAlarm_detail(true,null,$("#calendarList_detail").val());
+		if(!$("#allDayCheckBox").prop('checked'))
+			result = showAlarm_detail(true,null,$("#calendarList_detail").val());
 	}
 	if(result == ""){
 		if(text != ""){
@@ -1000,8 +1012,11 @@ function submitInput_detail(){
 		attendees.push(attendee);
 	}	
 	var recurrence = new Array();
-	var originRecurrence = JSON.parse($("#recurrenceList_detail").attr('data-moreInformation'));
-	var originRRULE;
+	var originRecurrence = new Object();
+	if($("#recurrenceList_detail").attr('data-moreInformation') != undefined){
+		originRecurrence = JSON.parse($("#recurrenceList_detail").attr('data-moreInformation'));
+	}
+	var originRRULE = "";
 	for(var i=0;i<originRecurrence.length;i++){
 		if(originRecurrence[i].substring(0,5) == "RRULE"){
 			originRRULE = originRecurrence[i];
@@ -1067,15 +1082,15 @@ function submitInput_detail(){
 		console.log(originRecurrence);
 		console.log(recurrence);
 		if($("#recurrenceList_detail").attr('data-moreInformation') != JSON.stringify(recurrence)){
-			$("[name='userType']:eq(0)").parent().css('display','none');
-			$("[name='userType']:eq(1)").prop('checked',true);
+			$("[name='userType_detail']:eq(0)").parent().css('display','none');
+			$("[name='userType_detail']:eq(1)").prop('checked',true);
 		}else{
-			$("[name='userType']:eq(0)").parent().css('display','inline-block');
+			$("[name='userType_detail']:eq(0)").parent().css('display','inline-block');
 		}
 		if($("#recurrenceList_detail").attr('data-originalValue') != undefined){
-			$("#recurUpdateDiv").css('display','block');
+			$("#recurUpdateDiv_detail").css('display','block');
 			$("#recurUpdateBtn_detail").click(function(){
-				var updateTypeStr = $("[name='userType']:checked").val();
+				var updateTypeStr = $("[name='userType_detail']:checked").val();
 				var updateType = 0;
 				switch(updateTypeStr){
 				case "ONLYTHIS":
@@ -1098,7 +1113,24 @@ function submitInput_detail(){
 					}
 					break;
 				case "NEXT":
-					updateType = 3;
+					updateType = 3;	//until 추가 originRecurrence
+					var original = convertRRULEToObject($("#recurrenceList_detail").attr('data-originalvalue').split(":")[1]);
+					var current = new Date(new Date($("#startDatePicker").val()).getTime()-86400000);	//하루 전까지 UNTIL
+					var result = ""+(current.getFullYear())+addZero(current.getMonth()+1)+addZero(current.getDate());
+					original.UNTIL = result;
+					inputJSON.originRecurrence = JSON.parse($("#recurrenceList_detail").attr('data-moreInformation'));
+					if(inputJSON.originRecurrence.length > 1){
+						for(var i=0; i<input.originRecurrence.length;i++){
+							if(inputJSON.originRecurrence[i].substring(0,5) == "RRULE"){
+								inputJSON.originRecurrence[i] = rruleToString(original);
+								console.log(inputJSON.originRecurrence[i]);
+								break;
+							}
+						}
+					}else{
+						inputJSON.originRecurrence[0] = rruleToString(original);
+						console.log(inputJSON.originRecurrence[0]);
+					}
 					break;
 				}
 				inputJSON.updateType = updateType;

@@ -83,6 +83,7 @@ function showTitle(y,m){
 	input += "<button class = 'btn btn-info' type='button' id = 'forwardBtn' value='"+m+"' name='forward'> > </button>";
 	input += "</form>";
 	document.getElementById("title").innerHTML = input;
+	makeMiniCalendar(y,m);
 }
 
 //showTitle();
@@ -335,8 +336,16 @@ function clickEventTitle(title,scroll){
 		contents += "</p>";
 	}
 	if(data.recurrence != null){
-		contents += "<p class='eventSummaryContents_p eventSummaryRecurrence'><span class='eventSummaryContents_span'>반복 </span> ";
+		contents += "<p class='eventSummaryContents_p' id='eventSummaryRecurrence'><span class='eventSummaryContents_span'>반복 </span> ";
 		var temp = data.recurrence[0].split(':');
+		if(data.recurrence.length > 1){
+			for(var i=0;i<data.recurrence.length;i++){
+				if(data.recurrence[i].substring(0,5) == "RRULE"){
+					temp = data.recurrence[i].split(':');
+					break;
+				}
+			}
+		}
 		var rrule = temp[1];
 		contents += covertRRULEInKorean(rrule,data.startTime[1],data.startTime[2])+"</p>";
 	}
@@ -380,6 +389,10 @@ function clickEventTitle(title,scroll){
 		}
 	}
 	$('#eventSummary_Contents').html(contents);
+	//추가한 후
+	if(rrule != undefined){
+		$("#eventSummaryRecurrence").attr('data-rrule',rrule);
+	}
 	if(calendar.attr('data-accessRole') == "owner" || calendar.attr('data-accessRole') == "writer"){
 		var text = "<input type='text' name='calendarId' style='display:none' value='"+title.getAttribute('data-calendarId')+"' />";
 		text += "<input type='text' name='eventId' style='display:none' value='"+title.getAttribute('data-eventId')+"' />";
@@ -481,33 +494,96 @@ function clickDeleteEvent(button){
 	result= confirm('정말 삭제하시겠습니까?');
 	if(result == true){
 		console.log("delete");
-		$.ajax({
-			url:baseUrl+"/deleteEvent",
-			type:'GET',
-			data : data,
-			dataType :"json",
-			contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-			success:function(data){
-				if(data == true){
-					alert('삭제가 완료되었습니다.');
-					$(this).attr('disabled',false);
-					//location.reload();
-					$("#showEventSummary").css('display','none');
-					requestData();
-					count=0;
+		
+		if($("#eventSummaryRecurrence") != undefined){
+			$("#recurUpdateDiv").css('display','block');
+		}else{
+			$.ajax({
+				url:baseUrl+"/deleteEvent",
+				type:'GET',
+				data : data,
+				dataType :"json",
+				contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+				success:function(data){
+					if(data == true){
+						alert('삭제가 완료되었습니다.');
+						$(this).attr('disabled',false);
+						//location.reload();
+						$("#showEventSummary").css('display','none');
+						requestData();
+						count=0;
+					}
+					else{
+						alert(data);
+						$(this).attr('disabled',false);
+						count=0;
+					}
 				}
-				else{
-					alert(data);
-					$(this).attr('disabled',false);
-					count=0;
-				}
-			}
-		});
+			});
+		}
 	}else{
 		alert('취소 되었습니다.');
 		$(this).attr('disabled',false);
 		count=0;
 	}
+}
+function clickDeleteRecurrenceEvent(){
+	var type = $("[name='userType']:checked").val();
+	var deleteType = 0;
+	var baseUrl = "http://localhost:8080";
+	var rrule = "";
+	switch(type){
+	case "ONLYTHIS":
+		deleteType=1;
+		break;
+	case "ALL":
+		deleteType=2;
+		break;
+	case "NEXT":
+		deleteType=3;
+		var rruleStr = $("#eventSummaryRecurrence").attr('data-rrule');
+		var original = convertRRULEToObject(rruleStr);
+		var start = $("#eventSummary_Contents").children().eq(1).attr('data-startdate').split('-');
+		var current = new Date(new Date(parseInt(start[0]),parseInt(start[1])-1,parseInt(start[2]),9).getTime()-86400000);	//하루 빼기
+		var result = ""+(current.getFullYear())+addZero(current.getMonth()+1)+addZero(current.getDate());
+		original.UNTIL = result;
+		rrule = rruleToString(original);
+		console.log(rrule);
+		break;
+	}
+	var deleteBtn = $("#btnDeleteEvent");
+	var div = $("#showEventSummary");
+	var data={
+		"calendarId" : deleteBtn.attr('data-calendarId'),
+		"eventId" : deleteBtn.attr('data-eventId'),
+		"startTime" : $("#eventSummary_Contents").children().eq(1).attr('data-startdate'),
+		"rrule" : rrule,
+		"deleteType" : deleteType
+	};
+	$.ajax({
+		url:baseUrl+"/deleteRecurrenceEvent",
+		type:'GET',
+		data : data,
+		dataType :"json",
+		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+		success:function(data){
+			if(data == true){
+				alert('삭제가 완료되었습니다.');
+				$(this).attr('disabled',false);
+				//location.reload();
+				$("#showEventSummary").css('display','none');
+				$("#recurUpdateDiv").css('display','none');
+				requestData();
+				count=0;
+			}
+			else{
+				alert(data);
+				$(this).attr('disabled',false);
+				$("#recurUpdateDiv").css('display','none');
+				count=0;
+			}
+		}
+	});
 }
 //updateResponseStatus
 function updateResponse(response){

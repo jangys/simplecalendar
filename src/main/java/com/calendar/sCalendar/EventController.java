@@ -84,7 +84,45 @@ public class EventController {
 		
 		return result;
 	}
-	
+	@RequestMapping(value="/deleteRecurrenceEvent",method = RequestMethod.GET)
+	public @ResponseBody String deleteRecurrenceEvent(CalendarAndEventIdDTO dto) {
+		String result = "true";
+		GoogleCalendarService gcs = new GoogleCalendarService();
+		com.google.api.services.calendar.Calendar service;
+		try {
+			service = gcs.getCalendarService();
+			if(dto.getDeleteType() == EventInputDTO.ONLYTHIS || dto.getDeleteType() == EventInputDTO.NEXT) {
+				Event updateEvent = service.events().get(dto.getCalendarId(), dto.getEventId()).execute();
+				//EXDATE;TZID=Asia/Seoul:20180515T120000
+				String[] strDate = dto.getStartTime().split("-");
+				java.util.List<String> recurrence = updateEvent.getRecurrence();
+				if(dto.getDeleteType() == EventInputDTO.ONLYTHIS) {
+					String exdate = "EXDATE;TZID=Asia/Seoul:"+strDate[0]+addZero(Integer.parseInt(strDate[1]))+addZero(Integer.parseInt(strDate[2]));
+					recurrence.add(exdate);
+				}else {
+					int removeIndex = 0;
+					for(int i=0;i<recurrence.size();i++) {
+						if(recurrence.get(i).substring(0, 5).equals("RRULE")) {
+							removeIndex = i;
+							break;
+						}
+					}
+					recurrence.remove(removeIndex);
+					recurrence.add(dto.getRrule());
+				}
+				updateEvent.setRecurrence(recurrence);
+				service.events().update(dto.getCalendarId(), dto.getEventId(), updateEvent).execute();
+			}else {
+				service.events().delete(dto.getCalendarId(), dto.getEventId()).execute();
+			}
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			result = getErrorMessage(e.getMessage());
+		}
+		return result;
+	}
 	
 	@RequestMapping(value = "/getEvent",method = RequestMethod.GET)
 	public @ResponseBody Event getEventObject(CalendarAndEventIdDTO dto, Model model){
@@ -153,6 +191,7 @@ public class EventController {
 				System.out.println(dto.getStartDateTime());
 				Date startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]), 
 						Integer.parseInt(strStartDateTime[0]), Integer.parseInt(strStartDateTime[1]));
+				System.out.println("original Start = "+startD.toString());
 				if(dto.getUpdateType() == EventInputDTO.ALL) {
 					start.setDateTime(new DateTime(startD.getTime()+originalStart)).setTimeZone("Asia/Seoul");
 				}else {
@@ -164,11 +203,11 @@ public class EventController {
 		if(dto.getAllDay().equals("true")) {
 			Date endD;
 			endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]),9,0);
-			if(dto.getUpdateType() == EventInputDTO.ALL) {
-				end.setDate(new DateTime(true,endD.getTime()+86400000l+originalEnd,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+			if(dto.getUpdateType() == EventInputDTO.ALL) {//이미 하루 차이 나서 allday는 그래서 더해줄 필요 없음
+				end.setDate(new DateTime(true,endD.getTime()+originalEnd,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
 			}else {
 				end.setDate(new DateTime(true,endD.getTime()+86400000l,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
-				updateEnd = new Date(endD.getTime()+86400000l);
+				updateEnd = new Date(endD.getTime());
 			}
 			
 		}else {
@@ -180,7 +219,7 @@ public class EventController {
 				
 			}else {
 				end.setDateTime(new DateTime(endD)).setTimeZone("Asia/Seoul");
-				updateEnd = new Date(endD.getTime()+86400000l);
+				updateEnd = new Date(endD.getTime());
 			}
 		}
 		System.out.println(start.toString());
@@ -263,10 +302,25 @@ public class EventController {
 							.setEnd(end)
 							.setReminders(reminders)
 							.setAttendees(dto.getAttendees())
-							.setRecurringEventId(eventId)
+							//.setRecurringEventId(eventId)
 							;
-					System.out.println("update only this = "+event.getRecurringEventId());
 					service.events().insert(calendarId, event).execute();
+				}else if(dto.getUpdateType() == EventInputDTO.NEXT) {
+					updateEvent.setRecurrence(dto.getOriginRecurrence());
+					service.events().update(calendarId, updateEvent.getId(), updateEvent).execute();
+					Event event = new Event()
+							.setSummary(dto.getSummary())
+							.setLocation(dto.getLocation())
+							.setDescription(dto.getDescription())
+							.setStart(start)
+							.setEnd(end)
+							.setReminders(reminders)
+							.setAttendees(dto.getAttendees())
+							.setRecurrence(dto.getRecurrence())
+							//.setRecurringEventId(eventId)
+							;
+					System.out.println("update Next");
+					service.events().insert(dto.getCalendars(), event).execute();
 				}else {
 					updateEvent.setSummary(dto.getSummary())
 					.setSummary(dto.getSummary())

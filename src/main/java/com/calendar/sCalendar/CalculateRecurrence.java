@@ -40,9 +40,9 @@ public class CalculateRecurrence {
 		if(exdateList != null) {
 			Collections.sort(exdateList);
 		}
+		System.out.println(event.getSummary()+" : "+event.getRecurrence());
 		//여러날 일정 반복인 경우 기간이 28일 넘어가면 그 전날부터 조사. 
 		for(int i=0;i<size;i++) {
-			System.out.println(event.getRecurrence());
 			Recur recur = null;
 			String rule = event.getRecurrence().get(i).substring(0,6);
 			if(rule.equals("RRULE:")) {
@@ -82,6 +82,7 @@ public class CalculateRecurrence {
 				periodEndDate.setMonth(m);
 				periodEndDate.setYear(y);
 				periodEndDate.setDate(1);
+				periodEndDate.setHours(0);
 			}
 			Date periodStartDate = new Date();
 			if(duration != 0) {
@@ -120,6 +121,10 @@ public class CalculateRecurrence {
 				if(exdateIndex < exdateListSize && origin.toString().substring(0,8).equals(exdateList.get(exdateIndex).toString())) {//예외 날짜에 있는것 제외
 					exdateIndex++;
 					continue;
+				}
+				//시작 날짜가 예외 날짜보다 뒤가 되면 예외 날짜도 뒤로 가게 하기
+				while(exdateIndex < exdateListSize && Integer.parseInt(origin.toString().substring(0,8)) > exdateList.get(exdateIndex)) {
+					exdateIndex++;
 				}
 				EventDTO copyEvent = new EventDTO();
 				if(isDateOnly) {

@@ -12,10 +12,10 @@
 			<span class='detail_span'>제목</span><input id="summary_detail" class="form-control" type="text" name="summary"><br><br>
 			<span class='detail_span'>일시</span>
 				<input id="startDatePicker" class="form-control datePick_detail" type="date" name="startDate" required onblur="checkDate_detail(true);">
-				 <input id="startTimePicker" class="form-control timePick_detail" type="time" name="startDateTime" onclick="resetTimePicker_detail();" onblur="checkTime_detail();">
+				 <input id="startTimePicker" class="form-control timePick_detail" type="time" name="startDateTime" onblur="checkTime_detail();">
 				<span> - </span>
 				<input id="endDatePicker" class="form-control datePick_detail" type="date" name="endDate" required onblur="checkDate_detail();">
-				 <input id="endTimePicker" class="form-control timePick_detail" type="time" name="endDateTime" onclick="resetTimePicker_detail();"  onblur="checkTime_detail();">
+				 <input id="endTimePicker" class="form-control timePick_detail" type="time" name="endDateTime" onblur="checkTime_detail();">
 			 <label><input id="allDayCheckBox" type='checkbox' name="allDay" onclick="resetTimePicker_detail();"> 종일</label>
 			 <br/><br/>
 			 <span class='detail_span'>반복</span>
@@ -52,25 +52,25 @@
 	</div>
 	<div id="timePickerDiv">
 	</div>
-	<div id="recurUpdateDiv">
+	<div id="recurUpdateDiv_detail">
 		<div style="width:100%; height:22.5%; text-align:right; padding:1%; ">
-			<button type='button' class="btn btn-info" onclick="$('#recurUpdateDiv').css('display','none');">X</button>
+			<button type='button' class="btn btn-info" onclick="$('#recurUpdateDiv_detail').css('display','none');">X</button>
 		</div>
 		<div style="width:100%; height:55%; text-align:left; padding: 3%;">
 			<form>
-				<label><input type="radio" name="userType" checked="checked" value="ONLYTHIS">이 일정만 변경</label><br>
-				<label><input type="radio" name="userType" value="ALL">모든 반복 일정들 변경</label><br>
-				<label><input type="radio" name="userType" value="NEXT">이 일정과 향후 반복 일정들 변경</label>
+				<label><input type="radio" name="userType_detail" checked="checked" value="ONLYTHIS">이 일정만 변경</label><br>
+				<label><input type="radio" name="userType_detail" value="ALL">모든 반복 일정들 변경</label><br>
+				<label><input type="radio" name="userType_detail" value="NEXT">이 일정과 향후 반복 일정들 변경</label>
 			</form>
 		</div>
 		<div style="width:100%; height:22.5%; text-align:center; padding-bottom:1%;">
 			<button type='button' class="btn btn-info" id='recurUpdateBtn_detail'>확인</button>
-			<button type='button' class="btn btn-info" style='margin-left:5px;' onclick="$('#recurUpdateDiv').css('display','none');">취소</button>
+			<button type='button' class="btn btn-info" style='margin-left:5px;' onclick="$('#recurUpdateDiv_detail').css('display','none');">취소</button>
 		</div>
 	</div>
 	<div id="makeRecurDiv">
 		<div style="width:100%; height:15%; text-align:right; padding:1%; ">
-			<button type='button' class="btn btn-info" onclick="$('#makeRecurDiv').css('display','none'); $('#recurrenceList_detail').children().eq(0).prop('selected',true);">X</button>
+			<button type='button' class="btn btn-info" onclick="cancelmakeRecurDiv();">X</button>
 		</div>
 		<div style="width:100%; height:70%; text-align:left; padding: 3%;">
 			<div>
@@ -113,7 +113,7 @@
 		</div>
 		<div style="width:100%; height:15%; text-align:center; padding-bottom:1%;">
 			<button type='button' class="btn btn-info" id='makeRecurBtn_detail' onclick="saveCustomRRULE();">확인</button>
-			<button type='button' class="btn btn-info" style='margin-left:5px;' onclick="$('#makeRecurDiv').css('display','none'); $('#recurrenceList_detail').children().eq(0).prop('selected',true);">취소</button>
+			<button type='button' class="btn btn-info" style='margin-left:5px;' onclick="cancelmakeRecurDiv();">취소</button>
 		</div>
 	</div>
 </div>
