@@ -23,7 +23,15 @@ function printCalendarList(data){
 	var colorList = ["#B5B2FF","#B2CCFF","#B2EBF4","#B7F0B1","#CEFBC9","#D4F4FA","#FAED7D"];
 	for(var i=0;i<size;i++){
 		var colorCode = colorList[parseInt(data[i].colorId)%colorList.length];
-		checkList += "<label"+" style='color:white; background-color:"+colorCode+"'><input type='checkbox' value = '"+data[i].id+"' data-originalCalendarId = '"+data[i].id+"'";
+		checkList += "<div style='margin-bottom:5px;'><label>";
+		checkList += "<div class='checkboxDiv' style='background-color:"+colorCode+"'>"
+		if(data[i].check == true){
+			checkList +="<p>✔</p>";
+		}else{
+			checkList += "<p>&nbsp;</p>";
+		}
+		checkList += "</div>";
+		checkList += "<input style='display:none;' type='checkbox' value = '"+data[i].id+"' data-originalCalendarId = '"+data[i].id+"'";
 		checkList += "data-defaultReminders='"+JSON.stringify(data[i].defaultReminders)+"'";
 		if(data[i].check == true){
 			checkList +=" checked";
@@ -31,7 +39,13 @@ function printCalendarList(data){
 		if(data[i].primary){
 			$("#userId").text(data[i].id);
 		}
-		checkList +=" onClick='clickCheckbox(this)' data-colorCode = '"+colorCode+"' data-accessRole = '"+data[i].accessRole+"'>"+data[i].summary+"</label><br/>";
+		checkList +=" onClick='clickCheckbox(this)' data-colorCode = '"+colorCode+"' data-accessRole = '"+data[i].accessRole+"'>"
+		checkList +="<span style='font-weight:bold;'>"+data[i].summary+"</span></label>";
+		checkList +="<button style='cursor:pointer;'type='button' onclick='clickCalendarUpdateBtn(this);'><img src='/image/settings.png'></button>";
+		if($("#userId").text() != data[i].id){
+			checkList +="<a href='#' class='noUnderLine' style='color:#787777;' onclick='clickDeleteCalendar(this); return false;'>X</a>";
+		}
+		checkList +="</div>";
 	}
 	document.getElementById("checkboxList").innerHTML = checkList;
 }
@@ -162,6 +176,11 @@ function clickCheckbox(box){
 	var year;
 	var month;
 	var date;
+	if($(box).prop("checked")){
+		$(box).prev().html("<p>✔</p>");
+	}else{
+		$(box).prev().html("<p>&nbsp;</p>");
+	}
 	if(location.pathname != '/'){
       	var fullDate = path[2].split('-');
       	year = parseInt(fullDate[0]);
@@ -206,6 +225,67 @@ function requestCheckCalendar(year,month,date,box){
 		  	  break;
 		    }
 			
+		}
+	});
+}
+function clickCalendarUpdateBtn(btn){
+	var calendarId = $(btn).prev().children().eq(1).attr('data-originalcalendarid');
+	goToCalendarPage(calendarId);
+}
+
+function clickDeleteCalendar(link){
+	var input = $(link).prevAll().eq(1).children().eq(1);
+	var calendarId = input.attr('data-originalcalendarid');
+	var result = false;
+	var baseUrl = "http://localhost:8080";
+	result = confirm("이 캘린더를 정말 삭제하시겠습니까?");
+	if(result){
+		$(link).attr('disabled',true);
+		var data={
+			"type":calendarId	
+		};
+		$.ajax({
+			url:baseUrl+"/deleteCalendar",
+			type:'GET',
+			data : data,
+			dataType :"json",
+			contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+			success:function(data){
+				if(data == true){
+					alert('삭제가 완료되었습니다.');
+					//location.reload();
+					$(link).attr('disabled',false);
+					getCalendarList(false);
+				}
+				else{
+					alert(data);
+					$(link).attr('disabled',false);
+				}
+			}
+		});
+	}else{
+		alert("취소되었습니다.");
+	}
+}
+
+function goToCalendarPage(type){
+	if(type == "ko.south_korea#holiday@group.v.calendar.google.com"){
+		type = "ko.south_korea";
+	}
+	if(type == "#contacts@group.v.calendar.google.com"){
+		type = "contacts";
+	}
+	$.ajax({
+		url: "http://localhost:8080/showCalendarPage",
+		dataType: "text",
+		success: function(data){
+			changeStyle("calendar",data);
+			var calendarId;
+			var eventId;
+			var path = location.pathname.split('/');
+			var url ="http://localhost:8080/calendar/"+type+"/"+path[1]+"&"+path[2];
+			history.pushState(data,"Simple Calendar-Add/Update Event",url);
+			loadCalendarDetail();
 		}
 	});
 }

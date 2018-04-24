@@ -62,6 +62,10 @@ public class HomeController {
 	public String refreshEventPage(@PathVariable String calendarId, @PathVariable String eventId,@PathVariable String type,Locale locale, Model model) {
 		return "index";
 	}
+	@RequestMapping(value = "/calendar/{calendarId}/{type}", method = RequestMethod.GET)
+	public String refreshCalendarPage(@PathVariable String calendarId,@PathVariable String type,Locale locale, Model model) {
+		return "index";
+	}
 	
 	@RequestMapping(value = "/showEventPage")
 	public String showEventPage(HttpServletRequest requset, Locale locale, Model model) {
@@ -72,4 +76,8 @@ public class HomeController {
 		return "EventDetail";
 	}	
 
+	@RequestMapping(value = "/showCalendarPage")
+	public String showCalendarPage(Model model) {
+		return "CalendarDetail";
+	}
 }

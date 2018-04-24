@@ -8,6 +8,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link rel="stylesheet" href="/bootstrap/css/bootstrap.css" >
 <link rel="stylesheet" href="/css/EventDetail_style.css" >
+<link rel="stylesheet" href="/css/CalendarDetail_style.css" >
 
 <script src="/bootstrap/js/bootstrap.min.js"></script>
 <script src="/javascripts/monthlyCalendar.js" charset="utf-8"></script>
@@ -16,6 +17,7 @@
 <script src="/javascripts/listCalendar.js" charset="utf-8"></script>
 <script src="/javascripts/convertRRULE.js" charset="utf-8"></script>
 <script src="/javascripts/eventDetail.js" charset="utf-8"></script>
+<script src="/javascripts/calendarDetail.js" charset="utf-8"></script>
 
 <title>Simple Calendar</title>
 
@@ -28,7 +30,6 @@
 	}
 	table{
 		width:100%;
-		border-collapse: collapse;
 		border-bottom: 1px solid #9EBEC4;
 	}
 	th{
@@ -41,7 +42,7 @@
 	}
 	td{
 		width:14.2%;
-		height:12.5%;
+		padding:0px;
 	}
 	form{
 		display: inline;
@@ -109,8 +110,6 @@
 	.date{
 		vertical-align: top;
 		height:12.5%;
-		border-left: 1px solid #9EBEC4;
-		border-right: 1px solid #9EBEC4;
 	}
 	/*스켸쥴 표*/
 	#dates{
@@ -147,28 +146,39 @@
 		border: 1px solid #918EDB;
 		*/
 		height:12.5%;
-		border-left: 1px solid #9EBEC4;
-		border-right: 1px solid #9EBEC4;
+
 		position:relative;
 		z-index:1;
+		border-left: 1px solid #c3c3c3;
+		border-right: 1px solid #c3c3c3;
 	}
 	/*날짜 부분*/
 	.date{
 		position:relative;
 		z-index:1;
+		border-left: 1px solid #c3c3c3;
+		border-right: 1px solid #c3c3c3;
 	}
 	/*일정이 들어간 칸*/
 	.eventFill{
 		height:12.5%;
-		border-left: 1px solid #9EBEC4;
-		border-right: 1px solid #9EBEC4;
 		position:relative;
 		z-index:4;
+		padding-left: 0.5px;
+		padding-right: 0.5px;
+		padding-top:0px;
+		padding-bottom:0px;
+		border-left: 1px solid #c3c3c3;
+		border-right: 1px solid #c3c3c3;
 	}
 	/*일정 표*/
 	.eventList{
 		border-collapse: separate;
 		border: none;
+	}
+	/*일정 날짜 큰 칸*/
+	.dateIndexTd{
+		
 	}
 	/*사이드*/
 	#side{
@@ -177,6 +187,7 @@
 		width:20%;
 		display:inline-block;
 		vertical-align:top;
+		min-width: 270px;
 	/*
 		margin: auto 1%;
 		width:5%;
@@ -193,7 +204,7 @@
 	#container{
 		padding : 1% 1%;
 		position : relative;
-		min-width: 930px;
+		min-width: 920px;
 		min-height: 246px;
 		width:75%;
 		display:inline-block;
@@ -296,6 +307,10 @@
 		z-index:2;
 		border:none;
 	}
+	/*일정 한 줄*/
+	.dateLineTr{
+		padding : 0px;
+	}
 	/*4주일때*/
 	.week4{
 		height:25%;
@@ -320,7 +335,7 @@
 		height:25px;
 		-webkit-border-radius:12.5px;
 		-moz-border-radius:12.5px;
-		background-color:#97D7E5;
+		background-color:#97D7E5	!important;
 		font-weight:bold;
 	}
 	/*side쪽 미니 캘린더 클릭 날짜 표시*/
@@ -342,6 +357,10 @@
 	/*일정 제목 링크 부분*/
 	.eventTitleLink{
 		overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+		height:95%;
+		margin-left:2px;
+		margin-right:2px;
+		cursor: pointer;
 	}
 	/*일정 더보기 링크 부분*/
 	.moreEvent{
@@ -356,6 +375,7 @@
 	.clickDate{
 		background-color: #EAEAEA;
 		opacity: 0.5;
+		cursor: default;
 	}
 	/*더보기 링크가 있는 칸*/
 	.moreEvent{
@@ -366,7 +386,14 @@
 	#eventSummaryRecurrence{
 		font-size: small;
 	}	
-	
+	/*체크박스 모양 만들기*/
+	.checkboxDiv{
+		width:20px;
+		height: 20px;
+		display:inline-block;
+		text-align: center;
+		margin-right: 5px;
+	}
 	
 	/*List Calendar*/
 	/*일정 들어가는 한 날짜(여러줄)*/
@@ -451,9 +478,12 @@
 			<div id = "checkboxList">
 			</div>
 		</form>
-		<br><br>
+		<br>
+		<button class='btn btn-info' type='button' style="margin-bottom: 10px;" onclick="goToCalendarPage('add');">캘린더 추가</button>
+		<br>
 			<input type="text" id="addEventDate" style="display: none;" name="addEventDate">
-			<button class='btn btn-info' id='addBtn' type='button' name='addBtn' value='0' onclick="$('#addEventDate').attr('value',0); goToEventPage('add');">일정 추가</button> 
+			<button class='btn btn-info' id='addBtn' type='button' name='addBtn' value='0' onclick="$('#addEventDate').attr('value',0); goToEventPage('add');">일정 추가</button>
+			 
 	</div>
 	<div id="container" style="height:100%;">
 		<div id="monthCalendar" data-colnum='0'>
@@ -462,7 +492,7 @@
 					<th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th>
 				</tr>
 			</table>
-			<div id="dates">
+			<div id="dates" onselectstart="return false">
 			</div>
 		</div>
 		<div id="dayCalendar">
@@ -519,6 +549,7 @@
 	</div>
 	<div id="container_EventDetail" style="">
 	</div>
+	<div id="container_CalendarDetail"></div>
 </div>
 <p style="display:none;" id='userId'></p>
 <script type="text/javascript">
@@ -564,5 +595,6 @@
 		});
 	}
 </script>
+<div style='display:none;'>Icons made by <a href="https://www.flaticon.com/authors/tutsplus" title="TutsPlus">TutsPlus</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
 </body>
 </html>

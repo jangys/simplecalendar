@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.CalendarListEntry;
 
 @Controller
@@ -102,4 +103,72 @@ public class CalendarController {
 		}
 		return calendarList;
 	}
+	@RequestMapping(value="/getCalendar",method = RequestMethod.GET)
+	public @ResponseBody CalendarListEntry getCalendar(CalendarInputDTO dto){
+		CalendarListEntry calendar = new CalendarListEntry();
+		GoogleCalendarService gcs = new GoogleCalendarService();
+		System.out.println(dto.getType());
+		try {
+			Calendar service= gcs.getCalendarService();
+			calendar = service.calendarList().get(dto.getType()).execute();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return calendar;
+	}
+	@RequestMapping(value = "/deleteCalendar", method = RequestMethod.GET)
+	public @ResponseBody String deleteCalendar(CalendarInputDTO dto) {
+		String result="true";
+		GoogleCalendarService gcs = new GoogleCalendarService();
+		try {
+			Calendar service = gcs.getCalendarService();
+			service.calendars().delete(dto.getType()).execute();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			result = new EventController().getErrorMessage(e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	@RequestMapping(value = "/updateCalendar", method = RequestMethod.POST)
+	public @ResponseBody String updateCalendar(@RequestBody CalendarInputDTO dto) {
+		String result="true";
+		GoogleCalendarService gcs = new GoogleCalendarService();
+		try {
+			Calendar service = gcs.getCalendarService();
+			
+			if(dto.getType().equals("add")) {
+				com.google.api.services.calendar.model.Calendar calendar = new com.google.api.services.calendar.model.Calendar();
+				calendar.setSummary(dto.getSummary())
+				.setDescription(dto.getDescription())
+				.setTimeZone(dto.getTimezone())
+				;
+				com.google.api.services.calendar.model.Calendar newCalendar = service.calendars().insert(calendar).execute();
+				if(dto.getDefaultReminders() != null && newCalendar != null) {
+					CalendarListEntry entry = service.calendarList().get(newCalendar.getId()).execute();
+					entry.setDefaultReminders(dto.getDefaultReminders());
+					service.calendarList().update(newCalendar.getId(), entry).execute();
+				}
+			}else {
+				CalendarListEntry entry = service.calendarList().get(dto.getType()).execute();
+				entry
+				.setSummary(dto.getSummary())
+				.setDescription(dto.getDescription())
+				.setTimeZone(dto.getTimezone())
+				.setDefaultReminders(dto.getDefaultReminders())
+				;
+				service.calendarList().update(entry.getId(), entry).execute();
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			result = new EventController().getErrorMessage(e.getMessage());
+		}
+		
+		return result;
+	}
+	
 }

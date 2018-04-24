@@ -14,7 +14,17 @@ $(document).ready(function(){
 				loadEventDetail();
 			}
 		});
-	}else{
+	}else if(path[1]=="calendar"){
+		$.ajax({
+			url: "http://localhost:8080/showCalendarPage",
+			dataType: "text",
+			success: function(data){
+				changeStyle("calendar",data);
+				loadCalendarDetail();
+			}
+		});
+	}
+	else{
 		if(location.pathname == '/'){
 			getCalendarList(false);
 		}else{//새로고침 시 히스토리에 기록 남기지 않게 하기
@@ -58,6 +68,10 @@ function reloadPage(data){
 	case 'event':
 		changeStyle("event",data);
 		loadEventDetail();
+		break;
+	case 'calendar':
+		changeStyle("calendar",data);
+		loadCalendarDetail();
 		break;
 	}
 }
@@ -277,7 +291,17 @@ function changeStyle(type,data){
 		$("#container").css('display','none');
 		$("#header").css('display','none');
 		$("#side").css('display','none');
+		$("#container_CalendarDetail").css('display','none');
 		$("#container_EventDetail").css('display','inline-block');
+		break;
+	case "calendar":
+		var refine = $("#container_CalendarDetail").html(data).find("#calendarDetailContents");
+		$("#container_CalendarDetail").html(refine);
+		$("#container").css('display','none');
+		$("#header").css('display','none');
+		$("#side").css('display','none');
+		$("#container_EventDetail").css('display','none');
+		$("#container_CalendarDetail").css('display','inline-block');
 		break;
 	}
 }	
@@ -494,8 +518,7 @@ function clickDeleteEvent(button){
 	result= confirm('정말 삭제하시겠습니까?');
 	if(result == true){
 		console.log("delete");
-		
-		if($("#eventSummaryRecurrence") != undefined){
+		if($("#eventSummaryRecurrence").length == 1){
 			$("#recurUpdateDiv").css('display','block');
 		}else{
 			$.ajax({

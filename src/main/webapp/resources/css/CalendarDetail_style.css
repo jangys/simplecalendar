@@ -1,0 +1,11 @@
+@charset "EUC-KR";
+/*본문*/
+#container_CalendarDetail{
+	width: 85%;
+	margin: 5% 5%;
+}
+
+/*캘린더 페이지에 있는 input 태그*/
+.calendarForm{
+	width: 50%;
+}

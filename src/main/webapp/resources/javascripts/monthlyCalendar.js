@@ -55,7 +55,10 @@ function printCalendar(y, m, data,colNum) {
 				if(tempDateNum > lastDate){
 					table += "<td></td>";
 				}else{
-					table += "<td data-dateIndex='"+(j+start)+"' draggable='true' onclick='mouseUpDate(this,false)' onmousedown='startDrag(this)' ondragenter='mouseDownDate(this)' ondragend='mouseUpDate(this,true)'></td>";
+					table += "<td class='dateIndexTd ";
+
+					table += "'data-dateIndex='"+(j+start)+"'onclick='mouseUpDate(this,false)' onmousedown='startDrag(this)'" 
+					table += "ondragstart='dragstart_handler(this,event);'ondragenter='mouseDownDate(this,event)' ondragend='mouseUpDate(this,true)' ondragover='allowDrop(event)'></td>";
 					tempDateNum ++;
 				}
 			}
@@ -83,11 +86,12 @@ function printCalendar(y, m, data,colNum) {
 					}
 				}else{
 					table += "<td class='event";
-					if(m == month && x+start == date+startDay-1){
-						table += " today";
-					}
+
 					if(j == colNum -1){
 						table += " moreEvent";
+					}
+					if(m == month && x+start+1-startDay == date){
+						table+=" today";
 					}
 					table += "' data-index='"+(x+start)+"' data-col='"+j+"'";
 					
@@ -171,35 +175,42 @@ function calColNumAndPrintCalendar(year, month, data,resize){
 //날짜 칸을 마우스가 처음으로 눌렀을 때
 function startDrag(td){
 	$(td).attr('id','firstClick');
+	td.setAttribute('draggable','true');
 	//eventFill original value = 4  날짜 한칸은 2
 	$(".eventFill").css('z-index','1');
 	$(".moreEvent").css('z-index','1');
 }
-function mouseDownDate(td){
+
+function dragstart_handler(td,event){
+	var img = new Image();
+	img.src = '/image/transparent.png';
+	event.dataTransfer.setDragImage(img,10,10);
+}
+function mouseDownDate(td,event){
 	var last = $('.clickDate:last').attr('data-dateIndex');
 	var first = $('.clickDate:first').attr('data-dateIndex');
-	$(td).attr('class','clickDate');
+	$(td).addClass('clickDate');
 	var start = parseInt($('#firstClick').attr('data-dateIndex'));
 	var end = parseInt($(td).attr('data-dateIndex'));
 	closeAllDiv();
 	for(var i=first; i<= start-1; i++){
-		$("[data-dateIndex="+i+"]").attr('class','');
+		$("[data-dateIndex="+i+"]").removeClass("clickDate");
 	}
 	
 	if(start < end){
 		var nextEnd = end+1;
 		for(var a = nextEnd; a<= last; a++){
-			$("[data-dateIndex="+a+"]").attr('class','');
+			$("[data-dateIndex="+a+"]").removeClass("clickDate");
 		}
 		for(var i=start; i <= end; i++){
-			$("[data-dateIndex="+i+"]").attr('class','clickDate');
+			$("[data-dateIndex="+i+"]").addClass('clickDate');
 		}
 	}else if(start >= end){
 		for(var a = start+1; a<= last; a++){
-			$("[data-dateIndex="+a+"]").attr('class','');
+			$("[data-dateIndex="+a+"]").removeClass("clickDate");
 		}
 		for(var i=end; i <= start; i++){
-			$("[data-dateIndex="+i+"]").attr('class','clickDate');
+			$("[data-dateIndex="+i+"]").addClass('clickDate');
 		}
 	}
 	
@@ -210,8 +221,7 @@ function mouseUpDate(td,drag){
 	var month = $("#forwardBtn").attr('value');
 	
 	if(drag == false){
-		console.log("Aa");
-		$(td).attr('class','clickDate');
+		$(td).addClass('clickDate');
 	}
 	
 	date += year+"-";
@@ -225,6 +235,9 @@ function mouseUpDate(td,drag){
 	$("#addEventDate").attr('value',date);
 	goToEventPage("add");
 	$(".clickDate").removeClass("clickDate");
+	//eventFill original value = 4  날짜 한칸은 2
+	$(".eventFill").css('z-index','4');
+	$(".moreEvent").css('z-index','2');
 	//document.getElementById("addForm").submit();
 }
 
@@ -424,25 +437,26 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 function setEventTd(index, col, title, colorCode, colspan,responseStatus){
 	var td = $("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)");
 	td.html(title);
+	td.attr("colspan",colspan);
+	td.attr('class',"eventFill");
+	td.removeAttr("data-index");
+	td.removeAttr("onclick");
+	
+	td = td.children().eq(0);
+	td.css('border','2px solid '+colorCode);
 	if(responseStatus == null){
 		td.css('background-color',colorCode);
-		td.css('border-bottom','1px solid white');
-		td.css('border-top','1px solid white');
 	}else{
 		switch(responseStatus){
 			case "accepted":
 				td.css('background-color',colorCode);
-				td.css('border-bottom','1px solid white');
-				td.css('border-top','1px solid white');
 				break;
 			case "declined":
 				td.css('background-color','white');
-				td.css('border','2px solid '+colorCode);
 				td.css('font-weight','bold');
 				break;
 			case "tentative":
 				td.css('background-color','white');
-				td.css('border','2px solid '+colorCode);
 				var background = "linear-gradient(-45deg";
 				var start = 25;
 				for(var i=0;i<3;i++){
@@ -455,15 +469,10 @@ function setEventTd(index, col, title, colorCode, colspan,responseStatus){
 				break;
 			case "needsAction":
 				td.css('background-color','white');
-				td.css('border','2px solid '+colorCode);
 				td.css('font-weight','bold');
 				break;
 		}
 	}
-	td.attr("colspan",colspan);
-	td.attr("class","eventFill");
-	td.removeAttr("data-index");
-	td.removeAttr("onclick");
 }
 
 function setAddTd(index, col){
@@ -505,4 +514,7 @@ function clickEvent(event){
 		clickEventTitle(event.childNodes[0].childNodes[0],false);
 		
 	}
+}
+function allowDrop(ev){
+	ev.preventDefault();
 }
