@@ -60,7 +60,9 @@ public class CalculateRecurrence {
 			}
 			Date periodEndDate = null;
 			if(recur.getUntil() != null) {
-				periodEndDate = recur.getUntil();
+				periodEndDate = recur.getUntil();	//그 날까지는 포함
+				long temp = periodEndDate.getTime();
+				periodEndDate.setTime(temp+86400000l);	//하루 뒤까지는 보게
 			}
 			DateTime endTime = new DateTime();
 			endTime.setTime(event.getEnd());
@@ -139,7 +141,6 @@ public class CalculateRecurrence {
 				if((copyEvent.getEndTime()[1] - 1)< month || copyEvent.getEndTime()[0] < year+1900) {//끝 날짜가 현재 보고 있는 날짜보다 전이면 리스트에 넣지 않음
 					continue;
 				}
-				
 				copyEvent.setSummary(event.getSummary());
 				copyEvent.setAttendees(event.getAttendees());
 				copyEvent.setCalendarID(event.getCalendarID());
@@ -150,7 +151,7 @@ public class CalculateRecurrence {
 				copyEvent.setRecurrence(event.getRecurrence());
 				
 				copyEvent.setStart(origin.getTime(),isDateOnly);
-
+				copyEvent.setOriginalStart(event.getStart());
 				list.add(copyEvent);
 //				for(int x=0;x<list.size();x++) {
 //					System.out.println(list.get(x).getStartTime()[2]);

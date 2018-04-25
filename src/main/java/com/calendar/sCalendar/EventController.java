@@ -169,15 +169,16 @@ public class EventController {
 		String eventResult="true";
 		EventDateTime start = new EventDateTime();
 		EventDateTime end = new EventDateTime();
+		EventDateTime originalStartTime = new EventDateTime();
 		Reminders reminders = new Reminders();
 		System.out.println(dto.getSummary());
 		String[] strStartDate = dto.getStartDate().split("-");
 		String[] strEndDate = dto.getEndDate().split("-");
-		long originalStart = dto.getOriginalStartDate()[0]-dto.getOriginalStartDate()[1];
+		long originalStart = dto.getOriginalStartDate()[0]-dto.getOriginalStartDate()[1]; // 0-> 첫번째 일정의 시작 날짜, 1-> 이 반복 일정의 원래 날짜	//2->첫번째 일정이 종일이었는지 여부 0-false, 1-true
 		Date updateStart = new Date();
 		Date updateEnd = new Date();
+		Date startD;
 		if(dto.getAllDay().equals("true")) {
-			Date startD;
 			startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]),9,0);	//timezone만큼 시간 설정해야함.
 		//	System.out.println(startD.toString());
 			if(dto.getUpdateType() == EventInputDTO.ALL) {
@@ -189,9 +190,8 @@ public class EventController {
 		}else {
 				String[] strStartDateTime = dto.getStartDateTime().split(":");
 				System.out.println(dto.getStartDateTime());
-				Date startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]), 
+				startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]), 
 						Integer.parseInt(strStartDateTime[0]), Integer.parseInt(strStartDateTime[1]));
-				System.out.println("original Start = "+startD.toString());
 				if(dto.getUpdateType() == EventInputDTO.ALL) {
 					start.setDateTime(new DateTime(startD.getTime()+originalStart)).setTimeZone("Asia/Seoul");
 				}else {
@@ -199,12 +199,24 @@ public class EventController {
 					updateStart = startD;
 				}
 		}
+		if(dto.getUpdateType() == EventInputDTO.ONLYTHIS) {
+			if(dto.getOriginalStartDate()[2] == 1) {//첫번째 반복 일정이 종일 일정이었을 경우
+				originalStartTime.setDate(new DateTime(true,dto.getOriginalStartDate()[1],startD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+			}else {
+				originalStartTime.setDateTime(new DateTime(dto.getOriginalStartDate()[1])).setTimeZone("Asia/Seoul");
+				System.out.println(originalStartTime.toString());
+			}
+		}
+		
 		long originalEnd = dto.getOriginalEndDate()[0]-dto.getOriginalEndDate()[1];
 		if(dto.getAllDay().equals("true")) {
 			Date endD;
 			endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]),9,0);
 			if(dto.getUpdateType() == EventInputDTO.ALL) {//이미 하루 차이 나서 allday는 그래서 더해줄 필요 없음
 				end.setDate(new DateTime(true,endD.getTime()+originalEnd,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+				if(dto.getOriginalStartDate()[2] == 0) {//첫번째 반복 일정이 시간이 있는 일정이었을 경우
+					end.setDate(new DateTime(true,endD.getTime()+originalEnd+86400000l,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+				}
 			}else {
 				end.setDate(new DateTime(true,endD.getTime()+86400000l,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
 				updateEnd = new Date(endD.getTime());
@@ -215,8 +227,11 @@ public class EventController {
 			Date endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]), 
 					Integer.parseInt(strEndDateTime[0]), Integer.parseInt(strEndDateTime[1]));
 			if(dto.getUpdateType() == EventInputDTO.ALL ) {
+				System.out.println("0 : "+new DateTime(dto.getOriginalEndDate()[0]).toString() + " 1 : "+new DateTime(dto.getOriginalEndDate()[1]).toString() + " endD : "+endD.toString());
 				end.setDateTime(new DateTime(endD.getTime()+originalEnd)).setTimeZone("Asia/Seoul");
-				
+				if(dto.getOriginalStartDate()[2] == 1) {//첫번째 반복 일정이 종일 일정이었을 경우
+					end.setDateTime(new DateTime(endD.getTime()+originalEnd-86400000l)).setTimeZone("Asia/Seoul");
+				}
 			}else {
 				end.setDateTime(new DateTime(endD)).setTimeZone("Asia/Seoul");
 				updateEnd = new Date(endD.getTime());
@@ -288,12 +303,8 @@ public class EventController {
 		}else{
 			try {
 				service = gcs.getCalendarService();
-				Event updateEvent = service.events().get(calendarId, eventId).execute();
 				System.out.println("dd  "+reminders.getUseDefault());
 				if(dto.getUpdateType() == EventInputDTO.ONLYTHIS) {
-					updateEvent
-						.setRecurrence(recurrence);
-					service.events().update(calendarId, updateEvent.getId(), updateEvent).execute();
 					Event event = new Event()
 							.setSummary(dto.getSummary())
 							.setLocation(dto.getLocation())
@@ -302,10 +313,12 @@ public class EventController {
 							.setEnd(end)
 							.setReminders(reminders)
 							.setAttendees(dto.getAttendees())
-							//.setRecurringEventId(eventId)
+							.setRecurringEventId(eventId)
+							.setOriginalStartTime(originalStartTime)
 							;
-					service.events().insert(calendarId, event).execute();
+					service.events().insert(dto.getCalendars(), event).execute();
 				}else if(dto.getUpdateType() == EventInputDTO.NEXT) {
+					Event updateEvent = service.events().get(calendarId, eventId).execute();
 					updateEvent.setRecurrence(dto.getOriginRecurrence());
 					service.events().update(calendarId, updateEvent.getId(), updateEvent).execute();
 					Event event = new Event()
@@ -317,11 +330,11 @@ public class EventController {
 							.setReminders(reminders)
 							.setAttendees(dto.getAttendees())
 							.setRecurrence(dto.getRecurrence())
-							//.setRecurringEventId(eventId)
 							;
 					System.out.println("update Next");
 					service.events().insert(dto.getCalendars(), event).execute();
 				}else {
+					Event updateEvent = service.events().get(calendarId, eventId).execute();
 					updateEvent.setSummary(dto.getSummary())
 					.setSummary(dto.getSummary())
 					.setLocation(dto.getLocation())

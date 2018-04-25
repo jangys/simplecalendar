@@ -360,6 +360,7 @@ class callable implements Callable<ArrayList<EventDTO>>{
             		if(sortList != null) {
             			Collections.sort(sortList);
             		}
+            		System.out.println(eventDTO.getSummary() + " : "+eventDTO.getStartTime()[2]);
 					ArrayList<EventDTO> list = new CalculateRecurrence().getRecurrenceEvents(isDateOnly, eventDTO, d.getYear(), d.getMonth(),sortList);
 					if(list != null) {
 						result.addAll(list);

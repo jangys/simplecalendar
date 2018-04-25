@@ -12,6 +12,7 @@ public class EventDTO {
 	private String eventID;
 	private String summary;
 	private long start;
+	private long originalStart;	//for recurrenceEvent
 	private int[] startTime;
 	private long end;
 	private int[] endTime;
@@ -30,6 +31,7 @@ public class EventDTO {
 	public void setSummary(String summary) {
 		this.summary = summary;
 	}
+
 	public void setStart(long start, boolean isDateOnly) {
 		this.start = start;
 		String strStart = new DateTime(start).toString();
@@ -48,7 +50,9 @@ public class EventDTO {
 		}
 		
 	}
-
+	public void setOriginalStart(long originalStart) {
+		this.originalStart = originalStart;
+	}
 	public void setEnd(long end, boolean isDateOnly) {
 		this.end = end;
 		endTime = new int[5];
@@ -105,6 +109,9 @@ public class EventDTO {
 	public long getStart() {
 		return start;
 	}
+	public long getOriginalStart() {
+		return originalStart;
+	}
 	public int[] getStartTime() {
 		return startTime;
 	}
@@ -129,4 +136,5 @@ public class EventDTO {
 	public List<String> getRecurrence(){
 		return recurrence;
 	}
+
 }

@@ -93,8 +93,8 @@ function showTitle(y,m){
 	input += "<form id = 'title-form'>";
 	//년, 월, 버튼 출력
 	input += "<button class = 'btn btn-info' id = 'backBtn' type='button' value='"+y+"' name='back'> < </button>";
-	input += "<div id='calendarTitle' style='text-align : center;'>  "+y+"년 "+m+"월"+"  </div>";
-	input += "<button class = 'btn btn-info' type='button' id = 'forwardBtn' value='"+m+"' name='forward'> > </button>";
+	input += "<div id='calendarTitle' style='text-align : center;'>  "+y+"년 "+parseInt(m)+"월"+"  </div>";
+	input += "<button class = 'btn btn-info' type='button' id = 'forwardBtn' value='"+parseInt(m)+"' name='forward'> > </button>";
 	input += "</form>";
 	document.getElementById("title").innerHTML = input;
 	makeMiniCalendar(y,m);
@@ -360,7 +360,12 @@ function clickEventTitle(title,scroll){
 		contents += "</p>";
 	}
 	if(data.recurrence != null){
-		contents += "<p class='eventSummaryContents_p' id='eventSummaryRecurrence'><span class='eventSummaryContents_span'>반복 </span> ";
+		contents += "<p class='eventSummaryContents_p' id='eventSummaryRecurrence'";
+		if(data.start == data.originalStart){//반복 일정의 첫번째 일정
+			contents += " data-recurFirst='true'"
+		}
+		contents += "><span class='eventSummaryContents_span'";
+		contents += ">반복 </span> ";
 		var temp = data.recurrence[0].split(':');
 		if(data.recurrence.length > 1){
 			for(var i=0;i<data.recurrence.length;i++){
@@ -520,6 +525,11 @@ function clickDeleteEvent(button){
 		console.log("delete");
 		if($("#eventSummaryRecurrence").length == 1){
 			$("#recurUpdateDiv").css('display','block');
+			if($("#eventSummaryRecurrence").attr('data-recurfirst') != undefined){
+				$("input:radio[name=userType]:eq(2)").parent().css('display','none');
+			}else{
+				$("input:radio[name=userType]:eq(2)").parent().css('display','block');
+			}
 		}else{
 			$.ajax({
 				url:baseUrl+"/deleteEvent",

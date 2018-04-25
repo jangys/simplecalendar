@@ -36,7 +36,12 @@ function loadEventDetail(){
 			document.getElementById('startDatePicker').valueAsDate = startDate;
 			document.getElementById('endDatePicker').valueAsDate = endDate;
 			document.getElementById('startTimePicker').value = makeTimeForm(date.getHours(),0,0);
-			document.getElementById('endTimePicker').value = makeTimeForm(date.getHours(),0,0);
+			var endHour = date.getHours();
+			if(startDate.getTime() == endDate.getTime()){
+				endHour++;
+			}
+			document.getElementById('endTimePicker').value = makeTimeForm(endHour,0,0);
+			
 		}
 		
 		$("#allDayCheckBox").attr('value',false);
@@ -130,7 +135,11 @@ function showEvent_detail(data){
 		recurStart=path[2].split('-');
 		recurEnd=path[3].split('-');
 	}
+	var allDay = false;
+	var originalStart;
+	
 	if(data.start.date != undefined){
+		allDay = true;
 		start = data.start.date.value;
 		$("#allDayCheckBox").attr('checked',true);
 		$("#allDayCheckBox").attr('value',true);
@@ -140,9 +149,10 @@ function showEvent_detail(data){
 		start = data.start.dateTime.value;
 		$("#allDayCheckBox").attr('data-originalValue',false);
 		var d = new Date(data.start.dateTime.value);	
-		var time = makeTimeForm(d.getHours(),d.getMinutes(),0);
+		var time =  makeTimeForm(d.getHours(),d.getMinutes(),0);
 		document.getElementById('startTimePicker').value = time;
 		$("#startTimePicker").attr('data-originalValue',time);
+		var originalDate = new Date()
 	}
 	var startDate;
 	if(path.length == 4){
@@ -153,12 +163,15 @@ function showEvent_detail(data){
 	showRecurrenceList(new Date(start));
 	var valueDate = new Date(startDate.getFullYear(),startDate.getMonth(),startDate.getDate(),9);	//시간 있는 날짜인 경우 9시 이전이면 그 전날을 표시하기 때문
 	document.getElementById('startDatePicker').valueAsDate = valueDate;
-	if(data.start.dateTime != undefined){
-		$("#startDatePicker").attr('data-originalValue',data.start.dateTime.value);
-	}else{
-		$("#startDatePicker").attr('data-originalValue',valueDate.getTime());
-	}
+	$("#startDatePicker").attr('data-originalValue',valueDate.getTime());	//날짜만 판단. 시간은 판단하지 않을 거임
 	$("#startDatePicker").attr('data-originalDateValue',start);
+	if(!allDay){
+		var d = new Date(data.start.dateTime.value);
+		valueDate.setHours(d.getHours());
+		valueDate.setMinutes(d.getMinutes());
+		console.log(valueDate);
+	}
+	$("#startDatePicker").attr('data-originalStartDate',valueDate.getTime());
 	var end;
 	if(data.end.date != null){
 		end = data.end.date.value; 
@@ -181,12 +194,15 @@ function showEvent_detail(data){
 	}
 	var valueDate = new Date(date.getFullYear(),date.getMonth(),date.getDate(),9);
 	document.getElementById('endDatePicker').valueAsDate = valueDate;
-	if(data.end.dateTime != undefined){
-		$("#endDatePicker").attr('data-originalValue',data.end.dateTime.value);
-	}else{
-		$("#endDatePicker").attr('data-originalValue',valueDate.getTime());
-	}
+	$("#endDatePicker").attr('data-originalValue',valueDate.getTime());
 	
+	if(!allDay){
+		var d = new Date(data.end.dateTime.value);
+		valueDate.setHours(d.getHours());
+		valueDate.setMinutes(d.getMinutes());
+		console.log(valueDate);
+	}
+	$("#endDatePicker").attr('data-originalStartDate',valueDate.getTime());	//추후 개별 일정의 originalStartTime
 	if(data.location != null){
 		$('#location_detail').attr('value',data.location);
 		$("#location_detail").attr('data-originalValue',data.location);
@@ -618,7 +634,7 @@ function resetTimePicker_detail(){
 		}
 	} else{
 		var date = new Date();
-		showAlarm_detail(true,null,$("#calendarList_detail>option:selected").val());
+		
 		document.getElementById('startTimePicker').value = makeTimeForm(date.getHours(),0,0);
 		if(date.getHours() == 23){
 			document.getElementById('endTimePicker').value = makeTimeForm(date.getHours(),30,0);
@@ -635,6 +651,8 @@ function resetTimePicker_detail(){
 				var previous = JSON.parse($("#previousData_detail").text());
 				showAlarm_detail(previous.reminders.useDefault, previous,$("#calendarList_detail").attr('data-originalvalue'));
 			}
+		}else{
+			showAlarm_detail(true,null,$("#calendarList_detail>option:selected").val());
 		}
 	}
 }
@@ -877,7 +895,9 @@ function checkInputChange(input){
 	var start = "";
 	var startTime = "";
 	var date;
-
+	if(input.allDay == $("#allDayCheckBox").is(":checked")){
+		return true;
+	}
 	var startSplit = input.startDate.split("-");
 	start = new Date(startSplit[0],startSplit[1]-1,startSplit[2],9);
 	if($("#startDatePicker").attr('data-originalvalue') != start.getTime()){
@@ -898,6 +918,7 @@ function checkInputChange(input){
 	if(startTime != input.startDateTime){
 		return true;
 	}
+
 	if(previous.end.dateTime != null){
 		endTime = $("#endTimePicker").attr('data-originalvalue');
 	}
@@ -907,7 +928,7 @@ function checkInputChange(input){
 	if(previous.recurrence == undefined && input.recurrence != null){
 		return true;
 	}
-	if(previous.recurrence != undefined && previous.recurrence != input.recurrence){
+	if(previous.recurrence != undefined && previous.recurrence.toString() != input.recurrence.toString()){
 		return true;
 	}
 	var location = "";
@@ -1036,11 +1057,16 @@ function submitInput_detail(){
 	//var originalEnd = $("#endDatePicker").attr('data-originalDateValue')+new Date($("#endDatePicker").val()).getTime()-$("#endDatePicker").attr('data-originalValue');
 	var originalStart = new Array();
 	originalStart.push($("#startDatePicker").attr('data-originalDateValue'));
-	originalStart.push($("#startDatePicker").attr('data-originalValue'));
+	originalStart.push($("#startDatePicker").attr('data-originalStartDate'));
+	var originalAllDay = 0;	//false
+	if($("#allDayCheckBox").attr('data-originalvalue')=="true"){
+		originalAllDay = 1;
+	}
+	originalStart.push(originalAllDay);
 	var originalEnd = new Array();
 	originalEnd.push($("#endDatePicker").attr('data-originalDateValue'));
-	originalEnd.push($("#endDatePicker").attr('data-originalValue'));
-	
+	originalEnd.push($("#endDatePicker").attr('data-originalStartDate'));
+	console.log($("#endDatePicker").attr('data-originalStartDate'));
 	var calendarId = $("#calendarList_detail").val().toString();
 	var inputJSON={
 		"summary" : $("#summary_detail").val().toString(),
@@ -1073,10 +1099,11 @@ function submitInput_detail(){
 		var end;
 		var endSplit = inputJSON.endDate.split("-");
 		end = new Date(endSplit[0],endSplit[1]-1,endSplit[2],9);
+		console.log("picker = "+$("#startDatePicker").attr('data-originalvalue')+" , "+start.getTime());
 		if($("#startDatePicker").attr('data-originalvalue') != start.getTime()){
-			$("[name='userType']:eq(1)").parent().css('display','none');
+			$("[name='userType_detail']:eq(1)").parent().css('display','none');
 		}else{
-			$("[name='userType']:eq(1)").parent().css('display','inline-block');
+			$("[name='userType_detail']:eq(1)").parent().css('display','inline-block');
 		}
 		//반복 규칙이 바뀐 경우
 		console.log(originRecurrence);

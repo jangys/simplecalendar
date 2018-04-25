@@ -102,6 +102,22 @@
 			<span class='detail_span'>기본 알람</span><ul id="alarmList_calendar" style="list-style: none; padding:0% 0%; display:none;" data-alarmNum="0"></ul>
 			<button id="btnAddAlarm_calendar" class="btn btn-info" type="button" onclick="addAlarm_calendar();">알람 추가</button><br><br>
 			<p id="accessRole_calendar"></p>
+			<p>캘린더 공유 설정</p>
+			<div id="aclDiv_calendar">
+				<div style="vertical-align: top; margin-bottom:10px;">
+					<span class='detail_span'>공유할 사람의 이메일</span><input type="text" class="form-control calendarForm" style="width:25%;">
+					<span class="detail_span">공유 권한</span>
+					<select id="aclSelect_calendar" class="form-control" style="width:310px;">
+						<option value="owner">Owner-변경 및 공유 관리</option>
+						<option value="writer">Writer-일정 변경</option>
+						<option value="reader">Reader-모든 일정 세부정보 보기</option>
+						<option value="freeBusyReader">FreeBusyReader-한가함/바쁨 정보만 보기</option>
+					</select>
+					<button type='button' class='btn btn-info' onclick="addACLRole_calendar(this);">추가</button>
+				</div>
+				<ul style="list-style: none;" id="aclList_calendar">
+				</ul>
+			</div>
 			<br>
 			<button id="btnSave_calendar" class="btn btn-info" type="button" name="save" value="true" onclick="submitInput_calendar();">저장</button>
 			<button id="btnCancel_calendar" class="btn btn-info" type="button" onclick="clickCancel_calendar();">취소</button>
