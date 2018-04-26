@@ -9,7 +9,7 @@ function printList(year,month,data){
 	var dayList = ["일","월","화","수","목","금","토"];
 	if(size == 0){
 		var text="<p style='text-align:center; padding-top:5%;'>일정 없음</p>";
-		$("#listCalendar").html(text);
+		$("#listCalendar_Contents").html(text);
 		return;
 	}
 	//마지막 날짜 계산
@@ -27,7 +27,7 @@ function printList(year,month,data){
 		divText +="<div class='listRowGroup' style='display:none' data-listdate='"+i+"' data-listday="+day+"></div>";
 		day = day+1 == 7 ? 0:day+1;
 	}
-	$("#listCalendar").html(divText);
+	$("#listCalendar_Contents").html(divText);
 	for(var i=0; i<size; i++){
 		var start=data[i].startTime[2];
 		var end=data[i].endTime[2];

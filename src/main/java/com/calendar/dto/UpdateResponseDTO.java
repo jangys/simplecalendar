@@ -1,4 +1,4 @@
-package com.calendar.sCalendar;
+package com.calendar.dto;
 
 public class UpdateResponseDTO {
 	private String calendarId;

@@ -1,9 +1,10 @@
-package com.calendar.sCalendar;
+package com.calendar.dto;
 
 import java.util.List;
 
 import javax.print.DocFlavor.STRING;
 
+import com.calendar.sCalendar.CalculateCalendar;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.EventAttendee;
 

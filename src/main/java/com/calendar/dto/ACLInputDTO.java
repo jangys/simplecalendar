@@ -1,4 +1,4 @@
-package com.calendar.sCalendar;
+package com.calendar.dto;
 
 public class ACLInputDTO {
 	private String id;		//rule¿« id

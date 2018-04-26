@@ -1,9 +1,16 @@
 package com.calendar.sCalendar;
 
 import java.text.ParseException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import com.calendar.dto.EventDTO;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 
@@ -23,18 +30,17 @@ public class CalculateRecurrence {
 		DateList dateList = recur.getDates(baseDate, startDate, endDate, Value.DATE_TIME);
 		System.out.println(dateList.toString());
 	}
-	@SuppressWarnings("deprecation")
-	public ArrayList<EventDTO> getRecurrenceEvents(boolean isDateOnly, EventDTO event, int year, int month,ArrayList<Integer> exdateList) throws ParseException{
+	public ArrayList<EventDTO> getRecurrenceEvents(boolean isDateOnly, EventDTO event, int year, int month,int date,int type,ArrayList<Integer> exdateList) throws ParseException{
 		ArrayList<EventDTO> list = new ArrayList<EventDTO>();
 		int size = event.getRecurrence().size();
 		for(int i=0;i<size;i++) {
 			String rule = event.getRecurrence().get(i).substring(0,6);
 			if(rule.equals("EXDATE")){
-				String date = event.getRecurrence().get(i).split(":")[1];
+				String dateStr = event.getRecurrence().get(i).split(":")[1];
 				if(exdateList == null) {
 					exdateList = new ArrayList<Integer>();
 				}
-				exdateList.add(Integer.parseInt(date.substring(0, 8)));
+				exdateList.add(Integer.parseInt(dateStr.substring(0, 8)));
 			}
 		}
 		if(exdateList != null) {
@@ -50,20 +56,17 @@ public class CalculateRecurrence {
 			}else if(rule.equals("EXDATE")){
 				continue;
 			}
+			//첫번째 일정 시작 날짜
 			DateTime startDate = null;
 			startDate = new DateTime();
 			
 			if(isDateOnly) {
-				startDate.setTime(event.getStart()+9*3600000+1);
+				startDate.setTime(event.getStart()+9*3600000l+1);	//원래는 12시에서 -1 한 값가지고 있었음
 			}else {
 				startDate.setTime(event.getStart());
 			}
-			Date periodEndDate = null;
-			if(recur.getUntil() != null) {
-				periodEndDate = recur.getUntil();	//그 날까지는 포함
-				long temp = periodEndDate.getTime();
-				periodEndDate.setTime(temp+86400000l);	//하루 뒤까지는 보게
-			}
+			
+			//첫번째 일정 끝 날짜
 			DateTime endTime = new DateTime();
 			endTime.setTime(event.getEnd());
 			int duration = 0;
@@ -71,44 +74,40 @@ public class CalculateRecurrence {
 			long start = 0;
 			end = endTime.getTime();
 			start = startDate.getTime();
-			duration = (int) ((end - start)/86400000);
+			duration = (int) ((end - start)/86400000);	//날짜 텀 구하기
 			
-			if(periodEndDate == null || periodEndDate.getMonth() > month || periodEndDate.getYear() > year) {
-				periodEndDate = new Date();
-				int m = month+1;
-				int y = year;
-				if(month == 12) {
-					y++;
-					m = 0;
-				}
-				periodEndDate.setMonth(m);
-				periodEndDate.setYear(y);
-				periodEndDate.setDate(1);
-				periodEndDate.setHours(0);
+			//기간 끝 날짜 구하기 다음달 1일 0시
+			DateTime periodEndDateTime = new DateTime();
+			LocalDateTime temp = LocalDateTime.of(year, month, date, 0, 0);
+			switch(type) {
+			case GoogleCalendarService.MONTHLY:
+				temp = temp.plusMonths(1);
+				break;
+			case GoogleCalendarService.WEEKLY:
+				temp = LocalDateTime.of(year, month,date,11,59);
+				temp = temp.plusWeeks(1);
+				break;
+			case GoogleCalendarService.DAILY:
+				temp = LocalDateTime.of(year, month,date,11,59);
+				break;
 			}
-			Date periodStartDate = new Date();
+			ZonedDateTime zdt = temp.atZone(ZoneId.of("Asia/Seoul"));
+			periodEndDateTime.setTime(zdt.toInstant().toEpochMilli());
+			System.out.println(periodEndDateTime.toString());
+			
+			//기간 시작 날짜 구하기. 반복 일정이 하루 날짜가 아닌 경우는 텀을 구해 그에 맞게 설정
+			DateTime periodStartDate = new DateTime();
+			int previousMonth = 0;
 			if(duration != 0) {
-				int previousMonth = duration/29 + 1;
-				int m = month - previousMonth;
-				int y = year;
-				while(m < 0) {
-					y--;
-					m += 11;
-				}
-				periodStartDate = new Date(new java.util.Date(y,m,1,9,0).getTime());
-				
-			}else {
-				int m = month -1;
-				int y = year;
-				if(m == -1) {
-					m = 11;
-					y = year-1;
-				}
-				periodStartDate = new Date(new java.util.Date(y,m,1,9,0).getTime());
+				previousMonth = duration/29 + 1;
 			}
-//			System.out.println(recur+", "+startDate+", "+periodStartDate+", "+periodEndDate);
-			DateList dateList = recur.getDates(startDate, periodStartDate, periodEndDate, Value.DATE_TIME);
-//			System.out.println(dateList.toString());
+			LocalDateTime periodStartTemp = LocalDateTime.of(year, month-previousMonth, 1, 9, 0);
+			zdt = periodStartTemp.atZone(ZoneId.systemDefault());
+			periodStartDate.setTime(zdt.toInstant().toEpochMilli());
+			
+//			System.out.println(recur+", "+startDate+", "+periodStartDate+", "+periodEndDateTime);
+			DateList dateList = recur.getDates(startDate, periodStartDate, periodEndDateTime, Value.DATE_TIME);		//반복일정 구하기
+			System.out.println(dateList.toString());
 			int dateSize = dateList.size();
 			
 //			System.out.println(endTime.toString()+", "+startDate.toString()+", "+duration+", "+dateSize);
@@ -117,6 +116,8 @@ public class CalculateRecurrence {
 			if(exdateList != null) {
 				exdateListSize = exdateList.size();
 			}
+			
+			//반복 일정 복사
 			for(int j=0;j<dateSize;j++) {
 				Date origin = dateList.get(j);
 //				System.out.println("recurrence date : "+origin.toString());
@@ -138,7 +139,7 @@ public class CalculateRecurrence {
 					long resultEnd = origin.getTime()+86400000l*(duration)+rest;
 					copyEvent.setEnd(resultEnd, isDateOnly);
 				}
-				if((copyEvent.getEndTime()[1] - 1)< month || copyEvent.getEndTime()[0] < year+1900) {//끝 날짜가 현재 보고 있는 날짜보다 전이면 리스트에 넣지 않음
+				if(copyEvent.getEndTime()[1]< month || copyEvent.getEndTime()[0] < year) {//끝 날짜가 현재 보고 있는 날짜보다 전이면 리스트에 넣지 않음
 					continue;
 				}
 				copyEvent.setSummary(event.getSummary());
@@ -162,17 +163,5 @@ public class CalculateRecurrence {
 		
 		return list;
 	}
-	
-	public int getLastDay(int year, int month) {
-		int result = 31;
-		if((month % 2 == 0 && month <= 6) || (month % 2 == 1 && month >= 9)){
-			result = 30;
-		}
-		if(month == 2 && year % 4 == 0 && year % 100 != 0 || year % 400 == 0){
-			result = 29;
-		}else if(month == 2){
-			result = 28;
-		}
-		return result;
-	}
+
 }

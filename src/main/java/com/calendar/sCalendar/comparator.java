@@ -2,6 +2,8 @@ package com.calendar.sCalendar;
 
 import java.util.Comparator;
 
+import com.calendar.dto.EventDTO;
+
 public class comparator implements Comparator<EventDTO>{
 	public int compare(EventDTO dto1, EventDTO dto2) {
 		int ret = 0;

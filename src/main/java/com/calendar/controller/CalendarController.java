@@ -1,4 +1,4 @@
-package com.calendar.sCalendar;
+package com.calendar.controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,6 +22,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.calendar.dto.CalendarDTO;
+import com.calendar.dto.CalendarInputDTO;
+import com.calendar.dto.CheckedCalendarDTO;
+import com.calendar.dto.EventDTO;
+import com.calendar.sCalendar.GoogleCalendarService;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.CalendarListEntry;
 
@@ -82,7 +87,7 @@ public class CalendarController {
 			calendarList.add(dto);
 			}
 		}
-		result = new GoogleCalendarService().getEvent_Month(calendarList, checkedCal.getYear(), checkedCal.getMonth());
+		result = new GoogleCalendarService().getEvent(calendarList, checkedCal.getYear(), checkedCal.getMonth(),1,GoogleCalendarService.MONTHLY);
 		return result;
 	}
 	

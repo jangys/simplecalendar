@@ -1,5 +1,6 @@
-package com.calendar.sCalendar;
+package com.calendar.dto;
 
+import com.calendar.sCalendar.CalculateCalendar;
 import com.google.api.client.util.DateTime;
 
 public class EventDetailDTO {

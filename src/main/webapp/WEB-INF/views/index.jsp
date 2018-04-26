@@ -18,6 +18,7 @@
 <script src="/javascripts/convertRRULE.js" charset="utf-8"></script>
 <script src="/javascripts/eventDetail.js" charset="utf-8"></script>
 <script src="/javascripts/calendarDetail.js" charset="utf-8"></script>
+<script src="/javascripts/weeklyCalendar.js" charset="utf-8"></script>
 
 <title>Simple Calendar</title>
 
@@ -57,7 +58,9 @@
 	li{
 		overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 	}
-
+	p{
+		margin:0 0;
+	}
 	/*제목 부분*/
 	#title{
 		padding-left: 3%;
@@ -93,18 +96,13 @@
 		height:85%;
 		border:1px solid black;
 	}
-	/*주별 캘린더*/
-	#weekCalendar{
+	/*목록 캘린더*/
+	#listCalendar{
 		display:none;
 		width:100%;
 		height:85%;
-		border:1px solid black;
-	}
-	/*목록 캘린더*/
-	#listCalendar{
-		border-top: 1px solid #c3c3c3;
-		display:none;
-		width:100%;
+		overflow:hidden;
+		overflow-y:scroll;
 	}
 	/*날짜 한 칸*/
 	.date{
@@ -449,6 +447,57 @@
 		height : 200px;
 		display: none;
 	}
+	
+	/*일별,주별 캘린더 이름은 주별 기준*/
+	/*주별 캘린더 큰 틀*/
+	#weekCalendar{
+		display:none;
+		width:100%;
+		height:970px;
+	}
+	/*주별,일별 캘린더 헤더 부분*/
+	#weekCalendar_Header{
+		width:100%;
+		border:1px solid black;
+	}
+	/*주별 캘린더 시간 일정들 큰 부분*/
+	#weekCalendar_Container{
+		width:100%;
+		border:1px solid black;
+		height: 776px;	/*height 970*0.8 추후 종일 일정 사이즈 따라 변경됨*/
+		overflow:hidden;
+		overflow-y:scroll;
+	}
+	/*주별 캘린더 시간 일정틀 부분*/
+	#weekCalendar_Contents{
+		width:100%;
+		border:1px solid black;
+		height:1000px;
+		position:relative;
+	}
+	/*주별 캘린더 날짜 부분*/
+	#weekCalendar_Title{
+		border:1px solid black;
+		width:100%;
+		height:70px;
+	}
+	/*주별 캘린더 종일 일정 부분*/
+	#weekCalendar_AllDay{
+		border:1px solid black;
+		width:100%;
+		height:124px;
+	}
+	/*주별 캘린도 일 부분*/
+	.dateP_weekly{
+		font-weight:bold;
+		font-size: 22px;
+		margin-bottom:5px;
+	}
+	/*주별 캘린더 요일 부분*/
+	.dayP_weekly{
+		font-size:16px;
+	}
+	
 </style>
 </head>
 
@@ -495,11 +544,23 @@
 			<div id="dates" onselectstart="return false">
 			</div>
 		</div>
+		<div id="weekCalendar">
+			<div id="weekCalendar_Header">
+				<div id="weekCalendar_Title">
+				</div>
+				<div id="weekCalendar_AllDay">
+				</div>
+			</div>
+			<div id="weekCalendar_Container">
+				<div id="weekCalendar_Contents">
+				</div>
+			</div>
+		</div>
 		<div id="dayCalendar">
 		</div>
-		<div id="weekCalendar">
-		</div>
 		<div id="listCalendar">
+			<div id="listCalendar_Contents" style="border-top:1px solid #c3c3c3;">
+			</div>
 		</div>
 		<div id="showEventSummary" style="border: 1px solid #c3c3c3">
 			<div class = "row" id="eventSummary_Header">

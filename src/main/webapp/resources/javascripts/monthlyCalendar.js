@@ -273,7 +273,7 @@ function makeEventTitleForm(data,color,more,responseStatus){
 		text += " clickEventTitle(this,false);"
 	}
 	text +=	"return false;' href='#' data-eventId ="+data.eventID+" data-calendarId = "+data.calendarID+">"+isNull(data.summary)+"</a>";
-	text += "<span style='display:none;' data-information='"+JSON.stringify(data)+"'></span>";
+	text += "<span class='eventInformation' style='display:none;' data-information='"+JSON.stringify(data)+"'></span>";
 	return text;
 }
 function isNull(text){
@@ -337,7 +337,7 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 		if(startDateIndex == endDateIndex){//하루 일정
 			var col = $("[data-index="+startDateIndex+"]:eq(0)").attr("data-col");
 			if(col == colNum -1){//마지막줄인 경우
-				 setAddTd(startDateIndex, col);
+				 setAddTd(startDateIndex, col,data[i]);
 				//$("[data-index="+startDateIndex+"]"+"[data-col="+col+"]:eq(0)").addClass('moreEvent');
 			}else{//일정 세팅 그리기
 				setEventTd(startDateIndex, col, title, colorCode, 0,responseStatus);
@@ -358,7 +358,7 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 						col = col > lastCol ? col:lastCol;
 					}
 					if(col == colNum - 1){//마지막 줄인 경우
-						 setAddTd(startDateIndex, col);
+						 setAddTd(startDateIndex, col,data[i]);
 					}else{//일정 세팅 그리기
 						setEventTd(startDateIndex, col, title, colorCode, colspan,responseStatus);
 					}
@@ -391,7 +391,7 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 						}
 					}
 					if(col == colNum-1){//마지막 줄인 경우
-						 setAddTd(index, col);
+						 setAddTd(index, col,data[i]);
 					}else{//일정 칸 설정 
 						if(index == startDateIndex){
 							setEventTd(startDateIndex, col, title, colorCode, colspan,responseStatus);
@@ -475,13 +475,28 @@ function setEventTd(index, col, title, colorCode, colspan,responseStatus){
 	}
 }
 
-function setAddTd(index, col){
+function setAddTd(index, col,data){
 	var td = $("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)");
 	var add = parseInt(td.attr("data-add")) +1;
+	var more = "";
 	td.attr("data-add",add);
-	td.removeAttr("onclick");
-	temp = "<a class='showMoreEvent' title='더보기' href='#' style='color:black;'>+"+add+"</a>";
-	td.html(temp);
+	
+	if(data != null){
+		more = "<span class='eventInformation' style='display:none' data-information='"+JSON.stringify(data)+"'></span>";
+	}
+	if(td.children().length == 0){
+		td.removeAttr("onclick");
+		temp = "<a class='showMoreEvent' title='더보기' href='#' style='color:black;'>+"+add+"</a>";
+		if(more != ""){
+			temp += more;
+		}
+		td.html(temp);
+	}else{
+		td.children().eq(0).text("+"+add);
+		if(more != ""){
+			td.append(more);
+		}
+	}
 }
 
 function addZero(data){

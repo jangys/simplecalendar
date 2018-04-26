@@ -1,4 +1,4 @@
-package com.calendar.sCalendar;
+package com.calendar.controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.calendar.dto.ACLInputDTO;
+import com.calendar.dto.CalendarInputDTO;
+import com.calendar.sCalendar.GoogleCalendarService;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Acl;
 import com.google.api.services.calendar.model.AclRule;

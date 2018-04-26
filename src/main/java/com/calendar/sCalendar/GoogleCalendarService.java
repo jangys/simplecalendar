@@ -1,5 +1,8 @@
 package com.calendar.sCalendar;
 
+import com.calendar.dto.CalendarDTO;
+import com.calendar.dto.EventDTO;
+import com.calendar.dto.EventDetailDTO;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -19,7 +22,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.ParseException;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,7 +42,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import org.springframework.social.google.api.Google;
+
 public class GoogleCalendarService {
+	
+	public static final int MONTHLY = 1;
+	public static final int WEEKLY = 2;
+	public static final int DAILY = 3;
+	
     /** Application name. */
     private static final String APPLICATION_NAME =
         "SimpleCalendar";
@@ -115,43 +131,55 @@ public class GoogleCalendarService {
 
     //@SuppressWarnings("deprecation")
     //year, month에 맞는 이벤트 ArrayList<EventDTO>로 저장
-	public static ArrayList<EventDTO> getEvent_Month(ArrayList<CalendarDTO> calendarList, int year, int month) throws IOException{
+	public static ArrayList<EventDTO> getEvent(ArrayList<CalendarDTO> calendarList, int year, int month,int date,int type) throws IOException{
     	
-            //DateTime now = new DateTime(System.currentTimeMillis());
-    		Date cur = new Date(year-1900, month-1, 1);
-    		ArrayList<EventDTO> dtoList = new ArrayList<EventDTO>();
-    		Date nextDate;
-    		if(month == 12) {
-    			nextDate = new Date(year-1900 + 1,0,1);
-    		}else {
-    			nextDate = new Date(year-1900,month,1);
-    		}
+		//기간 설정
+		LocalDate cur = LocalDate.of(year,month,date);
+		ArrayList<EventDTO> dtoList = new ArrayList<EventDTO>();
+		LocalDateTime nowLocal = cur.atStartOfDay();
+		ZonedDateTime nowZdt = nowLocal.atZone(ZoneId.systemDefault());
+        DateTime now = new DateTime(nowZdt.toInstant().toEpochMilli());
+        DateTime next = null;
+        switch(type) {
+        case MONTHLY:
+        	next = new DateTime(cur.plusMonths(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli());
+        	break;
+        case WEEKLY:
+        	LocalDateTime local = cur.plusWeeks(1).atTime(11,59);
+        	ZonedDateTime zdt = local.atZone(ZoneId.systemDefault());
+        	next = new DateTime(zdt.toInstant().toEpochMilli());
+        	break;
+        case DAILY:
+        	LocalDateTime localD = cur.atTime(11,59);
+        	ZonedDateTime zdtD = localD.atZone(ZoneId.systemDefault());
+        	next = new DateTime(zdtD.toInstant().toEpochMilli());
+        	break;
+        }
+        
+        
+        //캘린더 개수만큼 스레드 만들기
+        int size = calendarList.size();
+        ExecutorService executorService = Executors.newFixedThreadPool(size);
+        ArrayList<EventDTO> result = new ArrayList<EventDTO>();
+        List<Future<ArrayList<EventDTO>>> future = new ArrayList<Future<ArrayList<EventDTO>>>();
+        for(int i=0;i<size;i++) {
+        	String id = calendarList.get(i).getId();
+        	Callable<ArrayList<EventDTO>> task = new callable(id, now, next,type);	//스레드 만들기, 실행
+        	future.add(executorService.submit(task));//결과값
+        }
+        try {
+         	for(int i=0;i<size;i++) {
+         		result.addAll(future.get(i).get());
+         	}
+         }catch(Exception e) {
+         	e.printStackTrace();
+         }
+        executorService.shutdown();
+        dtoList = result;
+        Collections.sort(dtoList,new comparator());
+        dtoList = new EventProcessing().arrangeOrder(dtoList, year, month);
 
-            DateTime now = new DateTime(cur);
-            DateTime next = new DateTime(nextDate);
-            int size = calendarList.size();
-            System.out.println("size"+size);
-            ExecutorService executorService = Executors.newFixedThreadPool(size);
-            ArrayList<EventDTO> result = new ArrayList<EventDTO>();
-            List<Future<ArrayList<EventDTO>>> future = new ArrayList<Future<ArrayList<EventDTO>>>();
-            for(int i=0;i<size;i++) {
-            	String id = calendarList.get(i).getId();
-            	Callable<ArrayList<EventDTO>> task = new callable(id, now, next);
-            	future.add(executorService.submit(task));
-            }
-            try {
-             	for(int i=0;i<size;i++) {
-             		result.addAll(future.get(i).get());
-             	}
-             }catch(Exception e) {
-             	e.printStackTrace();
-             }
-            executorService.shutdown();
-            dtoList = result;
-            Collections.sort(dtoList,new comparator());
-            dtoList = new EventProcessing().arrangeOrder(dtoList, year, month);
-
-            return dtoList;
+        return dtoList;
     }
 	
 	//캘린더 목록 받아오기
@@ -251,11 +279,12 @@ class callable implements Callable<ArrayList<EventDTO>>{
 	private String id;
 	private DateTime now;
 	private DateTime next;
-	
-	public callable(String id, DateTime now, DateTime next) {
+	private int type;
+	public callable(String id, DateTime now, DateTime next,int type) {
 		this.id = id;
 		this.now = now;
 		this.next = next;
+		this.type = type;
 	}
 	@Override
 	public ArrayList<EventDTO> call() {
@@ -281,6 +310,8 @@ class callable implements Callable<ArrayList<EventDTO>>{
         } else {
         	// System.out.println(now.toString());
             System.out.println("Upcoming events");
+            
+            //일정 얻기
             for (Event event : items) {
                 DateTime start = null;
                 boolean isDateOnly = false;
@@ -347,11 +378,12 @@ class callable implements Callable<ArrayList<EventDTO>>{
                 	result.add(tempDTO);
                 }
             }//for
-            String noEXDATE = "";
-            int index = 0;
+            
+            //반복 일정 구하기
             for(EventDTO eventDTO : recurringEventList) {
             	boolean isDateOnly = false;
-            	Date d = new Date(now.getValue());
+            	//Date d = new Date(now.getValue());
+            	LocalDate localdate = Instant.ofEpochMilli(now.getValue()).atZone(ZoneId.systemDefault()).toLocalDate();
             	if(eventDTO.getStartTime()[3] == -1) {
             		isDateOnly = true;
             	}
@@ -360,8 +392,9 @@ class callable implements Callable<ArrayList<EventDTO>>{
             		if(sortList != null) {
             			Collections.sort(sortList);
             		}
-            		System.out.println(eventDTO.getSummary() + " : "+eventDTO.getStartTime()[2]);
-					ArrayList<EventDTO> list = new CalculateRecurrence().getRecurrenceEvents(isDateOnly, eventDTO, d.getYear(), d.getMonth(),sortList);
+					ArrayList<EventDTO> list = list = new CalculateRecurrence().getRecurrenceEvents(isDateOnly, eventDTO, localdate.getYear(), 
+							localdate.getMonthValue(),localdate.getDayOfMonth(),type,sortList);
+					
 					if(list != null) {
 						result.addAll(list);
 					}else {

@@ -649,7 +649,7 @@ function resetTimePicker_detail(){
 		if($("#allDayCheckBox").attr('data-originalvalue') == 'false'){
 			if($("#previousData_detail").text() != ''){
 				var previous = JSON.parse($("#previousData_detail").text());
-				showAlarm_detail(previous.reminders.useDefault, previous,$("#calendarList_detail").attr('data-originalvalue'));
+				showAlarm_detail(previous.reminders.useDefault, previous,$("#calendarList_detail").val());	//지금 사용자가 선택한 캘린더의 기본 알림 값이 나오도록 함
 			}
 		}else{
 			showAlarm_detail(true,null,$("#calendarList_detail>option:selected").val());

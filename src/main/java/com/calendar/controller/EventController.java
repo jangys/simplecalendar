@@ -1,10 +1,14 @@
-package com.calendar.sCalendar;
+package com.calendar.controller;
 
 import java.awt.List;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -13,6 +17,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -28,6 +33,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.calendar.dto.CalendarAndEventIdDTO;
+import com.calendar.dto.EventDTO;
+import com.calendar.dto.EventDetailDTO;
+import com.calendar.dto.EventInputDTO;
+import com.calendar.dto.UpdateResponseDTO;
+import com.calendar.sCalendar.GoogleCalendarService;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.Calendar.Events.Get;
@@ -47,14 +58,40 @@ public class EventController {
 			ArrayList<EventDTO> eventList = new ArrayList<>();
 			GoogleCalendarService gcs = new GoogleCalendarService();
 			try {
-				eventList = gcs.getEvent_Month(new CalendarController().getCheckedCalendarList(request),year,month);
+				eventList = gcs.getEvent(new CalendarController().getCheckedCalendarList(request),year,month,1,GoogleCalendarService.MONTHLY);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			return eventList;
 		}
-	
+		
+	//일 뷰 요청
+	@RequestMapping(value = "/daily/{year}/{month}/{date}")
+	public @ResponseBody ArrayList<EventDTO> getDailyEventList(@PathVariable int year,@PathVariable int month,@PathVariable int date, Model model,HttpServletResponse response,HttpServletRequest request)throws Exception{
+		ArrayList<EventDTO> eventList = new ArrayList<>();
+		GoogleCalendarService gcs = new GoogleCalendarService();
+		try {
+			eventList = gcs.getEvent(new CalendarController().getCheckedCalendarList(request),year,month,date,GoogleCalendarService.DAILY);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return eventList;
+	}
+	//주 뷰 요청
+	@RequestMapping(value = "/weekly/{year}/{month}/{date}")
+	public @ResponseBody ArrayList<EventDTO> getWeeklyEventList(@PathVariable int year,@PathVariable int month,@PathVariable int date, Model model,HttpServletResponse response,HttpServletRequest request)throws Exception{
+		ArrayList<EventDTO> eventList = new ArrayList<>();
+		GoogleCalendarService gcs = new GoogleCalendarService();
+		try {
+			eventList = gcs.getEvent(new CalendarController().getCheckedCalendarList(request),year,month,date,GoogleCalendarService.WEEKLY);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return eventList;
+	}
 	//이벤트 디테일 요청
 	@RequestMapping(value = "/showEventDetail")
 	public @ResponseBody EventDetailDTO getEventDetail(CalendarAndEventIdDTO dto) {
@@ -175,72 +212,84 @@ public class EventController {
 		String[] strStartDate = dto.getStartDate().split("-");
 		String[] strEndDate = dto.getEndDate().split("-");
 		long originalStart = dto.getOriginalStartDate()[0]-dto.getOriginalStartDate()[1]; // 0-> 첫번째 일정의 시작 날짜, 1-> 이 반복 일정의 원래 날짜	//2->첫번째 일정이 종일이었는지 여부 0-false, 1-true
-		Date updateStart = new Date();
-		Date updateEnd = new Date();
-		Date startD;
-		if(dto.getAllDay().equals("true")) {
-			startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]),9,0);	//timezone만큼 시간 설정해야함.
-		//	System.out.println(startD.toString());
-			if(dto.getUpdateType() == EventInputDTO.ALL) {
-				start.setDate(new DateTime(true,originalStart+startD.getTime(),startD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
-			}else {
-				start.setDate(new DateTime(true,startD.getTime(),startD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
-				updateStart = startD;
+		
+		LocalDateTime updateStart = null;
+		LocalDateTime dt = LocalDateTime.now();
+		ZonedDateTime zdt = dt.atZone(ZoneId.systemDefault());
+		int offset = zdt.getOffset().getTotalSeconds()/60;
+		
+		if(dto.getAllDay().equals("true")) {//시작이 종일 날짜인 경우
+			//시작 날짜 구하기
+			LocalDate startD = LocalDate.of(Integer.parseInt(strStartDate[0]), Integer.parseInt(strStartDate[1]), Integer.parseInt(strStartDate[2]));
+			long startDValue = startD.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
+			
+			if(dto.getUpdateType() == EventInputDTO.ALL) {//반복일정 수정인 경우 모든 일정 수정
+				start.setDate(new DateTime(true,originalStart+startDValue,offset));
+			}else {//반복 일정 수정 그 외
+				start.setDate(new DateTime(true,startDValue,offset));
+				updateStart = startD.atTime(9,0);
 			}
-		}else {
-				String[] strStartDateTime = dto.getStartDateTime().split(":");
-				System.out.println(dto.getStartDateTime());
-				startD = new Date(Integer.parseInt(strStartDate[0])-1900, Integer.parseInt(strStartDate[1])-1, Integer.parseInt(strStartDate[2]), 
-						Integer.parseInt(strStartDateTime[0]), Integer.parseInt(strStartDateTime[1]));
-				if(dto.getUpdateType() == EventInputDTO.ALL) {
-					start.setDateTime(new DateTime(startD.getTime()+originalStart)).setTimeZone("Asia/Seoul");
-				}else {
-					start.setDateTime(new DateTime(startD)).setTimeZone("Asia/Seoul");
-					updateStart = startD;
-				}
+		}else {//시작이 시간이 있는 날짜
+			//시작 날짜 구하기
+			String[] strStartDateTime = dto.getStartDateTime().split(":");
+			System.out.println(dto.getStartDateTime());
+			LocalDateTime startDT = LocalDateTime.of(Integer.parseInt(strStartDate[0]), Integer.parseInt(strStartDate[1]), 
+					Integer.parseInt(strStartDate[2]), Integer.parseInt(strStartDateTime[0]), Integer.parseInt(strStartDateTime[1]));
+			zdt = startDT.atZone(ZoneId.systemDefault());
+			long startDTValue = zdt.toInstant().toEpochMilli();
+			
+			//반복 일정인 경우
+			if(dto.getUpdateType() == EventInputDTO.ALL) {
+				start.setDateTime(new DateTime(startDTValue+originalStart)).setTimeZone("Asia/Seoul");
+			}else {
+				start.setDateTime(new DateTime(startDTValue)).setTimeZone("Asia/Seoul");
+				updateStart = startDT;
+			}
 		}
-		if(dto.getUpdateType() == EventInputDTO.ONLYTHIS) {
+		
+		if(dto.getUpdateType() == EventInputDTO.ONLYTHIS) {//반복 일정 수정 중 한개만 수정
 			if(dto.getOriginalStartDate()[2] == 1) {//첫번째 반복 일정이 종일 일정이었을 경우
-				originalStartTime.setDate(new DateTime(true,dto.getOriginalStartDate()[1],startD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+				originalStartTime.setDate(new DateTime(true,dto.getOriginalStartDate()[1],offset)).setTimeZone("Asia/Seoul");
 			}else {
 				originalStartTime.setDateTime(new DateTime(dto.getOriginalStartDate()[1])).setTimeZone("Asia/Seoul");
 				System.out.println(originalStartTime.toString());
 			}
 		}
 		
+		//일정 끝 날짜 구하기
 		long originalEnd = dto.getOriginalEndDate()[0]-dto.getOriginalEndDate()[1];
-		if(dto.getAllDay().equals("true")) {
-			Date endD;
-			endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]),9,0);
+		if(dto.getAllDay().equals("true")) {//종일 일정
+			LocalDate endD = LocalDate.of(Integer.parseInt(strEndDate[0]), Integer.parseInt(strEndDate[1]), Integer.parseInt(strEndDate[2]));
+			long endDValue = endD.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
 			if(dto.getUpdateType() == EventInputDTO.ALL) {//이미 하루 차이 나서 allday는 그래서 더해줄 필요 없음
-				end.setDate(new DateTime(true,endD.getTime()+originalEnd,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+				end.setDate(new DateTime(true,endDValue+originalEnd,offset)).setTimeZone("Asia/Seoul");
 				if(dto.getOriginalStartDate()[2] == 0) {//첫번째 반복 일정이 시간이 있는 일정이었을 경우
-					end.setDate(new DateTime(true,endD.getTime()+originalEnd+86400000l,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
+					end.setDate(new DateTime(true,endDValue+originalEnd+86400000l,offset)).setTimeZone("Asia/Seoul");
 				}
 			}else {
-				end.setDate(new DateTime(true,endD.getTime()+86400000l,endD.getTimezoneOffset())).setTimeZone("Asia/Seoul");
-				updateEnd = new Date(endD.getTime());
+				end.setDate(new DateTime(true,endDValue+86400000l,offset)).setTimeZone("Asia/Seoul");
 			}
 			
-		}else {
+		}else {//시간이 있는 일정
 			String[] strEndDateTime = dto.getEndDateTime().split(":");
-			Date endD = new Date(Integer.parseInt(strEndDate[0])-1900, Integer.parseInt(strEndDate[1])-1, Integer.parseInt(strEndDate[2]), 
+			LocalDateTime endDT = LocalDateTime.of(Integer.parseInt(strEndDate[0]), Integer.parseInt(strEndDate[1]), Integer.parseInt(strEndDate[2]), 
 					Integer.parseInt(strEndDateTime[0]), Integer.parseInt(strEndDateTime[1]));
+			zdt = endDT.atZone(ZoneId.systemDefault());
+			long endDTValue = zdt.toInstant().toEpochMilli();
+			
+			//반복 일정 수정인 경우
 			if(dto.getUpdateType() == EventInputDTO.ALL ) {
-				System.out.println("0 : "+new DateTime(dto.getOriginalEndDate()[0]).toString() + " 1 : "+new DateTime(dto.getOriginalEndDate()[1]).toString() + " endD : "+endD.toString());
-				end.setDateTime(new DateTime(endD.getTime()+originalEnd)).setTimeZone("Asia/Seoul");
+				System.out.println("0 : "+new DateTime(dto.getOriginalEndDate()[0]).toString() + " 1 : "+new DateTime(dto.getOriginalEndDate()[1]).toString() + " endD : "+endDT.toString());
+				end.setDateTime(new DateTime(endDTValue+originalEnd)).setTimeZone("Asia/Seoul");
 				if(dto.getOriginalStartDate()[2] == 1) {//첫번째 반복 일정이 종일 일정이었을 경우
-					end.setDateTime(new DateTime(endD.getTime()+originalEnd-86400000l)).setTimeZone("Asia/Seoul");
+					end.setDateTime(new DateTime(endDTValue+originalEnd-86400000l)).setTimeZone("Asia/Seoul");	// 종일 일정이었으면 하루가 더 더해져 있으니깐
 				}
 			}else {
-				end.setDateTime(new DateTime(endD)).setTimeZone("Asia/Seoul");
-				updateEnd = new Date(endD.getTime());
+				end.setDateTime(new DateTime(endDTValue)).setTimeZone("Asia/Seoul");
 			}
 		}
 		System.out.println(start.toString());
 		System.out.println(end.toString());
-		//System.out.println(startDate.toString());
-		//String[] strStartDateTime = request.getParameter("startDateTime").split(":");
 		//알람 default 체크
 		boolean useDefault = true;
 		if(dto.getOverrides() != null) {
@@ -263,21 +312,23 @@ public class EventController {
 			reminders.setOverrides(dto.getOverrides());
 		}
 		reminders.setUseDefault(useDefault);
-		System.out.println("update type : "+dto.getUpdateType());
+		
+		//반복 룰 추가
 		ArrayList<String> recurrence = new ArrayList<String>();
 		if(dto.getRecurrence() != null) {
 			recurrence.addAll(dto.getRecurrence());
 		}
-		String exdateStr = (updateStart.getYear()+1900)+addZero(updateStart.getMonth()+1)+addZero(updateStart.getDate());
-		if(!dto.getAllDay().equals("true"))
-			exdateStr += "T"+addZero(updateStart.getHours())+addZero(updateStart.getMinutes())+"00";
-		if(dto.getUpdateType() == EventInputDTO.ONLYTHIS) {
-			//EXDATE;TZID=Asia/Seoul:20180515T120000
-			String exdate = "EXDATE;TZID=Asia/Seoul:"+exdateStr;
-			System.out.println(exdate);
-			recurrence.add(exdate);
-		}
-		System.out.println(reminders.getUseDefault());
+//		String exdateStr = updateStart.getYear()+addZero(updateStart.getMonthValue())+addZero(updateStart.getDayOfMonth());
+//		if(!dto.getAllDay().equals("true"))
+//			exdateStr += "T"+addZero(updateStart.getHour())+addZero(updateStart.getMinute())+"00";
+//		if(dto.getUpdateType() == EventInputDTO.ONLYTHIS) {
+//			//EXDATE;TZID=Asia/Seoul:20180515T120000
+//			String exdate = "EXDATE;TZID=Asia/Seoul:"+exdateStr;
+//			System.out.println(exdate);
+//			recurrence.add(exdate);
+//		}
+		
+		
 		if(eventId.equals("addEvent")){//일정을 입력한 경우
 			try {
 				System.out.println("e  "+reminders.getUseDefault());
@@ -300,11 +351,10 @@ public class EventController {
 				eventResult = getErrorMessage(e.getMessage());
 			}
 			
-		}else{
+		}else{//수정인 경우
 			try {
 				service = gcs.getCalendarService();
-				System.out.println("dd  "+reminders.getUseDefault());
-				if(dto.getUpdateType() == EventInputDTO.ONLYTHIS) {
+				if(dto.getUpdateType() == EventInputDTO.ONLYTHIS) {	//반복 일정 한개만 수정
 					Event event = new Event()
 							.setSummary(dto.getSummary())
 							.setLocation(dto.getLocation())
@@ -317,7 +367,7 @@ public class EventController {
 							.setOriginalStartTime(originalStartTime)
 							;
 					service.events().insert(dto.getCalendars(), event).execute();
-				}else if(dto.getUpdateType() == EventInputDTO.NEXT) {
+				}else if(dto.getUpdateType() == EventInputDTO.NEXT) {//반복 일정 향후 일정 수정
 					Event updateEvent = service.events().get(calendarId, eventId).execute();
 					updateEvent.setRecurrence(dto.getOriginRecurrence());
 					service.events().update(calendarId, updateEvent.getId(), updateEvent).execute();
@@ -331,9 +381,8 @@ public class EventController {
 							.setAttendees(dto.getAttendees())
 							.setRecurrence(dto.getRecurrence())
 							;
-					System.out.println("update Next");
 					service.events().insert(dto.getCalendars(), event).execute();
-				}else {
+				}else {//반복 일정 모든 일정 수정, 그외 수정
 					Event updateEvent = service.events().get(calendarId, eventId).execute();
 					updateEvent.setSummary(dto.getSummary())
 					.setSummary(dto.getSummary())
@@ -347,7 +396,7 @@ public class EventController {
 					;
 					service.events().update(calendarId, updateEvent.getId(), updateEvent).execute();
 					String newCalendarId = dto.getCalendars();
-					if(!newCalendarId.equals(calendarId)) {
+					if(!newCalendarId.equals(calendarId)) {	// 캘린더 옮긴 경우
 						System.out.println("move"+newCalendarId);
 						service.events().move(calendarId, updateEvent.getId(), newCalendarId).execute();
 					}
@@ -361,6 +410,7 @@ public class EventController {
 		}
 		return eventResult;
 	}
+	//오류 메시지 추출
 	public String getErrorMessage(String message) {
 		String errorResult = "";
 		String[] strError = message.split("message");
@@ -371,6 +421,7 @@ public class EventController {
 		}
 		return errorResult;
 	}
+	//한자리 수 앞에 0 더하기
 	public String addZero(int num) {
 		String result ="";
 		if(num < 10) {

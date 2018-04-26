@@ -1,4 +1,4 @@
-package com.calendar.sCalendar;
+package com.calendar.controller;
 
 import java.io.IOException;
 import java.text.DateFormat;
