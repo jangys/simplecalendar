@@ -188,7 +188,7 @@ function requestData(request,y,m,d){
 }
 function requestDailyCalendar(year,month,date,reload){
 	var baseUrl = "http://localhost:8080";
-	var pageUrl = "/m/"+year+"-"+month+"-"+date;
+	var pageUrl = "/d/"+year+"-"+month+"-"+date;
 	console.log("request");
 	if(!reload){
 		history.pushState(null,"SimpleCalendar",pageUrl);				//데이터 요청이 느리니 먼저 url을 바꾸자
@@ -196,7 +196,6 @@ function requestDailyCalendar(year,month,date,reload){
 	if(reload == "first"){
 		history.replaceState(null,"SimpleCalendar",pageUrl);
 	}
-	
 	$.ajax({
 		url: baseUrl+"/daily/"+year+"/"+month+"/"+date,
 		type:'GET',
@@ -214,8 +213,13 @@ function requestDailyCalendar(year,month,date,reload){
 }
 function requestWeeklyCalendar(year,month,date,reload){
 	var baseUrl = "http://localhost:8080";
-	var pageUrl = "/m/"+year+"-"+month+"-"+date;
-	console.log("request");
+	var cur = new Date(year,month-1,date);
+	var firstDate = new Date(cur.getTime()-cur.getDay()*86400000);
+	var y = firstDate.getFullYear();
+	var m = (firstDate.getMonth()+1);
+	var d = firstDate.getDate();
+	var pageUrl = "/w/"+year+"-"+month+"-"+date;
+	console.log("request weekly");
 	if(!reload){
 		history.pushState(null,"SimpleCalendar",pageUrl);				//데이터 요청이 느리니 먼저 url을 바꾸자
 	}
@@ -223,14 +227,14 @@ function requestWeeklyCalendar(year,month,date,reload){
 		history.replaceState(null,"SimpleCalendar",pageUrl);
 	}
 	$.ajax({
-		url: baseUrl+"/weekly/"+year+"/"+month+"/"+date,
+		url: baseUrl+"/weekly/"+y+"/"+m+"/"+d,
 		type:'GET',
 		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
 		dataType:"json",
 		success:function(data){
 			showTitle(year,month);
 			console.log(data);
-			drawWeeklyCalendar(year,month,date,data,true);
+			drawWeeklyCalendar(y,m,d,data,true);
 		},
 		error: function (XMLHttpRequest, textStatus, errorThrown){
       	alert(errorThrown);
@@ -285,14 +289,11 @@ function requestListCalendar(year,month,date,reload){
 
 //일 버튼
 $(document).on('click','#dayBtn',function(){
-	var baseUrl = "http://localhost:8080";
-	var pageUrl = "/d"+requestData("d");
-    history.pushState(null,"SimpleCalendar",pageUrl);
+	requestData("d");
 });
 //주 버튼
 $(document).on('click','#weekBtn',function(){
-	var pageUrl = "/w"+requestData("w");
-    history.pushState(null,"SimpleCalendar",pageUrl);
+	requestData("w");
 });
 //월 버튼
 $(document).on('click','#monthBtn',function(){

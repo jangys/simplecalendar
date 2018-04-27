@@ -142,10 +142,12 @@ public class GoogleCalendarService {
         DateTime next = null;
         switch(type) {
         case MONTHLY:
-        	next = new DateTime(cur.plusMonths(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli());
+        	LocalDateTime localM = cur.plusMonths(1).atTime(0, 0);
+        	ZonedDateTime zdtM = localM.atZone(ZoneId.systemDefault());
+        	next = new DateTime(zdtM.toInstant().toEpochMilli()-60000l);	//1분을 빼서 첫번째 달 마지막 일 11시 59분이 되도록 함.
         	break;
         case WEEKLY:
-        	LocalDateTime local = cur.plusWeeks(1).atTime(11,59);
+        	LocalDateTime local = cur.plusDays(6).atTime(11,59);
         	ZonedDateTime zdt = local.atZone(ZoneId.systemDefault());
         	next = new DateTime(zdt.toInstant().toEpochMilli());
         	break;

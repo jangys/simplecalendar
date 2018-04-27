@@ -155,6 +155,7 @@ function clickMiniCalendarDate(input){
 	var type = path[1];
 	var curDate = path[2];
 	var pageUrl = baseUrl+"/"+type+"/"+strDate;
+	
 	if(type == "m" || type == "l"){
 		if(parseInt(strDate.split('-')[1]) != parseInt(curDate.split('-')[1])){// 월이 다르면
 			var date = strDate.split('-');
@@ -164,10 +165,20 @@ function clickMiniCalendarDate(input){
 			$(".miniCalendar_clickDate").removeClass("miniCalendar_clickDate");
 			$(input).addClass("miniCalendar_clickDate");
 		}
-	}else if(type == "d"){//일
-		
-	}else{//type == w 주
-		
+	}else if(type == "w"){//주
+		var next = new Date(strDate);
+		var cur = new Date(path[2]);
+		if(new Date(cur.getTime()-cur.getDay()*86400000).getTime() != new Date(next.getTime()-next.getDay()*86400000).getTime()){//주의 첫번째 날이 다르면
+			var date = strDate.split('-');
+			requestData(null,date[0],parseInt(date[1]),parseInt(date[2]));
+		}else{
+			history.pushState(null,"SimpleCalendar",pageUrl);
+			$(".miniCalendar_clickDate").removeClass("miniCalendar_clickDate");
+			$(input).addClass("miniCalendar_clickDate");
+		}
+	}else{//type == d 일
+		var date = strDate.split('-');
+		requestData(null,date[0],parseInt(date[1]),parseInt(date[2]));
 	}
 }
 ///check/{checkedId}/{calType}/{year}/{month}/{date}
@@ -197,6 +208,17 @@ function clickCheckbox(box){
 function requestCheckCalendar(year,month,date,box){
 	var baseUrl = "http://localhost:8080";
 	var path = location.pathname.split('/');
+	if(path[1] == "w"){
+		var cur = new Date(year,month-1,date);
+		var firstDate = new Date(cur.getTime()-cur.getDay()*86400000);
+		var y = firstDate.getFullYear();
+		var m = (firstDate.getMonth()+1);
+		var d = firstDate.getDate();
+		console.log(firstDate);
+		year = y;
+		month = m;
+		date = d;
+	}
 	//console.log(box.value);
 	var data = {
 			"id" : box.value,
@@ -205,7 +227,7 @@ function requestCheckCalendar(year,month,date,box){
 			"date" : date
 	};
 	$.ajax({
-		url:baseUrl+"/check"+"/m",
+		url:baseUrl+"/check"+"/"+path[1],
 		type:'GET',
 		data : data,
 		dataType :"json",
@@ -214,14 +236,16 @@ function requestCheckCalendar(year,month,date,box){
 			switch(path[1]){
 		    case 'd':
 		  	  //request, print 추가
+		    	drawWeeklyCalendar(year,month,date,data,false);
 		  	  break;
 		    case 'w':
+		    	drawWeeklyCalendar(y,m,d,data,true);
 		  	  break;
 		    case 'm':
 		    	drawCalendar(year,month-1,data);
 		  	  break;
 		    case 'l':
-		  	  printList(year,month,data);
+		  	  	printList(year,month,data);
 		  	  break;
 		    }
 			

@@ -66,9 +66,9 @@ public class CalendarController {
 		}
 		return result;
 	}
-	@RequestMapping(value = "/check/m", method = RequestMethod.GET)
-	public @ResponseBody ArrayList<EventDTO> getCheckedCalendarEventList(CheckedCalendarDTO checkedCal, HttpServletRequest request) throws IOException{
-		ArrayList<EventDTO> result;
+	@RequestMapping(value = "/check/{type}", method = RequestMethod.GET)
+	public @ResponseBody ArrayList<EventDTO> getCheckedCalendarEventList(@PathVariable String type,CheckedCalendarDTO checkedCal, HttpServletRequest request) throws IOException{
+		ArrayList<EventDTO> result = null;
 		HttpSession session = request.getSession();
 		boolean check = (boolean)session.getAttribute(checkedCal.getId());
 		session.removeAttribute(checkedCal.getId());
@@ -87,7 +87,21 @@ public class CalendarController {
 			calendarList.add(dto);
 			}
 		}
-		result = new GoogleCalendarService().getEvent(calendarList, checkedCal.getYear(), checkedCal.getMonth(),1,GoogleCalendarService.MONTHLY);
+		switch(type) {
+		case "m":
+			result = new GoogleCalendarService().getEvent(calendarList, checkedCal.getYear(), checkedCal.getMonth(),1,GoogleCalendarService.MONTHLY);
+			break;
+		case "l":
+			result = new GoogleCalendarService().getEvent(calendarList, checkedCal.getYear(), checkedCal.getMonth(),1,GoogleCalendarService.MONTHLY);
+			break;
+		case "w":
+			result = new GoogleCalendarService().getEvent(calendarList, checkedCal.getYear(), checkedCal.getMonth(),checkedCal.getDate(),GoogleCalendarService.WEEKLY);
+			break;
+		case "d":
+			result = new GoogleCalendarService().getEvent(calendarList, checkedCal.getYear(), checkedCal.getMonth(),checkedCal.getDate(),GoogleCalendarService.DAILY);
+			break;
+		}
+		
 		return result;
 	}
 	

@@ -456,36 +456,40 @@
 		height:970px;
 	}
 	/*주별,일별 캘린더 헤더 부분*/
-	#weekCalendar_Header{
+	#header_weekly{
 		width:100%;
-		border:1px solid black;
 	}
 	/*주별 캘린더 시간 일정들 큰 부분*/
-	#weekCalendar_Container{
+	#container_weekly{
 		width:100%;
-		border:1px solid black;
 		height: 776px;	/*height 970*0.8 추후 종일 일정 사이즈 따라 변경됨*/
+		border:1px solid #c3c3c3;
 		overflow:hidden;
 		overflow-y:scroll;
 	}
 	/*주별 캘린더 시간 일정틀 부분*/
-	#weekCalendar_Contents{
-		width:100%;
-		border:1px solid black;
+	#contents_weekly{
+		width:93%;
 		height:1000px;
 		position:relative;
+		float:left;
 	}
 	/*주별 캘린더 날짜 부분*/
-	#weekCalendar_Title{
-		border:1px solid black;
-		width:100%;
-		height:70px;
+	#title_weekly{
+		width:91.6%;
+		height:65px;
+		float:left;
+		display: inline-block;
 	}
 	/*주별 캘린더 종일 일정 부분*/
-	#weekCalendar_AllDay{
-		border:1px solid black;
-		width:100%;
-		height:124px;
+	#allDay_weekly{
+		width:93%;
+		height:129px;
+		position:relative;
+		float:left;
+		display: inline-block;
+		overflow:hidden;
+		overflow-y:scroll;
 	}
 	/*주별 캘린도 일 부분*/
 	.dateP_weekly{
@@ -497,7 +501,29 @@
 	.dayP_weekly{
 		font-size:16px;
 	}
-	
+	/*주별 캘린더 칸 나누기 위한 표*/
+	.table_weekly{
+		border-collapse:collapse;
+		border:none;
+		height:100%;
+		width:100%;
+		table-layout: fixed;
+	}
+	/*주별 캘린더 본문 중 side-시간, 종일 표시*/
+	.sideDiv_weekly{
+		float:left;
+		border-bottom:1px solid #c3c3c3;
+		border-left:1px solid #c3c3c3;
+		width:7%;
+		text-align:right;
+		padding-top:5px;
+		padding-right:5px;
+		display:none;
+	}
+	/*주별 캘린더 종일 일정 표*/
+	#alldayTable_weekly{
+		height:98%;
+	}
 </style>
 </head>
 
@@ -545,14 +571,25 @@
 			</div>
 		</div>
 		<div id="weekCalendar">
-			<div id="weekCalendar_Header">
-				<div id="weekCalendar_Title">
+			<div id="header_weekly">
+				<div style="margin: 0 0;">
+					<div class='sideDiv_weekly' style='border-top:1px solid #c3c3c3; height:65px;'><span>날짜</span></div>
+					<div id="title_weekly">
+					</div>
 				</div>
-				<div id="weekCalendar_AllDay">
+				<div>
+					<div class='sideDiv_weekly' style='height:129px;position:relative;'><span>종일</span>
+						<a id='moreAllDay_weekly' style='position:absolute;top:80%;right:10%;' href='#' class='noUnderLine' onclick='clickMoreAllDay_weekly(this); return false;'>∧</a>
+					</div>
+					<div id="allDay_weekly">
+					</div>
 				</div>
 			</div>
-			<div id="weekCalendar_Container">
-				<div id="weekCalendar_Contents">
+			<div id="container_weekly">
+				<div>
+					<div class='sideDiv_weekly' style='border-right:1px solid #c3c3c3; border-bottom:none; border-left:none; border-top:none; height:1000px;'><p>시간</p></div>
+					<div id="contents_weekly">
+					</div>
 				</div>
 			</div>
 		</div>

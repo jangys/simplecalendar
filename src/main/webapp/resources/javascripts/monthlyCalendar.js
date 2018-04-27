@@ -96,7 +96,7 @@ function printCalendar(y, m, data,colNum) {
 					table += "' data-index='"+(x+start)+"' data-col='"+j+"'";
 					
 					if(j == colNum -1){
-						table+= " data-add=0";
+						table+= " data-add='0'";
 					}
 					table +="></td>";
 				}
@@ -316,6 +316,7 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 				}
 			}
 		}
+		
 		if(data[i].startTime[1] < month || data[i].startTime[0] < year){//2017-12 ~ 2018-3
 			index = startIndex;
 		}else{
@@ -333,7 +334,7 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 		}else{
 			title += makeEventTitleForm(data[i],colorCode,false,responseStatus);
 		}
-		
+		title += "</div>";
 		if(startDateIndex == endDateIndex){//하루 일정
 			var col = $("[data-index="+startDateIndex+"]:eq(0)").attr("data-col");
 			if(col == colNum -1){//마지막줄인 경우
@@ -434,14 +435,20 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 	}//for-i
 }
 
-function setEventTd(index, col, title, colorCode, colspan,responseStatus){
+function setEventTd(index, col, title, colorCode, colspan,responseStatus,eventTd){
 	var td = $("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)");
+	if(eventTd != undefined){
+		td = eventTd;
+	}
 	td.html(title);
 	td.attr("colspan",colspan);
 	td.attr('class',"eventFill");
-	td.removeAttr("data-index");
-	td.removeAttr("onclick");
-	
+	if(eventTd != undefined){
+		td.removeAttr("data-indexweekly");
+	}else{
+		td.removeAttr("data-index");
+		td.removeAttr("onclick");
+	}
 	td = td.children().eq(0);
 	td.css('border','2px solid '+colorCode);
 	if(responseStatus == null){
@@ -480,23 +487,24 @@ function setAddTd(index, col,data){
 	var add = parseInt(td.attr("data-add")) +1;
 	var more = "";
 	td.attr("data-add",add);
-	
-	if(data != null){
-		more = "<span class='eventInformation' style='display:none' data-information='"+JSON.stringify(data)+"'></span>";
-	}
-	if(td.children().length == 0){
-		td.removeAttr("onclick");
-		temp = "<a class='showMoreEvent' title='더보기' href='#' style='color:black;'>+"+add+"</a>";
-		if(more != ""){
-			temp += more;
-		}
-		td.html(temp);
-	}else{
-		td.children().eq(0).text("+"+add);
-		if(more != ""){
-			td.append(more);
-		}
-	}
+	temp = "<a class='showMoreEvent' title='더보기' href='#' style='color:black;'>+"+add+"</a>";
+	td.html(temp);
+//	if(data != null){
+//		more = "<span class='eventInformation' style='display:none' data-information='"+JSON.stringify(data)+"'></span>";
+//	}
+//	if(td.children().length == 0){
+//		td.removeAttr("onclick");
+//		
+//		if(more != ""){
+//			temp += more;
+//		}
+//		td.html(temp);
+//	}else{
+//		td.children().eq(0).text("+"+add);
+//		if(more != ""){
+//			td.append(more);
+//		}
+//	}
 }
 
 function addZero(data){
