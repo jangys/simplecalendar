@@ -42,7 +42,7 @@
 		text-align: left;
 	}
 	td{
-		width:14.2%;
+		/*width:14.2%;*/
 		padding:0px;
 	}
 	form{
@@ -56,7 +56,8 @@
 		font-size:20px;
 	}
 	li{
-		overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+		overflow:hidden;
+		white-space:nowrap;
 	}
 	p{
 		margin:0 0;
@@ -169,6 +170,15 @@
 		border-left: 1px solid #c3c3c3;
 		border-right: 1px solid #c3c3c3;
 	}
+	/*일정이 들어간 칸-weekly에서 시간 있는일정*/
+	.eventFill_weekly{
+		position:relative;
+		z-index:4;
+		padding-left: 0.5px;
+		padding-right: 0.5px;
+		padding-top:0px;
+		padding-bottom:0px;
+	}
 	/*일정 표*/
 	.eventList{
 		border-collapse: separate;
@@ -202,6 +212,7 @@
 	#container{
 		padding : 1% 1%;
 		position : relative;
+		height:100%;
 		min-width: 920px;
 		min-height: 246px;
 		width:75%;
@@ -220,6 +231,7 @@
 		width:100%;
 		position: relative;
 		z-index: 1;
+		display:none;
 	}
 	/*일정 요약 보여주는 작은 창*/
 	#showEventSummary{
@@ -354,10 +366,18 @@
 	}
 	/*일정 제목 링크 부분*/
 	.eventTitleLink{
-		overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+		overflow:hidden;
+		white-space:nowrap;
 		height:95%;
 		margin-left:2px;
 		margin-right:2px;
+		cursor: pointer;
+	}
+	/*일정 제목 링크 부분_weekly 시간이 있는 일정 부분*/
+	.eventTitleLink_weekly{
+		overflow:hidden;
+		white-space:nowrap;
+		height:95%;
 		cursor: pointer;
 	}
 	/*일정 더보기 링크 부분*/
@@ -367,7 +387,8 @@
 	}
 	/*일정 요약 보여주는 작은 창에 있는 태그 p*/
 	.eventSummaryContents_p{
-		overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+		overflow:hidden;
+		white-space:nowrap;
 	}
 	/*날짜 칸 눌렀을때*/
 	.clickDate{
@@ -453,43 +474,56 @@
 	#weekCalendar{
 		display:none;
 		width:100%;
-		height:970px;
+		height:100%;
+		position:relative;
 	}
 	/*주별,일별 캘린더 헤더 부분*/
 	#header_weekly{
 		width:100%;
+		height:20%;
+		position: relative;
 	}
 	/*주별 캘린더 시간 일정들 큰 부분*/
 	#container_weekly{
 		width:100%;
-		height: 776px;	/*height 970*0.8 추후 종일 일정 사이즈 따라 변경됨*/
-		border:1px solid #c3c3c3;
+		height: 80%;	/*height 970*0.8 추후 종일 일정 사이즈 따라 변경됨*/
 		overflow:hidden;
 		overflow-y:scroll;
+		position:relative;
+		border-bottom:1px solid #c3c3c3;
+		display:none;
 	}
 	/*주별 캘린더 시간 일정틀 부분*/
 	#contents_weekly{
 		width:93%;
-		height:1000px;
+		height:1440px;
 		position:relative;
 		float:left;
+		z-index:2;
+		-webkit-flex:1;
+		flex:1;
 	}
 	/*주별 캘린더 날짜 부분*/
 	#title_weekly{
-		width:91.6%;
 		height:65px;
 		float:left;
 		display: inline-block;
+		overflow-y:scroll;
+		display:none;
 	}
 	/*주별 캘린더 종일 일정 부분*/
 	#allDay_weekly{
-		width:93%;
-		height:129px;
+		height:70%;
 		position:relative;
 		float:left;
 		display: inline-block;
 		overflow:hidden;
 		overflow-y:scroll;
+		border-right:1px solid #c3c3c3;
+		border-bottom:1px solid #c3c3c3;
+		-webkit-flex:1;
+		flex:1;
+		display:none;
 	}
 	/*주별 캘린도 일 부분*/
 	.dateP_weekly{
@@ -514,21 +548,23 @@
 		float:left;
 		border-bottom:1px solid #c3c3c3;
 		border-left:1px solid #c3c3c3;
-		width:7%;
+		width:65px;
 		text-align:right;
 		padding-top:5px;
 		padding-right:5px;
 		display:none;
+		-webkit-flex:none;
+		flex:none;
 	}
 	/*주별 캘린더 종일 일정 표*/
 	#alldayTable_weekly{
-		height:98%;
+		height:99.5%;
 	}
 </style>
 </head>
 
 <body>
-<div id = "header" class = "row" style="min-width: 930px;flex-wrap: nowrap; width:90%;margin-left:0; diplay:none;">
+<div id = "header" class = "row" style="min-width: 930px;flex-wrap: nowrap; width:90%;margin-left:0; diplay:none;height:5%;">
 	<div id="title" class = "col-sm-3">
 	</div>
 	<div id = "btnList" class = "col-sm-5">
@@ -538,7 +574,7 @@
 		<button class = 'btn btn-info' id = 'listBtn' type='button' value='list' name='list'>목록</button>
 	</div>
 </div>
-<div id = "contents"  style="width:100%; min-width: 1200px; height:90%;">
+<div id = "contents"  style="width:100%; min-width: 1200px; height:92%;min-height:875px;">
 	<div id = "side" class = "form-horizontal">
 		<div id="miniCalendar" style="width:100%;height:242px; border:1px solid #c3c3c3; margin-bottom:15px;">
 			<div id="miniCalendar_Header" style="width:100%; height:15%; text-align:center; padding-top:2%;">
@@ -562,7 +598,7 @@
 	</div>
 	<div id="container" style="height:100%;">
 		<div id="monthCalendar" data-colnum='0'>
-			<table id="week">
+			<table id="dayTable" style="display:none;">
 				<tr id="dayLine">
 					<th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th>
 				</tr>
@@ -572,22 +608,22 @@
 		</div>
 		<div id="weekCalendar">
 			<div id="header_weekly">
-				<div style="margin: 0 0;">
+				<div style="margin: 0 0; display:flex;">
 					<div class='sideDiv_weekly' style='border-top:1px solid #c3c3c3; height:65px;'><span>날짜</span></div>
-					<div id="title_weekly">
+					<div id="title_weekly" style='-webkit-flex:1; flex:1;'>
 					</div>
 				</div>
-				<div>
-					<div class='sideDiv_weekly' style='height:129px;position:relative;'><span>종일</span>
-						<a id='moreAllDay_weekly' style='position:absolute;top:80%;right:10%;' href='#' class='noUnderLine' onclick='clickMoreAllDay_weekly(this); return false;'>∧</a>
+				<div style="display:flex;margin:0 0;">
+					<div class='sideDiv_weekly' style='height:70%;position:relative;'><span>종일</span>
+						<a id='moreAllDay_weekly' style='position:absolute;bottom:10px;right:10px;' href='#' class='noUnderLine' onclick='clickMoreAllDay_weekly(this); return false;'>∧</a>
 					</div>
 					<div id="allDay_weekly">
 					</div>
 				</div>
 			</div>
 			<div id="container_weekly">
-				<div>
-					<div class='sideDiv_weekly' style='border-right:1px solid #c3c3c3; border-bottom:none; border-left:none; border-top:none; height:1000px;'><p>시간</p></div>
+				<div style="display:flex;">
+					<div class='sideDiv_weekly' style='border-bottom:none; height:1440px;position:relative;padding:0 0;'></div>
 					<div id="contents_weekly">
 					</div>
 				</div>

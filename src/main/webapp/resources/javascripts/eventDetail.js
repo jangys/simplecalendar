@@ -871,8 +871,12 @@ function clickCancel_detail(){
 	var strDate =typeStr[1].split("-");
 	switch(type){
 	case 'd':
+		changeStyle("day");
+		requestDailyCalendar(strDate[0],strDate[1],strDate[2],false);
 		break;
 	case 'w':
+		changeStyle("week");
+		requestWeeklyCalendar(strDate[0],strDate[1],strDate[2],false);
 		break;
 	case 'm':
 		changeStyle("month");
@@ -1185,8 +1189,12 @@ function submitData(inputJSON){
 				var strDate =date.split("-");
 				switch(type){
 				case 'd':
+					changeStyle("day");
+					requestDailyCalendar(strDate[0],strDate[1],strDate[2],false);
 					break;
 				case 'w':
+					changeStyle("week");
+					requestWeeklyCalendar(strDate[0],strDate[1],strDate[2],false);
 					break;
 				case 'm':
 					changeStyle("month");

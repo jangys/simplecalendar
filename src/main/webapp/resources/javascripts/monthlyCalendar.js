@@ -30,7 +30,7 @@ function printCalendar(y, m, data,colNum) {
 	var table = "";
 	var dateNum = 1;
 	var tempDateNum = 1;
-	
+	$("#dayTable").css('display','');	//요일 부분 표시
 	//달력그리기
 	for(var i = 0; i<row;i++){
 		table+="<div class='dateLine ";
@@ -436,13 +436,18 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 }
 
 function setEventTd(index, col, title, colorCode, colspan,responseStatus,eventTd){
-	var td = $("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)");
+	var td; 
 	if(eventTd != undefined){
 		td = eventTd;
+	}else{
+		td = $("[data-index="+index+"]"+"[data-col="+col+"]:eq(0)");
 	}
 	td.html(title);
 	td.attr("colspan",colspan);
 	td.attr('class',"eventFill");
+	if(index == "weekly"){//주별에서 시간이 있는 일정 그리는 경우
+		td.attr('class',"eventFill_weekly");
+	}
 	if(eventTd != undefined){
 		td.removeAttr("data-indexweekly");
 	}else{
@@ -450,7 +455,12 @@ function setEventTd(index, col, title, colorCode, colspan,responseStatus,eventTd
 		td.removeAttr("onclick");
 	}
 	td = td.children().eq(0);
-	td.css('border','2px solid '+colorCode);
+	
+	if(index == "weekly"){
+		td.css('border','1px solid white');
+	}else{
+		td.css('border','2px solid '+colorCode);
+	}
 	if(responseStatus == null){
 		td.css('background-color',colorCode);
 	}else{

@@ -341,8 +341,12 @@ function changeStyle(type,data){
 	closeAllDiv();
 	switch(type){
 	case "day":
+		$("#contents").css('height','90%');
+		$("#container").css('height','100%');
 		break;
 	case "week":
+		$("#contents").css('height','90%');
+		$("#container").css('height','100%');
 		break;
 	case "month":
 		$("#contents").css('height','90%');
