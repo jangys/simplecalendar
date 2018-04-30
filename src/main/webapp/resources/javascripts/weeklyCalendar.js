@@ -206,30 +206,34 @@ function showWeeklyEvent(year,month,date,data,weekly){
 	text += "</tr></table>";
 	div.html(text);
 	var size = data.length;
+	var day = new Date(data[0].startTime[0],data[0].startTime[1]-1,data[0].startTime[2]).getDay();
+	makeWeeklyEventTd(data[0],weekly);
 	if(size != 0){
-		for(var i=0;i<size;i++){
-//			var date = new Date(data[i].startTime[0],data[i].startTime[1]-1,data[i].startTime[2]);
-//			if(date.getDay() != day){//요일이 달라지면 전에 저장한 정보들 추가
-//				if(weekly){
-//					$("[data-timeindex='"+day+"']").html(text);
-//				}else{//일 뷰이면 하루만 있으므로
-//					$("[data-timeindex=0]").html(text);
-//				}
-//				day = date.getDay();
-//				text = "";
-//			}
-//			text = makeWeeklyEventTd(data[i]);
-			 makeWeeklyEventTd(data[i],weekly);
+		for(var i=1;i<size;i++){
+			if(weekly){
+				var date = new Date(data[i].startTime[0],data[i].startTime[1]-1,data[i].startTime[2]);
+				if(date.getDay() != day){//요일이 달라지면 전에 저장한 정보들 추가
+					arrangeWeeklyEvnetTd(day);
+					day = date.getDay();
+				}
+			}
+			makeWeeklyEventTd(data[i],weekly);
 		}
+		if(!weekly){
+			arrangeWeeklyEvnetTd(0);
+		}else{
+			arrangeWeeklyEvnetTd(day);
+		}
+		
 	}
 }
 function makeWeeklyEventTd(data,weekly){
 	//setEventTd(index, col, title, colorCode, colspan,responseStatus,eventTd)
 	var term = data.endTime[3] - data.startTime[3];	//시간 뺌
 	var min = data.endTime[4] - data.startTime[4];	//분 뺌
-	term = (term*60+min)+"px";
+	term = term*60+min;
 	var top = (60*data.startTime[3]+data.startTime[4]);
-	var result = "<div style='height:"+term+";position:absolute; top:"+top+"px;left:0px;width:100%;' data-top="+top+"></div>";
+	var result = "<div style='height:"+term+"px; position:absolute; top:"+top+"px;left:0px;width:100%;' data-top='"+top+"' data-bottom="+(top+term)+"></div>";
 	
 	var colorCode;
 	var calendarListSize = $("[type='checkbox']").size();
@@ -263,21 +267,135 @@ function makeWeeklyEventTd(data,weekly){
 		title += makeEventTitleForm(data,colorCode,false,responseStatus);
 	}
 	title += "</div>";
+	var timeIndex = 0;
 	if(weekly){
 		var day = new Date(data.startTime[0],data.startTime[1]-1,data.startTime[2]).getDay();
 		console.log(data.summary+" , "+day);
+		timeIndex = day;
 		$("[data-timeindex='"+day+"']").append(result);
 		setEventTd("weekly", 0, title, colorCode, 0,responseStatus,$("[data-timeindex='"+day+"']").children().last());
 	}else{
 		$("[data-timeindex=0]").append(result);
 		setEventTd("weekly", 0, title, colorCode, 0,responseStatus,$("[data-timeindex=0]").children().last());
 	}
-	var divs = $("[data-top='"+top+"']");	//같은 높이의 div 모으기
+}
+function arrangeWeeklyEvnetTd(timeIndex){
+//	var divs = $("[data-top='"+top+"']");	//같은 높이의 div 모으기
+//	var size = divs.length;
+//	var width = 100/size;
+//	divs.css('width',width+"%");
+//	for(var i=0;i<size;i++){
+//		divs.eq(i).css('left',width*i+"%");
+//	}
+//	width = 100*width/div.offsetParent().width();
+	var divs = $("[data-timeindex='"+timeIndex+"']").children();
 	var size = divs.length;
-	var width = 100/size;
-	divs.css('width',width+"%");
+	var maxBottomTop = divs.eq(0).attr('data-top');
+	var maxBottom=divs.eq(0).attr('data-bottom');
+	var newBottom = divs.last().attr('data-bottom');
+	var newTop = divs.last().attr('data-top');
+//	for(var i=0;i<size-1;i++){//마지막은 지금 새로 집어넣은 일정이라 보지 않아도 됨.
+//		var bottom = divs.eq(i).attr('data-bottom');
+//		var top = divs.eq(i).attr('data-top');
+//		if(bottom > maxBottom){
+//			maxBottom = bottom;
+//			maxBottomTop = top;
+//		}
+//	}
+	var colBefore = 0;
+	var col = 0;
+	
 	for(var i=0;i<size;i++){
-		divs.eq(i).css('left',width*i+"%");
+		var top = divs.eq(i).attr('data-top');
+		var bottom = divs.eq(i).attr('data-bottom');
+		console.log(i);
+		if(bottom > maxBottom){
+			maxBottom = bottom;
+			maxBottomTop = top;
+			if(colBefore < col){//최댓값만 가지도록
+				colBefore =col;
+				console.log(col);
+				i=0;
+			}
+			col = 0;
+		}
+		if(top == maxBottomTop){
+			col++;
+		}
+		if(top < maxBottomTop && bottom >= maxBottomTop){
+			col++;
+		}
+		if(top > maxBottomTop && top <= maxBottom){
+			var exist = false;
+			for(var j=0;j<i;j++){
+				var otherTop = divs.eq(j).attr('data-top');
+				var otherBottom = divs.eq(j).attr('data-bottom');
+				if(otherBottom <= top){//아래에 있음
+					exist = true;
+				}
+				if(otherTop == top){
+					exist = false;
+				}
+			}
+			if(!exist){
+				col++;
+			}
+			console.log("here : "+col);
+		}
+	}
+	console.log(colBefore);
+	col = colBefore;
+	var beforeDiv = divs.eq(0);
+	var currentIndex = 0;
+	var width = 100/col;
+	beforeDiv.css('left','0%');
+	beforeDiv.css('width','100%');
+	beforeDiv.attr('data-currentIndex',0);
+	for(var i=1;i<size;i++){
+		var top = divs.eq(i).attr('data-top');
+		var bottom = divs.eq(i).attr('data-bottom');
+		currentIndex=0;
+		var place = false;
+		var bottoms = $("[data-bottom='"+top+"']");
+		if(bottoms.length >= 1){
+			place = true;
+			var index = bottoms.attr('data-currentIndex');
+			divs.eq(i).attr('data-currentIndex',index);
+			divs.eq(i).css('width',width+"%");
+			divs.eq(i).css('left',width*index+"%");
+		}
+		if(!place){//자리가 없으면
+			for(var j=0;j<i;j++){
+				if(divs.eq(j).attr('data-bottom') > top){//옆에 있음
+					beforeDiv = divs.eq(j);
+					currentIndex = parseInt(beforeDiv.attr('data-currentIndex'))+1;
+				}
+			}
+			if(currentIndex > 0){
+				beforeDiv.css('width',width+"%");
+				divs.eq(i).css('left',(width*currentIndex)+"%");
+				divs.eq(i).attr('data-currentIndex',currentIndex);
+				divs.eq(i).css('width',(col-currentIndex)*width+"%");
+			}else{
+				divs.eq(i).css('left','0%');
+				divs.eq(i).css('width','100%');
+				divs.eq(i).attr('data-currentIndex',0);
+			}
+		}
+		
+//		var beforeTop = beforeDiv.attr('data-top');
+//		var beforeBottom = beforeDiv.attr('data-bottom');
+//		console.log(beforeBottom+" , "+top);
+//		if(beforeBottom > top){//옆에 있음
+//			beforeDiv.css('width',width+"%");
+//			beforeDiv.css('left',(width*beforeIndex)+"%");
+//			console.log(beforeIndex);
+//			beforeIndex++;
+//		}else{//아래에 있음
+//			beforeDiv.css('width',width*(col-beforeIndex)+"%");
+//			beforeDiv.css('left',width*beforeIndex+"%");
+//			beforeIndex=0;
+//		}
 	}
 }
 //종일 이벤트 더보기 누른 경우

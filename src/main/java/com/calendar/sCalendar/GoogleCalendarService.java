@@ -152,7 +152,7 @@ public class GoogleCalendarService {
         	next = new DateTime(zdt.toInstant().toEpochMilli());
         	break;
         case DAILY:
-        	LocalDateTime localD = cur.atTime(11,59);
+        	LocalDateTime localD = cur.plusDays(1).atTime(0,0);
         	ZonedDateTime zdtD = localD.atZone(ZoneId.systemDefault());
         	next = new DateTime(zdtD.toInstant().toEpochMilli());
         	break;

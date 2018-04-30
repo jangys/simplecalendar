@@ -377,7 +377,7 @@
 	.eventTitleLink_weekly{
 		overflow:hidden;
 		white-space:nowrap;
-		height:95%;
+		height:100%;
 		cursor: pointer;
 	}
 	/*일정 더보기 링크 부분*/
