@@ -103,15 +103,19 @@ function showWeeklyAllDay(year,month,date,data,weekly){
 			endIndex = dataEnd.getDay();
 		}
 		if(!weekly){
+			startIndex=0;
 			endIndex = 0;
 		}
 		//console.log(data[i].summary + " , "+startIndex+" , "+endIndex);
 		var startCol = $("[data-indexweekly='"+startIndex+"']:eq(0)").attr('data-colweekly');
 		var endCol = $("[data-indexweekly='"+endIndex+"']:eq(0)").attr('data-colweekly');
 		var col = startCol >= endCol ? startCol:endCol;
+		if(startCol == undefined || endCol == undefined){
+			col = undefined;
+		}
 		if(col == undefined){
 			maxcol++;
-			table.attr('data-colmax',maxcol);
+			table.attr('data-maxcol',maxcol);
 			var tableTd = "<tr>";
 			for(var j=0;j<row;j++){
 				tableTd += "<td style='border:1px solid #c3c3c3;' data-indexWeekly="+j+" data-colWeekly="+(maxcol-1)+"></td>";
@@ -159,6 +163,9 @@ function showWeeklyAllDay(year,month,date,data,weekly){
 			colspan = 0;
 		}
 		setEventTd(0, 0, title, colorCode, colspan,responseStatus,td);
+		if(data[i].summary == "4/3~4/5_22"){
+			console.log(td);
+		}
 		var index = startIndex;
 		while(index <= endIndex){
 			$("[data-indexweekly="+index+"]"+"[data-colweekly="+col+"]:eq(0)").remove();
@@ -205,8 +212,12 @@ function showWeeklyEvent(year,month,date,data,weekly){
 	}
 	text += "</tr></table>";
 	div.html(text);
+	if(data.length == 0){
+		return;
+	}
 	var size = data.length;
-	var day = new Date(data[0].startTime[0],data[0].startTime[1]-1,data[0].startTime[2]).getDay();
+	var day;
+	day = new Date(data[0].startTime[0],data[0].startTime[1]-1,data[0].startTime[2]).getDay();
 	makeWeeklyEventTd(data[0],weekly);
 	if(size != 0){
 		for(var i=1;i<size;i++){
@@ -233,6 +244,9 @@ function makeWeeklyEventTd(data,weekly){
 	var min = data.endTime[4] - data.startTime[4];	//분 뺌
 	term = term*60+min;
 	var top = (60*data.startTime[3]+data.startTime[4]);
+	if(term < 20){//최소 20px로 맞추기
+		term = 20;
+	}
 	var result = "<div style='height:"+term+"px; position:absolute; top:"+top+"px;left:0px;width:100%;' data-top='"+top+"' data-bottom="+(top+term)+"></div>";
 	
 	var colorCode;
@@ -302,83 +316,136 @@ function arrangeWeeklyEvnetTd(timeIndex){
 //			maxBottomTop = top;
 //		}
 //	}
-	var colBefore = 0;
 	var col = 0;
-	
-	for(var i=0;i<size;i++){
-		var top = divs.eq(i).attr('data-top');
-		var bottom = divs.eq(i).attr('data-bottom');
-		console.log(i);
-		if(bottom > maxBottom){
-			maxBottom = bottom;
-			maxBottomTop = top;
-			if(colBefore < col){//최댓값만 가지도록
-				colBefore =col;
-				console.log(col);
-				i=0;
-			}
-			col = 0;
-		}
-		if(top == maxBottomTop){
-			col++;
-		}
-		if(top < maxBottomTop && bottom >= maxBottomTop){
-			col++;
-		}
-		if(top > maxBottomTop && top <= maxBottom){
-			var exist = false;
-			for(var j=0;j<i;j++){
-				var otherTop = divs.eq(j).attr('data-top');
-				var otherBottom = divs.eq(j).attr('data-bottom');
-				if(otherBottom <= top){//아래에 있음
-					exist = true;
-				}
-				if(otherTop == top){
-					exist = false;
-				}
-			}
-			if(!exist){
-				col++;
-			}
-			console.log("here : "+col);
-		}
-	}
-	console.log(colBefore);
-	col = colBefore;
 	var beforeDiv = divs.eq(0);
 	var currentIndex = 0;
-	var width = 100/col;
 	beforeDiv.css('left','0%');
 	beforeDiv.css('width','100%');
 	beforeDiv.attr('data-currentIndex',0);
 	for(var i=1;i<size;i++){
-		var top = divs.eq(i).attr('data-top');
-		var bottom = divs.eq(i).attr('data-bottom');
+		var top = parseInt(divs.eq(i).attr('data-top'));
+		var bottom = parseInt(divs.eq(i).attr('data-bottom'));
+		currentIndex=0;
+		var place = false;
+		var bottoms = $("[data-bottom='"+top+"']");
+		if(bottoms.length >= 1){//자리가 있는지 확인
+			place = true;
+		}
+		var longerIndex = new Array();
+		var nextIndex = -1;
+		if(!place){//자리가 없으면
+			var beforeIndex = -1;
+			for(var j=0;j<i;j++){
+				var dataBottom = parseInt(divs.eq(j).attr('data-bottom'));
+				var divIndex = parseInt(divs.eq(j).attr('data-currentIndex'));
+				if(beforeIndex == -1 || (divIndex-beforeIndex) == 1){//바로 옆에 있는 경우
+					if(dataBottom > top){//옆에 있음
+						currentIndex = divIndex+1;
+						beforeIndex = divIndex;
+					}
+					if(dataBottom > bottom){//현재 들어가는 일정보다 긴 일정이 있는 경우
+						longerIndex.push(divIndex);
+					}
+				}
+			}
+			if(currentIndex > 0){
+				var term;
+				if(longerIndex.length != 0){
+					term = 0;
+					for(var j=0;j<longerIndex.length;j++){
+						var temp = longerIndex[j]-currentIndex;
+						if(temp > 0 && term > temp){//더 작은 수가 나오면
+							term = temp;
+							nextIndex = longerIndex[j];
+						}
+					}
+					if(term <= 0){
+						nextIndex = -1;
+					}
+				}
+				divs.eq(i).attr('data-currentIndex',currentIndex);
+			}else{
+				divs.eq(i).attr('data-currentIndex',0);
+			}
+		}
+		if(col < currentIndex){
+			col = currentIndex;
+		}
+	}
+	col++;	//currentIndex는 0부터 시작하니깐
+	var width = 100/col;
+	beforeDiv = divs.eq(0);
+	for(var i=1;i<size;i++){
+		var top = parseInt(divs.eq(i).attr('data-top'));
+		var bottom = parseInt(divs.eq(i).attr('data-bottom'));
 		currentIndex=0;
 		var place = false;
 		var bottoms = $("[data-bottom='"+top+"']");
 		if(bottoms.length >= 1){
 			place = true;
-			var index = bottoms.attr('data-currentIndex');
+			var index;
+			if(bottoms.length == 1){
+				index = bottoms.attr('data-currentIndex');
+			}else{
+				index = bottoms.eq(0).attr('data-currentIndex');
+			}
 			divs.eq(i).attr('data-currentIndex',index);
-			divs.eq(i).css('width',width+"%");
+			divs.eq(i).css('width',(width*bottoms.length)+"%");
 			divs.eq(i).css('left',width*index+"%");
 		}
 		if(!place){//자리가 없으면
+			var longerIndex = new Array();
+			var beforeIndex = -1;
 			for(var j=0;j<i;j++){
-				if(divs.eq(j).attr('data-bottom') > top){//옆에 있음
-					beforeDiv = divs.eq(j);
-					currentIndex = parseInt(beforeDiv.attr('data-currentIndex'))+1;
+				var dataBottom = parseInt(divs.eq(j).attr('data-bottom'));
+				var divIndex = parseInt(divs.eq(j).attr('data-currentIndex'));
+				
+				if(beforeIndex == -1 || (divIndex-beforeIndex) == 1){//바로 옆에 있는 경우
+					if(dataBottom > top){//옆에 있음
+						beforeDiv = divs.eq(j);
+						currentIndex = parseInt(beforeDiv.attr('data-currentIndex'))+1;
+						beforeIndex = divIndex;
+					}
+				}
+				if(dataBottom > bottom){//현재 들어가는 일정보다 긴 일정이 있는 경우
+					console.log(beforeDiv.css('left'));
+					longerIndex.push(parseInt(beforeDiv.attr('data-currentIndex')));
 				}
 			}
 			if(currentIndex > 0){
 				beforeDiv.css('width',width+"%");
 				divs.eq(i).css('left',(width*currentIndex)+"%");
 				divs.eq(i).attr('data-currentIndex',currentIndex);
-				divs.eq(i).css('width',(col-currentIndex)*width+"%");
+				var term=col - currentIndex;
+				if(longerIndex.length != 0){
+					term = 0;
+					for(var j=0;j<longerIndex.length;j++){
+						var temp = longerIndex[j]-currentIndex;
+						if(temp > 0 && term > temp){//더 작은 수가 나오면
+							term = temp;
+						}
+					}
+					if(term <= 0){
+						term = col-currentIndex;
+					}
+				}
+				divs.eq(i).css('width',term*width+"%");
 			}else{
 				divs.eq(i).css('left','0%');
-				divs.eq(i).css('width','100%');
+				var widthStr="100%";
+				if(longerIndex.length != 0){
+					term = 0;
+					for(var j=0;j<longerIndex.length;j++){
+						var temp = longerIndex[j]-currentIndex;
+						if(temp > 0 && term > temp){//더 작은 수가 나오면
+							term = temp;
+						}
+					}
+					if(temp > 0){
+						widthStr = temp*width+"%";
+					}
+				}
+				divs.eq(i).css('width',widthStr);
 				divs.eq(i).attr('data-currentIndex',0);
 			}
 		}
