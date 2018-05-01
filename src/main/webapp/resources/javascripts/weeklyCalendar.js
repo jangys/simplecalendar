@@ -328,40 +328,84 @@ function arrangeWeeklyEvnetTd(timeIndex){
 		currentIndex=0;
 		var place = false;
 		var bottoms = $("[data-bottom='"+top+"']");
-		if(bottoms.length >= 1){//자리가 있는지 확인
-			place = true;
-		}
 		var longerIndex = new Array();
-		var nextIndex = -1;
+		for(var j=0;j<i;j++){
+			var dataBottom = parseInt(divs.eq(j).attr('data-bottom'));
+			var divIndex = parseInt(divs.eq(j).attr('data-currentIndex'));
+			if(dataBottom > top){//현재 들어가는 일정보다 긴 일정이 있는 경우
+				longerIndex.push(divIndex);
+			}
+		}
+		if(bottoms.length >= 1){//자리가 있는지 확인
+			var tops = $("[data-top='"+top+"']");
+			var remain = 0;
+			var lastIndex = -1;
+			for(var x=0;x<tops.length;x++){
+				if(tops.eq(x).attr('data-currentIndex') == undefined){
+					remain++;
+				}else{
+					lastIndex = parseInt(tops.eq(x).attr('data-currentIndex'));
+				}
+			}
+			if(bottoms.length > tops.length-remain){//이미 내 자신은 추가 되어 있으니깐 같은 경우에도 넣을 수 있음
+				if(bottoms.length == 1){
+					index = bottoms.attr('data-currentIndex');
+				}else{
+					index = bottoms.eq(0).attr('data-currentIndex');
+					if(lastIndex != -1){
+						index = lastIndex+1;
+					}
+				}
+				var start = -1;
+				var end = -1;
+				if(longerIndex.length > 0){
+					console.log(longerIndex.length);
+					for(var x=0;x<longerIndex.length;x++){
+						if(longerIndex[x] == index){
+							if(start == -1){
+								start = index;
+							}
+							index++;
+							end = index;
+						}
+					}
+				}
+				if(start != -1){
+					divs.eq(i).attr('data-term',end-start);
+				}
+				divs.eq(i).attr('data-currentIndex',index);
+				place = true;
+			}
+		}
+		
 		if(!place){//자리가 없으면
 			var beforeIndex = -1;
 			for(var j=0;j<i;j++){
 				var dataBottom = parseInt(divs.eq(j).attr('data-bottom'));
 				var divIndex = parseInt(divs.eq(j).attr('data-currentIndex'));
-				if(beforeIndex == -1 || (divIndex-beforeIndex) == 1){//바로 옆에 있는 경우
+				if(beforeIndex == -1 || (divIndex-beforeIndex) == 1 || divs.eq(j).attr('data-term') != undefined){//바로 왼쪽에 일정이 있는 경우
 					if(dataBottom > top){//옆에 있음
 						currentIndex = divIndex+1;
 						beforeIndex = divIndex;
 					}
-					if(dataBottom > bottom){//현재 들어가는 일정보다 긴 일정이 있는 경우
-						longerIndex.push(divIndex);
-					}
 				}
 			}
+			var start = -1;
+			var last = -1;
 			if(currentIndex > 0){
-				var term;
 				if(longerIndex.length != 0){
-					term = 0;
 					for(var j=0;j<longerIndex.length;j++){
-						var temp = longerIndex[j]-currentIndex;
-						if(temp > 0 && term > temp){//더 작은 수가 나오면
-							term = temp;
-							nextIndex = longerIndex[j];
+						if(longerIndex[j] == currentIndex){//현재 일정이 들어가려는 부분에 이미 일정이 있는 경우 다음 칸으로 이동
+							if(start == -1){
+								start = currentIndex;
+							}
+							currentIndex++;
+							last = currentIndex;
 						}
 					}
-					if(term <= 0){
-						nextIndex = -1;
-					}
+				}
+				if(start != -1){
+					divs.eq(i).attr('data-term',last-start);
 				}
 				divs.eq(i).attr('data-currentIndex',currentIndex);
 			}else{
@@ -381,46 +425,90 @@ function arrangeWeeklyEvnetTd(timeIndex){
 		currentIndex=0;
 		var place = false;
 		var bottoms = $("[data-bottom='"+top+"']");
-		if(bottoms.length >= 1){
-			place = true;
-			var index;
-			if(bottoms.length == 1){
-				index = bottoms.attr('data-currentIndex');
-			}else{
-				index = bottoms.eq(0).attr('data-currentIndex');
+		var longerIndex = new Array();
+		var longerIndexDiv = new Array();
+		for(var j=0;j<i;j++){
+			var dataBottom = parseInt(divs.eq(j).attr('data-bottom'));
+			var divIndex = parseInt(divs.eq(j).attr('data-currentIndex'));
+			if(dataBottom > top){//현재 들어가는 일정보다 긴 일정이 있는 경우
+				longerIndex.push(divIndex);
+				longerIndexDiv.push(divs.eq(j));
 			}
-			divs.eq(i).attr('data-currentIndex',index);
-			divs.eq(i).css('width',(width*bottoms.length)+"%");
-			divs.eq(i).css('left',width*index+"%");
 		}
+		if(bottoms.length >= 1){
+			var tops = $("[data-top='"+top+"']");
+			var remain = 0;
+			console.log(tops.length);
+			var lastIndex = -1;
+			var lastDiv= null;
+			for(var x=0;x<tops.length;x++){
+				if(tops.eq(x).css('left') == "0px"){
+					remain++;
+				}else{
+					lastIndex = parseInt(tops.eq(x).attr('data-currentIndex'));
+					lastDiv=tops.eq(x);
+				}
+			}
+			if(bottoms.length > tops.length-remain){//이미 내 자신은 추가 되어 있으니깐 같은 경우에도 넣을 수 있음
+				place = true;
+				var index;
+				if(bottoms.length == 1){
+					index = bottoms.attr('data-currentIndex');
+				}else{
+					index = bottoms.eq(0).attr('data-currentIndex');
+					if(lastIndex != -1){
+						lastDiv.css('width',width+"%");
+						index = lastIndex+1;
+					}
+				}
+				if(longerIndex.length > 0){
+					for(var x=0;x<longerIndex.length;x++){
+						if(longerIndex[x] == index){
+							index++;
+							longerIndexDiv[x].css('width',width+"%");
+						}
+					}
+				}
+				divs.eq(i).attr('data-currentIndex',index);
+				var calRemain = bottoms.length-(tops.length-remain);
+				if(calRemain == 1){
+					//width = 100*width/div.offsetParent().width();
+					var parentWidth= 100*bottoms.last().width()/bottoms.last().offsetParent().width();
+					divs.eq(i).css('width',parentWidth+"%");
+				}else{
+					divs.eq(i).css('width',width*calRemain+"%");
+				}
+				divs.eq(i).css('left',width*index+"%");
+			}
+		}
+
 		if(!place){//자리가 없으면
-			var longerIndex = new Array();
 			var beforeIndex = -1;
 			for(var j=0;j<i;j++){
 				var dataBottom = parseInt(divs.eq(j).attr('data-bottom'));
 				var divIndex = parseInt(divs.eq(j).attr('data-currentIndex'));
+				var term = divs.eq(j).attr('data-term');
 				
-				if(beforeIndex == -1 || (divIndex-beforeIndex) == 1){//바로 옆에 있는 경우
-					if(dataBottom > top){//옆에 있음
+				if(beforeIndex == -1 || (divIndex-beforeIndex) == 1 || term != undefined){//바로 옆에 있는 경우, term이 있는 경우는 일정 건너 뛴 경우 이 값이 있다는건 무조건 왼쪽에 뭐가 있다는 것
+					if(dataBottom > top){//옆에 있음 오른쪽으로 갈수록 무조건 내려가기 때문에 왼쪽에는 내 시작지점보다 긴 일정을 가지고 있어야함.
 						beforeDiv = divs.eq(j);
 						currentIndex = parseInt(beforeDiv.attr('data-currentIndex'))+1;
 						beforeIndex = divIndex;
 					}
 				}
-				if(dataBottom > bottom){//현재 들어가는 일정보다 긴 일정이 있는 경우
-					console.log(beforeDiv.css('left'));
-					longerIndex.push(parseInt(beforeDiv.attr('data-currentIndex')));
-				}
 			}
 			if(currentIndex > 0){
 				beforeDiv.css('width',width+"%");
-				divs.eq(i).css('left',(width*currentIndex)+"%");
-				divs.eq(i).attr('data-currentIndex',currentIndex);
 				var term=col - currentIndex;
+				var sameLongerIndex = -1;
 				if(longerIndex.length != 0){
 					term = 0;
 					for(var j=0;j<longerIndex.length;j++){
 						var temp = longerIndex[j]-currentIndex;
+						if(longerIndex[j] == currentIndex){
+							currentIndex++;
+							longerIndexDiv[j].css('width',width+"%");
+						}
 						if(temp > 0 && term > temp){//더 작은 수가 나오면
 							term = temp;
 						}
@@ -430,6 +518,8 @@ function arrangeWeeklyEvnetTd(timeIndex){
 					}
 				}
 				divs.eq(i).css('width',term*width+"%");
+				divs.eq(i).css('left',(width*currentIndex)+"%");
+				divs.eq(i).attr('data-currentIndex',currentIndex);
 			}else{
 				divs.eq(i).css('left','0%');
 				var widthStr="100%";
