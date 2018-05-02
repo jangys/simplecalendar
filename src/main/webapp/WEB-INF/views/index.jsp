@@ -610,7 +610,7 @@
 			<div id="header_weekly">
 				<div style="margin: 0 0; display:flex;">
 					<div class='sideDiv_weekly' style='border-top:1px solid #c3c3c3; height:65px;'><span>날짜</span></div>
-					<div id="title_weekly" style='-webkit-flex:1; flex:1;'>
+					<div id="title_weekly" style='-webkit-flex:1; flex:1;position:relative;'>
 					</div>
 				</div>
 				<div style="display:flex;margin:0 0;">

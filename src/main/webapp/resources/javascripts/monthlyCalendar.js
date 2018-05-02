@@ -186,31 +186,35 @@ function dragstart_handler(td,event){
 	img.src = '/image/transparent.png';
 	event.dataTransfer.setDragImage(img,10,10);
 }
-function mouseDownDate(td,event){
-	var last = $('.clickDate:last').attr('data-dateIndex');
-	var first = $('.clickDate:first').attr('data-dateIndex');
+function mouseDownDate(td,event,weekly){
+	var attr = 'data-dateIndex';
+	if(weekly){
+		attr='data-dateIndexWeekly';
+	}
+	var last = $('.clickDate:last').attr(attr);
+	var first = $('.clickDate:first').attr(attr);
 	$(td).addClass('clickDate');
-	var start = parseInt($('#firstClick').attr('data-dateIndex'));
-	var end = parseInt($(td).attr('data-dateIndex'));
+	var start = parseInt($('#firstClick').attr(attr));
+	var end = parseInt($(td).attr(attr));
 	closeAllDiv();
 	for(var i=first; i<= start-1; i++){
-		$("[data-dateIndex="+i+"]").removeClass("clickDate");
+		$("["+attr+"="+i+"]").removeClass("clickDate");
 	}
 	
 	if(start < end){
 		var nextEnd = end+1;
 		for(var a = nextEnd; a<= last; a++){
-			$("[data-dateIndex="+a+"]").removeClass("clickDate");
+			$("["+attr+"="+a+"]").removeClass("clickDate");
 		}
 		for(var i=start; i <= end; i++){
-			$("[data-dateIndex="+i+"]").addClass('clickDate');
+			$("["+attr+"="+i+"]").addClass('clickDate');
 		}
 	}else if(start >= end){
 		for(var a = start+1; a<= last; a++){
-			$("[data-dateIndex="+a+"]").removeClass("clickDate");
+			$("["+attr+"="+a+"]").removeClass("clickDate");
 		}
 		for(var i=end; i <= start; i++){
-			$("[data-dateIndex="+i+"]").addClass('clickDate');
+			$("["+attr+"="+i+"]").addClass('clickDate');
 		}
 	}
 	
@@ -238,6 +242,7 @@ function mouseUpDate(td,drag){
 	//eventFill original value = 4  날짜 한칸은 2
 	$(".eventFill").css('z-index','4');
 	$(".moreEvent").css('z-index','2');
+	
 	//document.getElementById("addForm").submit();
 }
 

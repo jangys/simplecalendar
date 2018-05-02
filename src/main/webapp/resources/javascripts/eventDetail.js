@@ -27,7 +27,9 @@ function loadEventDetail(){
 			}
 			
 		}else{
+			var type = path[4].split("&")[0];
 			var str = $('#calendarId_detail').attr('value').split("~");
+			var time = false;
 			var strStartDate = str[0].split("-");
 			var strEndDate = str[1].split("-");
 			var startDate = new Date(parseInt(strStartDate[0]),parseInt(strStartDate[1])-1,parseInt(strStartDate[2]),9);
@@ -41,10 +43,22 @@ function loadEventDetail(){
 				endHour++;
 			}
 			document.getElementById('endTimePicker').value = makeTimeForm(endHour,0,0);
+			if(type == "w" || type == "d"){//종일 일정인 경우
+				if(path[2].indexOf("&") != -1){
+					var time = path[2].split("&")[1].split("~");
+					document.getElementById('startTimePicker').value = time[0];
+					document.getElementById('endTimePicker').value = time[1];
+				}else{
+					$("#allDayCheckBox").attr('checked',true);
+					$("#allDayCheckBox").attr('value',true);
+					resetTimePicker_detail();
+				}
+			}else{
+				$("#allDayCheckBox").attr('value',false);
+			}
 			
 		}
 		
-		$("#allDayCheckBox").attr('value',false);
 		getCalendarList_detail(false);
 	}else{
 		getCalendarList_detail(true);
@@ -85,7 +99,8 @@ function getCalendarList_detail(getEvent){
 					}
 					if(data[i].primary){
 						$("#userId").text(data[i].id);
-						if(!getEvent){
+						var type = location.pathname.split('/')[4].split("&")[0];
+						if(!getEvent && (type=='m' || type == 'l')){//일정 추가이고 월뷰, 리스트뷰 캘린더에서 요청한거면
 							showAlarm_detail(true,null,data[i].id);
 						}
 					}

@@ -35,7 +35,8 @@ function drawWeeklyCalendar(year,month,date,data,weekly){
 
 function showWeeklyTitle(year,month,date,weekly){
 	var col = weekly == true? 7:1;
-	var text = "<table class='table_weekly' style='height:99%;'><tr>";
+	var text = "<table class='table_weekly' style='height:99%;position:absolute;'><tr>";
+	var clickTable = "<table id='clickAlldayTable_weekly class='table_weekly' style='z-index:3; border:none;height:100%; width:100%;position:absolute;'>";
 	var div = $("#title_weekly");
 	var dayList = ["일","월","화","수","목","금","토"];
 	var start = new Date(year,month-1,date,9);
@@ -43,19 +44,28 @@ function showWeeklyTitle(year,month,date,weekly){
 		var d = new Date(start.getTime()+86400000*i);
 		text += "<td style='border:1px solid #c3c3c3; padding-left:10px;'><p class='dateP_weekly'>"+d.getDate()+"</p>";
 		text +="<p class='dayP_weekly'>"+ dayList[d.getDay()]+"</p></td>";
+		clickTable += "<td data-dateIndexWeekly='"+i+"'onclick='mouseUpDate_weekly(this,false)' onmousedown='startDrag(this)'" 
+		clickTable += "ondragstart='dragstart_handler(this,event);'ondragenter='mouseDownDate(this,event,true)' ondragend='mouseUpDate_weekly(this,true)' ondragover='allowDrop(event)'></td>";
 	}
 	text += "</tr></table>";
+	clickTable +="</tr><table>";
 	div.html(text);
+	div.append(clickTable);
 }
 function makeWeeklyAllDayTable(row){
 	var div = $("#allDay_weekly");
 	var col = 5;	//줄
-	var table="<table id='alldayTable_weekly' class='table_weekly' cellpadding='0' cellspacing='0' data-maxcol="+col+">";
+	var table="<table id='alldayTable_weekly' class='table_weekly' style='position:absolute;' cellpadding='0' cellspacing='0' data-maxcol="+col+">";
+	var clickTable = "<table id='clickAlldayTable_weekly class='table_weekly' style='z-index:3; border:none;height:100%; width:100%;position:absolute;'>";
 	table += "<tr style='display:hidden; height:0;'>";
+	clickTable += "<tr>";
 	for(var j=0;j<row;j++){
 		table += "<td></td>";
+		clickTable += "<td data-dateIndexWeekly='"+j+"'onclick='mouseUpDate_weekly(this,false)' onmousedown='startDrag(this)'" 
+		clickTable += "ondragstart='dragstart_handler(this,event);'ondragenter='mouseDownDate(this,event,true)' ondragend='mouseUpDate_weekly(this,true)' ondragover='allowDrop(event)'></td>";
 	}
 	table += "</tr>";
+	clickTable +="</tr>";
 	for(var i=0;i<col;i++){
 		table += "<tr>";
 		for(var j=0;j<row;j++){
@@ -64,7 +74,43 @@ function makeWeeklyAllDayTable(row){
 		table += "</tr>";
 	}
 	table += "</table>";
+	clickTable += "</table>";
 	div.html(table);
+	div.append(clickTable);
+}
+function mouseUpDate_weekly(td,drag){
+	var date = "";
+	var path = location.pathname.split('/');
+	var dateStr = path[2].split('-');
+	var urlDay = new Date(parseInt(dateStr[0]),parseInt(dateStr[1])-1,parseInt(dateStr[2]),9);
+	var weekStart = new Date(urlDay.getTime()-urlDay.getDay()*86400000);
+	
+	if(drag == false){
+		$(td).addClass('clickDate');
+	}
+	
+	var startDate;
+	var endDate;
+	switch(path[1]){
+	case 'w':
+		startDate = new Date(weekStart.getTime()+parseInt($(".clickDate:first").attr('data-dateIndexWeekly'))*86400000);//시작 날짜
+		endDate = new Date(weekStart.getTime()+parseInt($(".clickDate:last").attr('data-dateIndexWeekly'))*86400000);	//끝 날짜
+		date = startDate.getFullYear()+"-"+(startDate.getMonth()+1)+"-"+startDate.getDate()+"~";
+		date += endDate.getFullYear()+"-"+(endDate.getMonth()+1)+"-"+endDate.getDate();
+		break;
+	case 'd':
+		date = path[2]+"~"+path[2];
+		break;
+	}
+	console.log(date);
+	$("#addEventDate").attr('value',date);
+	goToEventPage("add");
+	$(".clickDate").removeClass("clickDate");
+	//eventFill original value = 4  날짜 한칸은 2
+	$(".eventFill").css('z-index','4');
+	$(".moreEvent").css('z-index','2');
+	
+	//document.getElementById("addForm").submit();
 }
 function showWeeklyAllDay(year,month,date,data,weekly){
 	var row = weekly == true? 7:1;
@@ -163,9 +209,7 @@ function showWeeklyAllDay(year,month,date,data,weekly){
 			colspan = 0;
 		}
 		setEventTd(0, 0, title, colorCode, colspan,responseStatus,td);
-		if(data[i].summary == "4/3~4/5_22"){
-			console.log(td);
-		}
+
 		var index = startIndex;
 		while(index <= endIndex){
 			$("[data-indexweekly="+index+"]"+"[data-colweekly="+col+"]:eq(0)").remove();
@@ -184,6 +228,9 @@ function showWeeklyAllDay(year,month,date,data,weekly){
 }
 function showTimeList(){
 	var div = $("#container_weekly");
+	if(div.children().length == 2){//이미 시간은 만든 상태
+		return;
+	}
 	var text = "<div style='z-index:-1;position:absolute;top:0px; left:0px;width:100%;height:1440px;'>";
 	var hourText = "";
 	for(var i=0;i<24;i++){
@@ -202,16 +249,81 @@ function showTimeList(){
 	div.append(text);
 	$(".sideDiv_weekly:eq(2)").html(hourText);
 }
+function showCurrentTime_weekly(){
+	var path = location.pathname.split('/');
+	if(path[1] != "w"){
+		return;
+	}
+	var now = new Date();
+	var min = now.getHours()*60+now.getMinutes()+"px";
+	var prevIndex = $("#todayLine_weekly").prev().attr('data-timeindex');
+	if(prevIndex != undefined && now.getDay() != prevIndex){//다른날로 넘어감
+		$("#todayLine_weekly").remove();
+		if(now.getDay() == 0){//주가 바뀐 것을 의미. 제거만 하고 더이상 호출 안함
+			return;
+		}
+		var div = $("[data-timeindex='"+now.getDay()+"']").parent();
+		var text = "<div id='todayLine_weekly' style='aria-hidden=true; border-top:2px solid #db4437;z-index:12; position:absolute; width:100%; height:3px;top:"+min+";'></div>";
+		div.append(text);
+	}
+	if($("#todayLine_weekly") != undefined){
+		$("#todayLine_weekly").css('top',min);
+		setTimeout("showCurrentTime_weekly()",1000*60);
+	}
+	
+}
+function showCurrentTime_daily(){
+	var path = location.pathname.split('/');
+	if(path[1] != "d"){
+		return;
+	}
+	var now = new Date();
+	if(parseInt($(".dateP_weekly").text()) != now.getDate()){
+		$("#todayLine_weekly").remove();
+	}
+	if($("#todayLine_weekly") != undefined){
+		var min = now.getHours()*60+now.getMinutes()+"px";
+		$("#todayLine_weekly").css('top',min);
+		setTimeout("showCurrentTime_daily()",1000*60);
+	}
+}
 function showWeeklyEvent(year,month,date,data,weekly){
 	var row = weekly == true? 7:1;
 	var div = $("#contents_weekly");
 	showTimeList();
 	var text = "<table class='table_weekly' style='flex:1; -webkit-flex:1;'><tr>";
+	var divText;
 	for(var i=0;i<row;i++){
-		text+="<td style='border:1px solid #c3c3c3;'><div data-timeindex='"+i+"' style='width:100%;height:100%;position:relative;'></div></td>";
+		text += "<td style='border:1px solid #c3c3c3;position:relative;'><div data-timeindex='"+i+"' style='width:100%;height:100%;position:absolute;top:0px;'></div>";
+		text += "<div id='clickTime_"+i+"' data-clickTimeIndex='"+i+"' style='width:100%;height:100%;position:absolute;z-index:3;top:0px;'></div></td>";
 	}
 	text += "</tr></table>";
 	div.html(text);
+	for(var i=0;i<row;i++){//시간 선택 위한 드래그 등록
+		var id = 'clickTime_'+i;
+		dragTime(document.getElementById(id));
+	}
+	var now = new Date();
+	var nowDiv = null;
+	if(!weekly){//하루
+		if(now.getFullYear() == year && now.getMonth() == (month-1) && now.getDate() == date){//오늘
+			nowDiv = $("[data-timeindex=0]").parent();
+			showCurrentTime_daily();
+		}
+	}else{
+		var nowWeek = new Date(now.getTime()-now.getDay()*86400000);
+		nowWeek.setHours(9);
+		if(nowWeek.getFullYear() == year && nowWeek.getMonth() == (month-1) && nowWeek.getDate() == date){//오늘과 같은 주
+			nowDiv = $("[data-timeindex='"+now.getDay()+"']").parent();
+			showCurrentTime_weekly();
+		}
+	}
+	
+	if(nowDiv != null){
+		var min = now.getHours()*60 + now.getMinutes();
+		var text = "<div id='todayLine_weekly' style='aria-hidden=true; border-top:2px solid #db4437;z-index:12; position:absolute; width:100%; height:3px;top:"+min+"px;'></div>";
+		nowDiv.append(text);
+	}
 	if(data.length == 0){
 		return;
 	}
@@ -235,8 +347,8 @@ function showWeeklyEvent(year,month,date,data,weekly){
 		}else{
 			arrangeWeeklyEvnetTd(day);
 		}
-		
 	}
+	
 }
 function makeWeeklyEventTd(data,weekly){
 	//setEventTd(index, col, title, colorCode, colspan,responseStatus,eventTd)
@@ -284,7 +396,6 @@ function makeWeeklyEventTd(data,weekly){
 	var timeIndex = 0;
 	if(weekly){
 		var day = new Date(data.startTime[0],data.startTime[1]-1,data.startTime[2]).getDay();
-		console.log(data.summary+" , "+day);
 		timeIndex = day;
 		$("[data-timeindex='"+day+"']").append(result);
 		setEventTd("weekly", 0, title, colorCode, 0,responseStatus,$("[data-timeindex='"+day+"']").children().last());
@@ -294,13 +405,6 @@ function makeWeeklyEventTd(data,weekly){
 	}
 }
 function arrangeWeeklyEvnetTd(timeIndex){
-//	var divs = $("[data-top='"+top+"']");	//같은 높이의 div 모으기
-//	var size = divs.length;
-//	var width = 100/size;
-//	divs.css('width',width+"%");
-//	for(var i=0;i<size;i++){
-//		divs.eq(i).css('left',width*i+"%");
-//	}
 //	width = 100*width/div.offsetParent().width();
 	var divs = $("[data-timeindex='"+timeIndex+"']").children();
 	var size = divs.length;
@@ -308,14 +412,7 @@ function arrangeWeeklyEvnetTd(timeIndex){
 	var maxBottom=divs.eq(0).attr('data-bottom');
 	var newBottom = divs.last().attr('data-bottom');
 	var newTop = divs.last().attr('data-top');
-//	for(var i=0;i<size-1;i++){//마지막은 지금 새로 집어넣은 일정이라 보지 않아도 됨.
-//		var bottom = divs.eq(i).attr('data-bottom');
-//		var top = divs.eq(i).attr('data-top');
-//		if(bottom > maxBottom){
-//			maxBottom = bottom;
-//			maxBottomTop = top;
-//		}
-//	}
+	
 	var col = 0;
 	var beforeDiv = divs.eq(0);
 	var currentIndex = 0;
@@ -359,7 +456,6 @@ function arrangeWeeklyEvnetTd(timeIndex){
 				var start = -1;
 				var end = -1;
 				if(longerIndex.length > 0){
-					console.log(longerIndex.length);
 					for(var x=0;x<longerIndex.length;x++){
 						if(longerIndex[x] == index){
 							if(start == -1){
@@ -423,8 +519,7 @@ function arrangeWeeklyEvnetTd(timeIndex){
 		var top = parseInt(divs.eq(i).attr('data-top'));
 		var bottom = parseInt(divs.eq(i).attr('data-bottom'));
 		currentIndex=0;
-		var place = false;
-		var bottoms = $("[data-bottom='"+top+"']");
+		
 		var longerIndex = new Array();
 		var longerIndexDiv = new Array();
 		for(var j=0;j<i;j++){
@@ -435,10 +530,11 @@ function arrangeWeeklyEvnetTd(timeIndex){
 				longerIndexDiv.push(divs.eq(j));
 			}
 		}
+		var place = false;
+		var bottoms = $("[data-bottom='"+top+"']");
 		if(bottoms.length >= 1){
 			var tops = $("[data-top='"+top+"']");
 			var remain = 0;
-			console.log(tops.length);
 			var lastIndex = -1;
 			var lastDiv= null;
 			for(var x=0;x<tops.length;x++){
@@ -469,7 +565,11 @@ function arrangeWeeklyEvnetTd(timeIndex){
 						}
 					}
 				}
-				divs.eq(i).attr('data-currentIndex',index);
+				if(index != divs.eq(i).attr('data-currentIndex')){
+					console.log("index error : "+index + " , "+ divs.eq(i).attr('data-currentIndex'));
+					index = divs.eq(i).attr('data-currentIndex');
+				}
+				
 				var calRemain = bottoms.length-(tops.length-remain);
 				if(calRemain == 1){
 					//width = 100*width/div.offsetParent().width();
@@ -488,7 +588,6 @@ function arrangeWeeklyEvnetTd(timeIndex){
 				var dataBottom = parseInt(divs.eq(j).attr('data-bottom'));
 				var divIndex = parseInt(divs.eq(j).attr('data-currentIndex'));
 				var term = divs.eq(j).attr('data-term');
-				
 				if(beforeIndex == -1 || (divIndex-beforeIndex) == 1 || term != undefined){//바로 옆에 있는 경우, term이 있는 경우는 일정 건너 뛴 경우 이 값이 있다는건 무조건 왼쪽에 뭐가 있다는 것
 					if(dataBottom > top){//옆에 있음 오른쪽으로 갈수록 무조건 내려가기 때문에 왼쪽에는 내 시작지점보다 긴 일정을 가지고 있어야함.
 						beforeDiv = divs.eq(j);
@@ -519,7 +618,6 @@ function arrangeWeeklyEvnetTd(timeIndex){
 				}
 				divs.eq(i).css('width',term*width+"%");
 				divs.eq(i).css('left',(width*currentIndex)+"%");
-				divs.eq(i).attr('data-currentIndex',currentIndex);
 			}else{
 				divs.eq(i).css('left','0%');
 				var widthStr="100%";
@@ -536,24 +634,114 @@ function arrangeWeeklyEvnetTd(timeIndex){
 					}
 				}
 				divs.eq(i).css('width',widthStr);
-				divs.eq(i).attr('data-currentIndex',0);
 			}
 		}
 		
-//		var beforeTop = beforeDiv.attr('data-top');
-//		var beforeBottom = beforeDiv.attr('data-bottom');
-//		console.log(beforeBottom+" , "+top);
-//		if(beforeBottom > top){//옆에 있음
-//			beforeDiv.css('width',width+"%");
-//			beforeDiv.css('left',(width*beforeIndex)+"%");
-//			console.log(beforeIndex);
-//			beforeIndex++;
-//		}else{//아래에 있음
-//			beforeDiv.css('width',width*(col-beforeIndex)+"%");
-//			beforeDiv.css('left',width*beforeIndex+"%");
-//			beforeIndex=0;
-//		}
 	}
+}
+function dragTime(elmnt){
+	elmnt.onmousedown = dragMouseDown;
+	var start;
+	var end;
+	function dragMouseDown(e){
+		start = e.pageY - $("#container_weekly").offset().top +  $("#container_weekly").scrollTop();
+		$("#dragTimeDiv_weekly").remove();
+		//선택 div 생성
+		var div = "<div id='dragTimeDiv_weekly' style='width:100%;position:absolute;z-index:10;top:"+start+"px;background-color:#c3c3c3;'></div>";
+		$(elmnt).append(div);
+		$(".eventFill_weekly").css('z-index','1');
+		document.onselectstart = new Function('return false');
+		document.onmouseup = closeDragElement;
+		document.onmousemove = elementDrag;
+	}
+	function elementDrag(e){
+		var div = $("#dragTimeDiv_weekly");
+//		console.log("pageY : "+e.pageY+" , divTop : "+$("#container_weekly").offset().top + " , scroll : "+ $("#container_weekly").scrollTop());
+		end = e.pageY - $("#container_weekly").offset().top +  $("#container_weekly").scrollTop();
+		if(start <= end){
+			div.css('top',start+"px");
+			div.css('bottom','');
+			div.css('height',(end-start)+"px");
+		}else{
+			div.css('top','');
+			div.css('height',(start-end)+"px");
+			div.css('bottom',(1440-start)+"px");
+		}
+		var top = parseInt(div.css('top'));
+		var height = parseInt(div.css('height'));
+		//일의 자리수는 반올림하기 10분 단위로 만들기
+		top = Math.round(top*0.1)*10;
+		height =  Math.round(height*0.1)*10;
+		var startStr = addZero(parseInt(top/60))+":"+addZero(top%60);
+		var endStr = addZero(parseInt((top+height)/60))+":"+addZero((top+height)%60);
+		div.html("<p style='font-size:small;'>"+startStr+"~"+endStr+"</p>");
+	}
+	function closeDragElement(e){
+		console.log("close");
+		var div = $("#dragTimeDiv_weekly");
+		if(start <= end){
+			var term = end-start;
+			if(term > 1440-start){
+				console.log("over");
+				term = 1440-start;
+			}
+			div.css('height',term+"px");
+		}else{
+			var term = start-end;
+			if(term > start){
+				term = start;
+			}
+			div.css('height',term+"px");
+		}
+		$(".eventFill_weekly").css('z-index','4');
+		document.onmouseup = null;
+		document.onmousemove = null;
+		document.onselectstart = null;
+		//이벤트 추가 페이지 이동
+		console.log(parseInt(div.css('top'))+" , "+parseInt(div.css('height')));
+		var top = parseInt(div.css('top'));
+		var height = parseInt(div.css('height'));
+		//일의 자리수는 반올림하기 10분 단위로 만들기
+		top = Math.round(top*0.1)*10;
+		height =  Math.round(height*0.1)*10;
+		var start = addZero(parseInt(top/60))+":"+addZero(top%60)+":00";
+		var end = addZero(parseInt((top+height)/60))+":"+addZero((top+height)%60)+":00";
+		console.log(start + " , "+end);
+		
+		var date = "";
+		var path = location.pathname.split('/');
+		var dateStr = path[2].split('-');
+		var urlDay = new Date(parseInt(dateStr[0]),parseInt(dateStr[1])-1,parseInt(dateStr[2]),9);
+		var weekStart = new Date(urlDay.getTime()-urlDay.getDay()*86400000);
+		
+		var startDate;
+		var endDate;
+		switch(path[1]){
+		case 'w':
+			var day = parseInt($("#dragTimeDiv_weekly").parent().attr('data-clicktimeindex'));
+			startDate = new Date(weekStart.getTime() + day*86400000);//시작 날짜
+			endDate = new Date(weekStart.getTime() + day*86400000);	//끝 날짜
+			date = startDate.getFullYear()+"-"+(startDate.getMonth()+1)+"-"+startDate.getDate()+"~";
+			date += endDate.getFullYear()+"-"+(endDate.getMonth()+1)+"-"+endDate.getDate();
+			break;
+		case 'd':
+			date = path[2]+"~"+path[2];
+			break;
+		}
+		date += "&"+start+"~"+end;
+		$("#addEventDate").attr('value',date);
+		goToEventPage("add");
+		$("#dragTimeDiv_weekly").remove();
+	} 
+}
+//시간 부분 누른 경우
+function clickTime_weekly(clickDiv,event){
+	var div = $(clickDiv);
+	var index = div.attr('data-clicktimeindex');
+	if(index == undefined){
+		return;
+	}
+	console.log(event.layerX + " , "+event.layerY);
 }
 //종일 이벤트 더보기 누른 경우
 function clickMoreAllDay_weekly(btn){
