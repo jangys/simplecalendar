@@ -55,10 +55,8 @@ function printCalendar(y, m, data,colNum) {
 				if(tempDateNum > lastDate){
 					table += "<td></td>";
 				}else{
-					table += "<td class='dateIndexTd ";
-
-					table += "'data-dateIndex='"+(j+start)+"'onclick='mouseUpDate(this,false)' onmousedown='startDrag(this)'" 
-					table += "ondragstart='dragstart_handler(this,event);'ondragenter='mouseDownDate(this,event)' ondragend='mouseUpDate(this,true)' ondragover='allowDrop(event)'></td>";
+					table += "<td class='dateIndexTd'";
+					table += " data-dateIndex='"+(j+start)+"'></td>";
 					tempDateNum ++;
 				}
 			}
@@ -106,7 +104,11 @@ function printCalendar(y, m, data,colNum) {
 		table+="</table></div>";
 	}
 	document.getElementById("dates").innerHTML = table;
-
+	var dateIndexTds = document.getElementsByClassName("dateIndexTd");
+	for(var a=0;a<dateIndexTds.length;a++){
+		dragDate(dateIndexTds[a],'data-dateindex');
+	}
+		
 	printEvent(y, m, startDay, lastDate, data, colNum);
 	$(".showMoreEvent").click(function(){
 		var index = $(this).parent().attr('data-index');
@@ -172,80 +174,6 @@ function calColNumAndPrintCalendar(year, month, data,resize){
 	$("#monthCalendar").attr('data-colnum',colNum);
 	printCalendar(year,month,data,colNum);
 }
-//날짜 칸을 마우스가 처음으로 눌렀을 때
-function startDrag(td){
-	$(td).attr('id','firstClick');
-	td.setAttribute('draggable','true');
-	//eventFill original value = 4  날짜 한칸은 2
-	$(".eventFill").css('z-index','1');
-	$(".moreEvent").css('z-index','1');
-}
-
-function dragstart_handler(td,event){
-	var img = new Image();
-	img.src = '/image/transparent.png';
-	event.dataTransfer.setDragImage(img,10,10);
-}
-function mouseDownDate(td,event,weekly){
-	var attr = 'data-dateIndex';
-	if(weekly){
-		attr='data-dateIndexWeekly';
-	}
-	var last = $('.clickDate:last').attr(attr);
-	var first = $('.clickDate:first').attr(attr);
-	$(td).addClass('clickDate');
-	var start = parseInt($('#firstClick').attr(attr));
-	var end = parseInt($(td).attr(attr));
-	closeAllDiv();
-	for(var i=first; i<= start-1; i++){
-		$("["+attr+"="+i+"]").removeClass("clickDate");
-	}
-	
-	if(start < end){
-		var nextEnd = end+1;
-		for(var a = nextEnd; a<= last; a++){
-			$("["+attr+"="+a+"]").removeClass("clickDate");
-		}
-		for(var i=start; i <= end; i++){
-			$("["+attr+"="+i+"]").addClass('clickDate');
-		}
-	}else if(start >= end){
-		for(var a = start+1; a<= last; a++){
-			$("["+attr+"="+a+"]").removeClass("clickDate");
-		}
-		for(var i=end; i <= start; i++){
-			$("["+attr+"="+i+"]").addClass('clickDate');
-		}
-	}
-	
-}
-function mouseUpDate(td,drag){
-	var date = "";
-	var year = $("#backBtn").attr('value');
-	var month = $("#forwardBtn").attr('value');
-	
-	if(drag == false){
-		$(td).addClass('clickDate');
-	}
-	
-	date += year+"-";
-	date += month+"-";
-	var startDate = new Date($("#backBtn").attr('value'),parseInt($("#forwardBtn").attr('value'))-1,1);
-	var startDay = startDate.getDay();	//시작 요일
-	date += (parseInt($(".clickDate:first").attr("data-dateindex"))-startDay +1);
-	date += "~"+year+"-"+month+"-";
-	date += (parseInt($(".clickDate:last").attr('data-dateIndex'))-startDay+1);
-	console.log(date);
-	$("#addEventDate").attr('value',date);
-	goToEventPage("add");
-	$(".clickDate").removeClass("clickDate");
-	//eventFill original value = 4  날짜 한칸은 2
-	$(".eventFill").css('z-index','4');
-	$(".moreEvent").css('z-index','2');
-	
-	//document.getElementById("addForm").submit();
-}
-
 
 function makeEventTitleForm(data,color,more,responseStatus){
 	var text = "<span class='eventTime'>";
@@ -461,7 +389,7 @@ function setEventTd(index, col, title, colorCode, colspan,responseStatus,eventTd
 	}
 	td = td.children().eq(0);
 	
-	if(index == "weekly"){
+	if(index == "weekly" && responseStatus == null){
 		td.css('border','1px solid white');
 	}else{
 		td.css('border','2px solid '+colorCode);
@@ -502,6 +430,9 @@ function setAddTd(index, col,data){
 	var add = parseInt(td.attr("data-add")) +1;
 	var more = "";
 	td.attr("data-add",add);
+	if(add == 1){//처음에만
+		td.css('z-index','2');
+	}
 	temp = "<a class='showMoreEvent' title='더보기' href='#' style='color:black;'>+"+add+"</a>";
 	td.html(temp);
 //	if(data != null){
@@ -521,7 +452,130 @@ function setAddTd(index, col,data){
 //		}
 //	}
 }
+function dragDate(elmnt,attr){
+	elmnt.onmousedown = dragMouseDown_date;
+	var startIndex;
+	var endIndex;
+	var width;
+	var height;
+	function dragMouseDown_date(e){
+		var x;
+		var y;
+		if(attr == 'data-dateindex'){
+			x = e.pageX - $("#dates").offset().left;
+			y = e.pageY - $("#dates").offset().top;
+			width = parseInt($(".dateIndexTd").eq(0).width());
+			height = parseInt($(".dateIndexTd").eq(0).height());
+		}else{
+			x = e.pageX - $("#header_weekly").offset().left - 65;	//65만큼은 설명 부분 너비
+			y = e.pageY - $("#header_weekly").offset().top;
+			width = parseInt($(".dateIndexWeeklyTd").eq(0).width());
+			height = parseInt($("#header_weekly").height());
+		}
+		$(".eventFill").css('z-index','1');
+		$(".moreEvent").css('z-index','1');
+		startIndex = parseInt(x/width) + parseInt(y/height)*7;
+		$("["+attr+"="+startIndex+"]").addClass('clickDate');
+//		console.log(x+","+y+", start index="+startIndex + " , width="+width+", height="+height);
+		document.onselectstart = new Function('return false');
+		if(attr == 'data-dateindex'){
+			document.onmouseup = closeDragElement_date;
+		}else{//daily, weekly에서 날짜 드래그 한 경우
+			document.onmouseup = closeDragElement_dateWeekly;
+		}
+		document.onmousemove = elementDrag_date;
+	}
+	function elementDrag_date(e){
+		var x;
+		var y;
+		if(attr == 'data-dateindex'){
+			x = e.pageX - $("#dates").offset().left;
+			y = e.pageY - $("#dates").offset().top;
+		}else{
+			x = e.pageX - $("#header_weekly").offset().left - 65;	//65만큼은 설명 부분 너비
+			y = e.pageY - $("#header_weekly").offset().top;
+		}
+		endIndex = parseInt(x/width) + parseInt(y/height)*7;
+//		console.log(x+","+y+", end index="+endIndex + " , width="+width+", height="+height);
+		var last = $('.clickDate:last').attr(attr);
+		var first = $('.clickDate:first').attr(attr);
+		for(var i=first; i<= startIndex-1; i++){
+			$("["+attr+"="+i+"]").removeClass("clickDate");
+		}
+		if(startIndex < endIndex){
+			var nextEnd = endIndex+1;
+			for(var a = nextEnd; a<= last; a++){
+				$("["+attr+"="+a+"]").removeClass("clickDate");
+			}
+			for(var i=startIndex; i <= endIndex; i++){
+				$("["+attr+"="+i+"]").addClass('clickDate');
+			}
+		}else if(startIndex >= endIndex){
+			for(var a = startIndex+1; a<= last; a++){
+				$("["+attr+"="+a+"]").removeClass("clickDate");
+			}
+			for(var i=endIndex; i <= startIndex; i++){
+				$("["+attr+"="+i+"]").addClass('clickDate');
+			}
+		}
+	}
+	function closeDragElement_date(e){
+		console.log("close");
+		var date = "";
+		var year = $("#backBtn").attr('value');
+		var month = $("#forwardBtn").attr('value');
 
+		date += year+"-";
+		date += month+"-";
+		var startDate = new Date($("#backBtn").attr('value'),parseInt($("#forwardBtn").attr('value'))-1,1);
+		var startDay = startDate.getDay();	//시작 요일
+		date += (parseInt($(".clickDate:first").attr("data-dateindex"))-startDay +1);
+		date += "~"+year+"-"+month+"-";
+		date += (parseInt($(".clickDate:last").attr('data-dateIndex'))-startDay+1);
+		console.log(date);
+		$("#addEventDate").attr('value',date);
+		goToEventPage("add");
+		$(".clickDate").removeClass("clickDate");
+		//eventFill original value = 4 
+		$(".eventFill").css('z-index','4');
+		
+		document.onmouseup = null;
+		document.onmousemove = null;
+		document.onselectstart = null;
+	}
+	function closeDragElement_dateWeekly(e){
+		console.log("close");
+		var date = "";
+		var path = location.pathname.split('/');
+		var dateStr = path[2].split('-');
+		var urlDay = new Date(parseInt(dateStr[0]),parseInt(dateStr[1])-1,parseInt(dateStr[2]),9);	//사용자가 클릭한 날짜 추출
+		var weekStart = new Date(urlDay.getTime()-urlDay.getDay()*86400000);	//사용자가 클릭한 날짜의 주 시작 날짜
+		var startDate;
+		var endDate;
+		
+		switch(path[1]){
+		case 'w':
+			startDate = new Date(weekStart.getTime()+parseInt($(".clickDate:first").attr('data-dateIndexWeekly'))*86400000);//시작 날짜
+			endDate = new Date(weekStart.getTime()+parseInt($(".clickDate:last").attr('data-dateIndexWeekly'))*86400000);	//끝 날짜
+			date = startDate.getFullYear()+"-"+(startDate.getMonth()+1)+"-"+startDate.getDate()+"~";
+			date += endDate.getFullYear()+"-"+(endDate.getMonth()+1)+"-"+endDate.getDate();
+			break;
+		case 'd':
+			date = path[2]+"~"+path[2];
+			break;
+		}
+		console.log(date);
+		$("#addEventDate").attr('value',date);
+		goToEventPage("add");
+		$(".clickDate").removeClass("clickDate");
+		//eventFill original value = 4  날짜 한칸은 2
+		$(".eventFill").css('z-index','4');
+		
+		document.onmouseup = null;
+		document.onmousemove = null;
+		document.onselectstart = null;
+	} 
+}
 function addZero(data){
 	var result = "";
 	if(data < 10){
@@ -552,7 +606,4 @@ function clickEvent(event){
 		clickEventTitle(event.childNodes[0].childNodes[0],false);
 		
 	}
-}
-function allowDrop(ev){
-	ev.preventDefault();
 }

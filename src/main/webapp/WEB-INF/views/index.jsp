@@ -31,7 +31,7 @@
 	}
 	table{
 		width:100%;
-		border-bottom: 1px solid #9EBEC4;
+		border-bottom: 1px solid #c3c3c3;
 	}
 	th{
 	/*
@@ -384,6 +384,7 @@
 	.moreEvent{
 		color:black;
 		text-align: right;
+		position: relative;
 	}
 	/*일정 요약 보여주는 작은 창에 있는 태그 p*/
 	.eventSummaryContents_p{
@@ -396,11 +397,7 @@
 		opacity: 0.5;
 		cursor: default;
 	}
-	/*더보기 링크가 있는 칸*/
-	.moreEvent{
-		position: relative;
-		z-index:4;
-	}
+
 	/*이벤트 요약 정보에서 반복 일정 정보*/
 	#eventSummaryRecurrence{
 		font-size: small;
@@ -556,9 +553,46 @@
 		-webkit-flex:none;
 		flex:none;
 	}
+	/*주별 캘린더 시간 일정 요일 행 td*/
+	.timeEventDayTd_weekly{
+		border:1px solid #c3c3c3;
+		position:relative;
+	}
+	/*주별 캘린더 시간 일정 요일 행 div*/
+	.timeEventDayDiv_weekly{
+		width:100%;
+		height:100%;
+		position:absolute;
+		top:0px;
+	}
+	/*주별 캘린더 시간 일정 시간 열 줄 그려주는 div*/
+	.timeEventTimeRowDiv_weekly{
+		position:relative;
+		height:60px;
+		width:100%;
+		border-bottom:1px solid #c3c3c3;
+		z-index:-1;
+	}
+	/*주별 캘린더 시간 일정 시간 행 시간 보여주는 div*/
+	.timeEventTimeDiv_weekly{
+		position:absolute;
+		right:5px;
+		font-size:11px;
+		text-align:right;
+		width:100%;
+	}
 	/*주별 캘린더 종일 일정 표*/
 	#alldayTable_weekly{
 		height:99.5%;
+	}
+	/*주별 캘린더 오늘 현재 시간 표시해주는 div*/
+	#todayLine_weekly{
+		aria-hidden:true;
+		border-top:2px solid #db4437;
+		z-index:12;
+		position:absolute;
+		width:100%;
+		height:3px;
 	}
 </style>
 </head>

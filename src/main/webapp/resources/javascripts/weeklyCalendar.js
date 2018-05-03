@@ -36,7 +36,7 @@ function drawWeeklyCalendar(year,month,date,data,weekly){
 function showWeeklyTitle(year,month,date,weekly){
 	var col = weekly == true? 7:1;
 	var text = "<table class='table_weekly' style='height:99%;position:absolute;'><tr>";
-	var clickTable = "<table id='clickAlldayTable_weekly class='table_weekly' style='z-index:3; border:none;height:100%; width:100%;position:absolute;'>";
+	var clickTable = "<table id='clickAlldayTable_weekly' class='table_weekly' style='z-index:3; border:none;height:100%; width:100%;position:absolute;'>";
 	var div = $("#title_weekly");
 	var dayList = ["일","월","화","수","목","금","토"];
 	var start = new Date(year,month-1,date,9);
@@ -44,8 +44,7 @@ function showWeeklyTitle(year,month,date,weekly){
 		var d = new Date(start.getTime()+86400000*i);
 		text += "<td style='border:1px solid #c3c3c3; padding-left:10px;'><p class='dateP_weekly'>"+d.getDate()+"</p>";
 		text +="<p class='dayP_weekly'>"+ dayList[d.getDay()]+"</p></td>";
-		clickTable += "<td data-dateIndexWeekly='"+i+"'onclick='mouseUpDate_weekly(this,false)' onmousedown='startDrag(this)'" 
-		clickTable += "ondragstart='dragstart_handler(this,event);'ondragenter='mouseDownDate(this,event,true)' ondragend='mouseUpDate_weekly(this,true)' ondragover='allowDrop(event)'></td>";
+		clickTable += "<td class='dateIndexWeeklyTd' data-dateIndexWeekly='"+i+"'></td>"; 
 	}
 	text += "</tr></table>";
 	clickTable +="</tr><table>";
@@ -61,8 +60,7 @@ function makeWeeklyAllDayTable(row){
 	clickTable += "<tr>";
 	for(var j=0;j<row;j++){
 		table += "<td></td>";
-		clickTable += "<td data-dateIndexWeekly='"+j+"'onclick='mouseUpDate_weekly(this,false)' onmousedown='startDrag(this)'" 
-		clickTable += "ondragstart='dragstart_handler(this,event);'ondragenter='mouseDownDate(this,event,true)' ondragend='mouseUpDate_weekly(this,true)' ondragover='allowDrop(event)'></td>";
+		clickTable += "<td class='dateIndexWeeklyTd' data-dateIndexWeekly='"+j+"'></td>"; 
 	}
 	table += "</tr>";
 	clickTable +="</tr>";
@@ -77,40 +75,10 @@ function makeWeeklyAllDayTable(row){
 	clickTable += "</table>";
 	div.html(table);
 	div.append(clickTable);
-}
-function mouseUpDate_weekly(td,drag){
-	var date = "";
-	var path = location.pathname.split('/');
-	var dateStr = path[2].split('-');
-	var urlDay = new Date(parseInt(dateStr[0]),parseInt(dateStr[1])-1,parseInt(dateStr[2]),9);
-	var weekStart = new Date(urlDay.getTime()-urlDay.getDay()*86400000);
-	
-	if(drag == false){
-		$(td).addClass('clickDate');
+	var dateIndexWeeklyTds = document.getElementsByClassName("dateIndexWeeklyTd");
+	for(var i=0;i<dateIndexWeeklyTds.length;i++){//드래그 등록
+		dragDate(dateIndexWeeklyTds[i],'data-dateIndexWeekly');
 	}
-	
-	var startDate;
-	var endDate;
-	switch(path[1]){
-	case 'w':
-		startDate = new Date(weekStart.getTime()+parseInt($(".clickDate:first").attr('data-dateIndexWeekly'))*86400000);//시작 날짜
-		endDate = new Date(weekStart.getTime()+parseInt($(".clickDate:last").attr('data-dateIndexWeekly'))*86400000);	//끝 날짜
-		date = startDate.getFullYear()+"-"+(startDate.getMonth()+1)+"-"+startDate.getDate()+"~";
-		date += endDate.getFullYear()+"-"+(endDate.getMonth()+1)+"-"+endDate.getDate();
-		break;
-	case 'd':
-		date = path[2]+"~"+path[2];
-		break;
-	}
-	console.log(date);
-	$("#addEventDate").attr('value',date);
-	goToEventPage("add");
-	$(".clickDate").removeClass("clickDate");
-	//eventFill original value = 4  날짜 한칸은 2
-	$(".eventFill").css('z-index','4');
-	$(".moreEvent").css('z-index','2');
-	
-	//document.getElementById("addForm").submit();
 }
 function showWeeklyAllDay(year,month,date,data,weekly){
 	var row = weekly == true? 7:1;
@@ -242,8 +210,8 @@ function showTimeList(){
 		}else{
 			hour = "오후 12시";
 		}
-		text += "<div style='position:relative;height:60px;width:100%;border-bottom:1px solid #c3c3c3;z-index:-1;'></div>";
-		hourText += "<div style='position:absolute; top:"+(60*i+5)+"px; right:5px; font-size:11px;text-align:right;width:100%'>"+hour+"</div>";
+		text += "<div class='timeEventTimeRowDiv_weekly'></div>";
+		hourText += "<div class='timeEventTimeDiv_weekly' style='top:"+(60*i+5)+"px;'>"+hour+"</div>";
 	}
 	text += "</div>";
 	div.append(text);
@@ -251,7 +219,7 @@ function showTimeList(){
 }
 function showCurrentTime_weekly(){
 	var path = location.pathname.split('/');
-	if(path[1] != "w"){
+	if(path[1] != "w"){//사용자가 다른 캘린더 누른 경우 멈춤
 		return;
 	}
 	var now = new Date();
@@ -263,7 +231,7 @@ function showCurrentTime_weekly(){
 			return;
 		}
 		var div = $("[data-timeindex='"+now.getDay()+"']").parent();
-		var text = "<div id='todayLine_weekly' style='aria-hidden=true; border-top:2px solid #db4437;z-index:12; position:absolute; width:100%; height:3px;top:"+min+";'></div>";
+		var text = "<div id='todayLine_weekly' style='top:"+min+";'></div>";
 		div.append(text);
 	}
 	if($("#todayLine_weekly") != undefined){
@@ -274,7 +242,7 @@ function showCurrentTime_weekly(){
 }
 function showCurrentTime_daily(){
 	var path = location.pathname.split('/');
-	if(path[1] != "d"){
+	if(path[1] != "d"){//사용자가 다른 캘린더 누른 경우 멈춤
 		return;
 	}
 	var now = new Date();
@@ -294,8 +262,8 @@ function showWeeklyEvent(year,month,date,data,weekly){
 	var text = "<table class='table_weekly' style='flex:1; -webkit-flex:1;'><tr>";
 	var divText;
 	for(var i=0;i<row;i++){
-		text += "<td style='border:1px solid #c3c3c3;position:relative;'><div data-timeindex='"+i+"' style='width:100%;height:100%;position:absolute;top:0px;'></div>";
-		text += "<div id='clickTime_"+i+"' data-clickTimeIndex='"+i+"' style='width:100%;height:100%;position:absolute;z-index:3;top:0px;'></div></td>";
+		text += "<td class='timeEventDayTd_weekly'><div data-timeindex='"+i+"' class='timeEventDayDiv_weekly'></div>";
+		text += "<div id='clickTime_"+i+"' data-clickTimeIndex='"+i+"' class='timeEventDayDiv_weekly' style='z-index:3;'></div></td>";
 	}
 	text += "</tr></table>";
 	div.html(text);
@@ -321,7 +289,7 @@ function showWeeklyEvent(year,month,date,data,weekly){
 	
 	if(nowDiv != null){
 		var min = now.getHours()*60 + now.getMinutes();
-		var text = "<div id='todayLine_weekly' style='aria-hidden=true; border-top:2px solid #db4437;z-index:12; position:absolute; width:100%; height:3px;top:"+min+"px;'></div>";
+		var text = "<div id='todayLine_weekly' style='top:"+min+"px;'></div>";
 		nowDiv.append(text);
 	}
 	if(data.length == 0){
@@ -332,7 +300,7 @@ function showWeeklyEvent(year,month,date,data,weekly){
 	day = new Date(data[0].startTime[0],data[0].startTime[1]-1,data[0].startTime[2]).getDay();
 	makeWeeklyEventTd(data[0],weekly);
 	if(size != 0){
-		for(var i=1;i<size;i++){
+		for(var i=1;i<size;i++){//resize
 			if(weekly){
 				var date = new Date(data[i].startTime[0],data[i].startTime[1]-1,data[i].startTime[2]);
 				if(date.getDay() != day){//요일이 달라지면 전에 저장한 정보들 추가
@@ -408,105 +376,52 @@ function arrangeWeeklyEvnetTd(timeIndex){
 //	width = 100*width/div.offsetParent().width();
 	var divs = $("[data-timeindex='"+timeIndex+"']").children();
 	var size = divs.length;
-	var maxBottomTop = divs.eq(0).attr('data-top');
-	var maxBottom=divs.eq(0).attr('data-bottom');
-	var newBottom = divs.last().attr('data-bottom');
-	var newTop = divs.last().attr('data-top');
-	
 	var col = 0;
 	var beforeDiv = divs.eq(0);
 	var currentIndex = 0;
 	beforeDiv.css('left','0%');
 	beforeDiv.css('width','100%');
 	beforeDiv.attr('data-currentIndex',0);
+	
 	for(var i=1;i<size;i++){
 		var top = parseInt(divs.eq(i).attr('data-top'));
 		var bottom = parseInt(divs.eq(i).attr('data-bottom'));
 		currentIndex=0;
-		var place = false;
-		var bottoms = $("[data-bottom='"+top+"']");
+		var bottoms = $("[data-timeindex='"+timeIndex+"']").children("[data-bottom='"+top+"']");
 		var longerIndex = new Array();
 		for(var j=0;j<i;j++){
 			var dataBottom = parseInt(divs.eq(j).attr('data-bottom'));
 			var divIndex = parseInt(divs.eq(j).attr('data-currentIndex'));
-			if(dataBottom > top){//현재 들어가는 일정보다 긴 일정이 있는 경우
+			if(dataBottom > top){//현재 들어가는 일정보다 긴 일정이 있는 경우 즉 들어가는 일정에 누가 차지하고 있는 경우
 				longerIndex.push(divIndex);
 			}
 		}
-		if(bottoms.length >= 1){//자리가 있는지 확인
-			var tops = $("[data-top='"+top+"']");
-			var remain = 0;
-			var lastIndex = -1;
-			for(var x=0;x<tops.length;x++){
-				if(tops.eq(x).attr('data-currentIndex') == undefined){
-					remain++;
-				}else{
-					lastIndex = parseInt(tops.eq(x).attr('data-currentIndex'));
-				}
+		var beforeIndex = -1;
+		for(var x=0;x<=col;x++){
+			var lastDiv =  $("[data-timeindex='"+timeIndex+"']").children("[data-currentIndex='"+x+"']").last();
+			if(x == 0 && parseInt(lastDiv.attr('data-bottom')) <= top){//맨 처음 자리가 비었다는 것을 의미
+				beforeIndex = -1;
+				break;
 			}
-			if(bottoms.length > tops.length-remain){//이미 내 자신은 추가 되어 있으니깐 같은 경우에도 넣을 수 있음
-				if(bottoms.length == 1){
-					index = bottoms.attr('data-currentIndex');
-				}else{
-					index = bottoms.eq(0).attr('data-currentIndex');
-					if(lastIndex != -1){
-						index = lastIndex+1;
-					}
-				}
-				var start = -1;
-				var end = -1;
-				if(longerIndex.length > 0){
-					for(var x=0;x<longerIndex.length;x++){
-						if(longerIndex[x] == index){
-							if(start == -1){
-								start = index;
-							}
-							index++;
-							end = index;
-						}
-					}
-				}
-				if(start != -1){
-					divs.eq(i).attr('data-term',end-start);
-				}
-				divs.eq(i).attr('data-currentIndex',index);
-				place = true;
+			if((beforeIndex == -1|| (x-beforeIndex == 1)) && parseInt(lastDiv.attr('data-bottom')) > top){//왼쪽 일정 중 제일 오른쪽에 있는 일정 찾기
+				beforeIndex = x;
+			}
+			if((beforeIndex == -1|| (x-beforeIndex == 1)) && parseInt(lastDiv.attr('data-bottom')) == top){//왼쪽 일정 중 자리 빈 곳이 있으면 그 곳에 넣기
+				beforeIndex = x-1;
 			}
 		}
-		
-		if(!place){//자리가 없으면
-			var beforeIndex = -1;
-			for(var j=0;j<i;j++){
-				var dataBottom = parseInt(divs.eq(j).attr('data-bottom'));
-				var divIndex = parseInt(divs.eq(j).attr('data-currentIndex'));
-				if(beforeIndex == -1 || (divIndex-beforeIndex) == 1 || divs.eq(j).attr('data-term') != undefined){//바로 왼쪽에 일정이 있는 경우
-					if(dataBottom > top){//옆에 있음
-						currentIndex = divIndex+1;
-						beforeIndex = divIndex;
+		if(beforeIndex >= 0){
+			currentIndex = beforeIndex+1;
+			if(longerIndex.length != 0){
+				for(var j=0;j<longerIndex.length;j++){
+					if(longerIndex[j] == currentIndex){//현재 일정이 들어가려는 부분에 이미 일정이 있는 경우 다음 칸으로 이동
+						currentIndex++;
 					}
 				}
 			}
-			var start = -1;
-			var last = -1;
-			if(currentIndex > 0){
-				if(longerIndex.length != 0){
-					for(var j=0;j<longerIndex.length;j++){
-						if(longerIndex[j] == currentIndex){//현재 일정이 들어가려는 부분에 이미 일정이 있는 경우 다음 칸으로 이동
-							if(start == -1){
-								start = currentIndex;
-							}
-							currentIndex++;
-							last = currentIndex;
-						}
-					}
-				}
-				if(start != -1){
-					divs.eq(i).attr('data-term',last-start);
-				}
-				divs.eq(i).attr('data-currentIndex',currentIndex);
-			}else{
-				divs.eq(i).attr('data-currentIndex',0);
-			}
+			divs.eq(i).attr('data-currentIndex',currentIndex);
+		}else{
+			divs.eq(i).attr('data-currentIndex',0);
 		}
 		if(col < currentIndex){
 			col = currentIndex;
@@ -527,123 +442,66 @@ function arrangeWeeklyEvnetTd(timeIndex){
 			var divIndex = parseInt(divs.eq(j).attr('data-currentIndex'));
 			if(dataBottom > top){//현재 들어가는 일정보다 긴 일정이 있는 경우
 				longerIndex.push(divIndex);
-				longerIndexDiv.push(divs.eq(j));
-			}
-		}
-		var place = false;
-		var bottoms = $("[data-bottom='"+top+"']");
-		if(bottoms.length >= 1){
-			var tops = $("[data-top='"+top+"']");
-			var remain = 0;
-			var lastIndex = -1;
-			var lastDiv= null;
-			for(var x=0;x<tops.length;x++){
-				if(tops.eq(x).css('left') == "0px"){
-					remain++;
-				}else{
-					lastIndex = parseInt(tops.eq(x).attr('data-currentIndex'));
-					lastDiv=tops.eq(x);
-				}
-			}
-			if(bottoms.length > tops.length-remain){//이미 내 자신은 추가 되어 있으니깐 같은 경우에도 넣을 수 있음
-				place = true;
-				var index;
-				if(bottoms.length == 1){
-					index = bottoms.attr('data-currentIndex');
-				}else{
-					index = bottoms.eq(0).attr('data-currentIndex');
-					if(lastIndex != -1){
-						lastDiv.css('width',width+"%");
-						index = lastIndex+1;
-					}
-				}
-				if(longerIndex.length > 0){
-					for(var x=0;x<longerIndex.length;x++){
-						if(longerIndex[x] == index){
-							index++;
-							longerIndexDiv[x].css('width',width+"%");
-						}
-					}
-				}
-				if(index != divs.eq(i).attr('data-currentIndex')){
-					console.log("index error : "+index + " , "+ divs.eq(i).attr('data-currentIndex'));
-					index = divs.eq(i).attr('data-currentIndex');
-				}
-				
-				var calRemain = bottoms.length-(tops.length-remain);
-				if(calRemain == 1){
-					//width = 100*width/div.offsetParent().width();
-					var parentWidth= 100*bottoms.last().width()/bottoms.last().offsetParent().width();
-					divs.eq(i).css('width',parentWidth+"%");
-				}else{
-					divs.eq(i).css('width',width*calRemain+"%");
-				}
-				divs.eq(i).css('left',width*index+"%");
+//				longerIndexDiv.push(divs.eq(j));
 			}
 		}
 
-		if(!place){//자리가 없으면
-			var beforeIndex = -1;
-			for(var j=0;j<i;j++){
-				var dataBottom = parseInt(divs.eq(j).attr('data-bottom'));
-				var divIndex = parseInt(divs.eq(j).attr('data-currentIndex'));
-				var term = divs.eq(j).attr('data-term');
-				if(beforeIndex == -1 || (divIndex-beforeIndex) == 1 || term != undefined){//바로 옆에 있는 경우, term이 있는 경우는 일정 건너 뛴 경우 이 값이 있다는건 무조건 왼쪽에 뭐가 있다는 것
-					if(dataBottom > top){//옆에 있음 오른쪽으로 갈수록 무조건 내려가기 때문에 왼쪽에는 내 시작지점보다 긴 일정을 가지고 있어야함.
-						beforeDiv = divs.eq(j);
-						currentIndex = parseInt(beforeDiv.attr('data-currentIndex'))+1;
-						beforeIndex = divIndex;
-					}
+		currentIndex = divs.eq(i).attr('data-currentIndex');
+		var beforeIndex = currentIndex-1;
+		if(currentIndex != 0){
+			var lastDiv = $("[data-timeindex='"+timeIndex+"']").children("[data-currentIndex='"+(currentIndex-1)+"']");
+			for(var j=0;j<lastDiv.length;j++){
+				if(parseInt(lastDiv.eq(j).attr('data-bottom')) > top){//옆에 있다는 것
+					beforeDiv = lastDiv.eq(j);
+					break;
 				}
-			}
-			if(currentIndex > 0){
-				beforeDiv.css('width',width+"%");
-				var term=col - currentIndex;
-				var sameLongerIndex = -1;
-				if(longerIndex.length != 0){
-					term = 0;
-					for(var j=0;j<longerIndex.length;j++){
-						var temp = longerIndex[j]-currentIndex;
-						if(longerIndex[j] == currentIndex){
-							currentIndex++;
-							longerIndexDiv[j].css('width',width+"%");
-						}
-						if(temp > 0 && term > temp){//더 작은 수가 나오면
-							term = temp;
-						}
-					}
-					if(term <= 0){
-						term = col-currentIndex;
-					}
-				}
-				divs.eq(i).css('width',term*width+"%");
-				divs.eq(i).css('left',(width*currentIndex)+"%");
-			}else{
-				divs.eq(i).css('left','0%');
-				var widthStr="100%";
-				if(longerIndex.length != 0){
-					term = 0;
-					for(var j=0;j<longerIndex.length;j++){
-						var temp = longerIndex[j]-currentIndex;
-						if(temp > 0 && term > temp){//더 작은 수가 나오면
-							term = temp;
-						}
-					}
-					if(temp > 0){
-						widthStr = temp*width+"%";
-					}
-				}
-				divs.eq(i).css('width',widthStr);
 			}
 		}
-		
+		if(beforeIndex >= 0){
+			if(beforeDiv != null){
+				beforeDiv.css('width',width+"%");
+			}
+			var term=col - currentIndex;
+			var sameLongerIndex = -1;
+			if(longerIndex.length != 0){
+				term = -1;
+				for(var j=0;j<longerIndex.length;j++){
+					var temp = longerIndex[j]-currentIndex;
+					if(temp > 0 && (term == -1 || term > temp)){//더 작은 수가 나오면
+						term = temp;
+					}
+				}
+				if(term <= 0){
+					term = col-currentIndex;
+				}
+			}
+			divs.eq(i).css('width',term*width+"%");
+			divs.eq(i).css('left',(width*currentIndex)+"%");
+		}else{
+			divs.eq(i).css('left','0%');
+			var widthStr="100%";
+			if(longerIndex.length != 0){
+				term = -1;
+				for(var j=0;j<longerIndex.length;j++){
+					var temp = longerIndex[j]-currentIndex;
+					if(temp > 0 && (term == -1 || term > temp)){//더 작은 수가 나오면
+						term = temp;
+					}
+				}
+				if(term > 0){
+					widthStr = term*width+"%";
+				}
+			}
+			divs.eq(i).css('width',widthStr);
+		}
 	}
+		
 }
 function dragTime(elmnt){
-	elmnt.onmousedown = dragMouseDown;
+	elmnt.onmousedown = dragMouseDown_weekly;
 	var start;
 	var end;
-	function dragMouseDown(e){
+	function dragMouseDown_weekly(e){
 		start = e.pageY - $("#container_weekly").offset().top +  $("#container_weekly").scrollTop();
 		$("#dragTimeDiv_weekly").remove();
 		//선택 div 생성
@@ -651,10 +509,10 @@ function dragTime(elmnt){
 		$(elmnt).append(div);
 		$(".eventFill_weekly").css('z-index','1');
 		document.onselectstart = new Function('return false');
-		document.onmouseup = closeDragElement;
-		document.onmousemove = elementDrag;
+		document.onmouseup = closeDragElement_weekly;
+		document.onmousemove = elementDrag_weekly;
 	}
-	function elementDrag(e){
+	function elementDrag_weekly(e){
 		var div = $("#dragTimeDiv_weekly");
 //		console.log("pageY : "+e.pageY+" , divTop : "+$("#container_weekly").offset().top + " , scroll : "+ $("#container_weekly").scrollTop());
 		end = e.pageY - $("#container_weekly").offset().top +  $("#container_weekly").scrollTop();
@@ -676,7 +534,7 @@ function dragTime(elmnt){
 		var endStr = addZero(parseInt((top+height)/60))+":"+addZero((top+height)%60);
 		div.html("<p style='font-size:small;'>"+startStr+"~"+endStr+"</p>");
 	}
-	function closeDragElement(e){
+	function closeDragElement_weekly(e){
 		console.log("close");
 		var div = $("#dragTimeDiv_weekly");
 		if(start <= end){
@@ -706,8 +564,18 @@ function dragTime(elmnt){
 		height =  Math.round(height*0.1)*10;
 		var start = addZero(parseInt(top/60))+":"+addZero(top%60)+":00";
 		var end = addZero(parseInt((top+height)/60))+":"+addZero((top+height)%60)+":00";
-		console.log(start + " , "+end);
-		
+		if(start == end){
+			var hour = parseInt(top/60);
+			var min = top%60;
+			if(hour >= 23){
+				if(min < 30){
+					min = 30;
+				}
+			}else{
+				hour++;
+			}
+			end= addZero(hour)+":"+addZero(min)+":00";
+		}
 		var date = "";
 		var path = location.pathname.split('/');
 		var dateStr = path[2].split('-');

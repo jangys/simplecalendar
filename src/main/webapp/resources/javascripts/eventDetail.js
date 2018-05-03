@@ -1166,7 +1166,7 @@ function submitInput_detail(){
 					original.UNTIL = result;
 					inputJSON.originRecurrence = JSON.parse($("#recurrenceList_detail").attr('data-moreInformation'));
 					if(inputJSON.originRecurrence.length > 1){
-						for(var i=0; i<input.originRecurrence.length;i++){
+						for(var i=0; i<inputJSON.originRecurrence.length;i++){
 							if(inputJSON.originRecurrence[i].substring(0,5) == "RRULE"){
 								inputJSON.originRecurrence[i] = rruleToString(original);
 								console.log(inputJSON.originRecurrence[i]);
