@@ -378,7 +378,8 @@ function changeStyle(type,data){
 }	
 function clickEventTitle(title,scroll){
 	closeAllDiv();
-	var data = JSON.parse($(title).next().attr('data-information'));
+	console.log($(title));
+	var data = JSON.parse($(title).nextAll().last().attr('data-information'));
 	if(data.attendees != null){
 		if(data.recurrence == null){
 			$("#showEventSummary").height(250);

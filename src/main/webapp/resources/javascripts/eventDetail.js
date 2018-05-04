@@ -326,6 +326,10 @@ function showEvent_detail(data){
 		}
 		$("#recurrenceList_detail").attr('data-moreInformation',JSON.stringify(data.recurrence));
 	}
+	//반복일정의 개별 일정인 경우
+	if(data.recurringEventId != null){
+		$("#recurrenceList_detail").prop('disabled','true');
+	}
 	$("#previousData_detail").text(JSON.stringify(data));
 }
 

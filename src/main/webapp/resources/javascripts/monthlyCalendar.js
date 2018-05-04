@@ -175,7 +175,7 @@ function calColNumAndPrintCalendar(year, month, data,resize){
 	printCalendar(year,month,data,colNum);
 }
 
-function makeEventTitleForm(data,color,more,responseStatus){
+function makeEventTitleForm(data,color,more,responseStatus,weekly){
 	var text = "<span class='eventTime'>";
 	if(data.startTime[3] != -1){
 		var hour = data.startTime[3];
@@ -183,6 +183,9 @@ function makeEventTitleForm(data,color,more,responseStatus){
 		text += changeTimeForm(hour, min);
 	}
 	text +=" </span><a title='"+isNull(data.summary)+"'style='";
+	if(responseStatus == null){
+		responseStatus = undefined;
+	}
 	if(responseStatus != undefined){
 		switch(responseStatus){
 			case "accepted":
@@ -206,6 +209,9 @@ function makeEventTitleForm(data,color,more,responseStatus){
 		text += " clickEventTitle(this,false);"
 	}
 	text +=	"return false;' href='#' data-eventId ="+data.eventID+" data-calendarId = "+data.calendarID+">"+isNull(data.summary)+"</a>";
+	if(weekly){
+		text += "<div class='changeEventTime' style='cursor:s-resize; position:absolute; bottom:0; left:0; width:100%;height:4px;'></div>";
+	}
 	text += "<span class='eventInformation' style='display:none;' data-information='"+JSON.stringify(data)+"'></span>";
 	return text;
 }
@@ -366,6 +372,10 @@ function printEvent(year, month, startIndex, lastDate, data, colNum){
 			}//for-n
 		}
 	}//for-i
+	var eventTitleLinks = document.getElementsByClassName('eventTitleLink');
+	for(var i=0;i<eventTitleLinks.length;i++){
+		dragEvent_date(eventTitleLinks[i],'data-dateindex');
+	}
 }
 
 function setEventTd(index, col, title, colorCode, colspan,responseStatus,eventTd){
@@ -576,6 +586,176 @@ function dragDate(elmnt,attr){
 		document.onselectstart = null;
 	} 
 }
+function dragEvent_date(elmnt,attr){
+	elmnt.onmousedown = dragMouseDown_date;
+	var startIndex, endIndex;
+	var width, height;
+	var move;
+	var inputJSON;
+	var drag = false;
+	var click = false;
+	function dragMouseDown_date(e){
+		drag = false;
+		click = false;
+		var x,y;
+		move = $(elmnt).clone();
+		if(attr == 'data-dateindex'){//월뷰
+			x = e.pageX - $("#dates").offset().left;
+			y = e.pageY - $("#dates").offset().top;
+			width = parseInt($(".dateIndexTd").eq(0).width());
+			height = parseInt($(".dateIndexTd").eq(0).height());
+			$(move).appendTo('#dates');
+		}else{//weekly, daily
+			x = e.pageX - $("#header_weekly").offset().left - 65;	//65만큼은 설명 부분 너비
+			y = e.pageY - $("#header_weekly").offset().top;
+			width = parseInt($(".dateIndexWeeklyTd").eq(0).width());
+			height = parseInt($("#header_weekly").height());
+			$(move).appendTo('#header_weekly');
+		}
+		
+		$(".eventFill").css('z-index','1');
+		startIndex = parseInt(x/width) + parseInt(y/height)*7;
+		
+//		console.log(x+","+y+", start index="+startIndex + " , width="+width+", height="+height);
+//		$(elmnt).css('position','absolute');
+		
+		$(move).css('position','absolute');
+		$(move).css('height','31px');
+		$(move).css('border','1px solid white');
+		$(move).css('z-index','5');
+		$(move).css('display','none');
+		
+		document.onselectstart = new Function('return false');
+		document.onmouseup = closeDragElement_date;
+		document.onmousemove = elementDrag_date;
+	}
+	function elementDrag_date(e){
+		drag = true;
+		if(!click){
+			if($(move).css('display') == 'none'){
+				$("[data-"+attr+"='"+startIndex+"']").addClass('clickDate');
+				$(move).css('top',y+'px');
+				$(move).css('left',x+'px');
+				$(move).css('display','');
+			}
+			var x,y;
+			if(attr == 'data-dateindex'){
+				x = e.pageX - $("#dates").offset().left;
+				y = e.pageY - $("#dates").offset().top;
+			}else{
+				x = e.pageX - $("#header_weekly").offset().left - 65;	//65만큼은 설명 부분 너비
+				y = e.pageY - $("#header_weekly").offset().top;
+			}
+			
+			endIndex = parseInt(x/width) + parseInt(y/height)*7;
+			$(move).css('top',y+'px');
+			$(move).css('left',x+'px');
+			$(".clickDate").removeClass('clickDate');
+			$("["+attr+"='"+endIndex+"']").addClass('clickDate');
+		}
+//		console.log(x+","+y+", end index="+endIndex + " , width="+width+", height="+height);
+	}
+	function closeDragElement_date(e){
+		console.log("close");
+		var update = true;
+		if(!drag){
+			click = true;
+			clickEvent(elmnt);
+			update = false;
+		}
+		var inputJSON = JSON.parse($(move).children().last().attr('data-information'));
+		var accessRole = $("input:checkbox[value='"+inputJSON.calendarID+"']").attr('data-accessrole');
+		if(drag && (accessRole == 'reader' || accessRole == 'freeBusyReader')){//이 권한은 수정할 수 없음
+			alert('이 일정은 수정이 불가능합니다');
+			update= false;
+		}
+		endIndex = $(".clickDate").attr(attr);
+		if(endIndex != undefined && update){//날짜 영역 밖에 놓은 경우는 제외
+			var firstDate;
+			var firstDay;
+			if(attr == 'data-dateindex'){
+				var year = $("#backBtn").attr('value');
+				var month = $("#forwardBtn").attr('value');
+				firstDate = new Date(parseInt(year),parseInt(month)-1,1);
+				firstDay = firstDate.getDay();	//시작 요일
+			}else{
+				var path = location.pathname.split('/');
+				var dateStr = path[2].split('-');
+				var urlDay = new Date(parseInt(dateStr[0]),parseInt(dateStr[1])-1,parseInt(dateStr[2]));	//사용자가 클릭한 날짜 추출
+				firstDate = new Date(urlDay.getTime()-urlDay.getDay()*86400000);	//사용자가 클릭한 날짜의 주 시작 날짜
+				firstDay = 0;
+				
+			}
+			var originStart = new Date(inputJSON.startTime[0],inputJSON.startTime[1]-1,inputJSON.startTime[2]);
+			var clickDate = new Date(firstDate.getTime()+(parseInt(endIndex)-firstDay)*86400000);
+			if(originStart.getTime() == clickDate.getTime()){//원래 날짜에 놓았으면
+				$(".clickDate").removeClass('clickDate');
+				$(move).remove();
+			}else{
+				var isAllDay = true;
+				var recurrence = false;
+				var start ,end;
+				var originalStartTime=0;
+				var originEnd = new Date(inputJSON.endTime[0],inputJSON.endTime[1]-1,inputJSON.endTime[2]);
+				var term = parseInt((originEnd.getTime()-originStart.getTime())/86400000);
+				end = new Date(clickDate.getTime()+term*86400000);
+				start = clickDate;
+				
+				if(inputJSON.startTime[3] != -1){//시간이 있는 일정
+					isAllDay = false;
+					start.setHours(inputJSON.startTime[3]);
+					start.setMinutes(inputJSON.startTime[4]);
+					originStart.setHours(inputJSON.startTime[3]);
+					originStart.setMinutes(inputJSON.startTime[4]);
+					
+					end.setHours(inputJSON.endTime[3]);
+					end.setMinutes(inputJSON.endTime[4]);
+				}else{
+					start.setHours(9);
+					originStart.setHours(9);
+					end.setTime(end.getTime()+86400000);
+					end.setHours(9);
+				}
+				if(inputJSON.recurrence != null){
+					recurrence = true;
+					originalStartTime = originStart.getTime();
+				}
+				var data = {
+					"calendarId" : inputJSON.calendarID,
+					"eventId" : inputJSON.eventID,
+					"startDate" : start.getTime(),
+					"endDate" : end.getTime(),
+					"isAllDay" : isAllDay,
+					"recurrence" : recurrence,	//추후 고치기
+					"originalStartTime" : originalStartTime
+				};
+				var baseUrl = "http://localhost:8080";
+				$.ajax({
+					url: baseUrl+"/updateEventDate",
+					type:'POST',
+					data: JSON.stringify(data),
+					contentType: "application/json; charset=UTF-8",
+					success:function(result){
+						console.log(result=="true");
+						if(result == "true"){
+							alert('수정이 완료되었습니다');
+							requestData();
+						}else{
+							alert(result);
+						}
+					},
+				});
+			}
+		}
+		//초기화
+		$(".eventFill").css('z-index','4');
+		$(".clickDate").removeClass('clickDate');
+		$(move).remove();
+		document.onmouseup = null;
+		document.onmousemove = null;
+		document.onselectstart = null;
+	}
+}
 function addZero(data){
 	var result = "";
 	if(data < 10){
@@ -599,11 +779,12 @@ function changeTimeForm(hour, min){
 	return result;
 }
 function clickEvent(event){
-	if(event.childNodes.length == 3){
+	if(event.childNodes.length == 3 || event.childNodes.length == 4){	//why?
 		clickEventTitle(event.childNodes[1],false);
 		//clickEventTitle($(event).children().eq(0),false);
 	}else{
 		clickEventTitle(event.childNodes[0].childNodes[0],false);
 		
 	}
+	
 }

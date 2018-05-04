@@ -379,6 +379,7 @@
 		white-space:nowrap;
 		height:100%;
 		cursor: pointer;
+		position:relative;
 	}
 	/*일정 더보기 링크 부분*/
 	.moreEvent{

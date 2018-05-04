@@ -37,6 +37,7 @@ import com.calendar.dto.CalendarAndEventIdDTO;
 import com.calendar.dto.EventDTO;
 import com.calendar.dto.EventDetailDTO;
 import com.calendar.dto.EventInputDTO;
+import com.calendar.dto.UpdateEventDateDTO;
 import com.calendar.dto.UpdateResponseDTO;
 import com.calendar.sCalendar.GoogleCalendarService;
 import com.google.api.client.util.DateTime;
@@ -105,6 +106,7 @@ public class EventController {
 		return result;
 	}
 	
+	//이벤트 삭제
 	@RequestMapping(value = "/deleteEvent", method = RequestMethod.GET)
 	public @ResponseBody String deleteEvent(CalendarAndEventIdDTO dto){
 		String result = "true";
@@ -121,6 +123,8 @@ public class EventController {
 		
 		return result;
 	}
+	
+	//반복 일정 삭제
 	@RequestMapping(value="/deleteRecurrenceEvent",method = RequestMethod.GET)
 	public @ResponseBody String deleteRecurrenceEvent(CalendarAndEventIdDTO dto) {
 		String result = "true";
@@ -161,6 +165,7 @@ public class EventController {
 		return result;
 	}
 	
+	//이벤트 하나만
 	@RequestMapping(value = "/getEvent",method = RequestMethod.GET)
 	public @ResponseBody Event getEventObject(CalendarAndEventIdDTO dto, Model model){
 		Event result = new Event();
@@ -189,6 +194,57 @@ public class EventController {
 			}
 			event.setAttendees(attendees);
 			service.events().update(dto.getCalendarId(), event.getId(), event).execute();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			result = getErrorMessage(e.getMessage());
+		}
+		return result;
+	}
+	
+	//이벤트 날짜 수정
+	@RequestMapping(value="/updateEventDate",method=RequestMethod.POST)
+	public @ResponseBody String updateEventDate(@RequestBody UpdateEventDateDTO dto, Model model) {
+		String result = "true";
+		GoogleCalendarService gcs = new GoogleCalendarService();
+		
+		try {
+			Calendar service = gcs.getCalendarService();
+			Event event = service.events().get(dto.getCalendarId(), dto.getEventId()).execute();
+			EventDateTime start = new EventDateTime();
+			EventDateTime end = new EventDateTime();
+			EventDateTime originalStartTime = new EventDateTime();
+			System.out.println(dto.getIsAllDay());
+			if(dto.getIsAllDay()) {//종일 일정인 경우
+				ZonedDateTime zdt = LocalDateTime.now().atZone(ZoneId.systemDefault());
+				int offset = zdt.getOffset().getTotalSeconds()/60;
+				start.setDate(new DateTime(true, dto.getStartDate(), offset));
+				end.setDate(new DateTime(true, dto.getEndDate(), offset));
+				originalStartTime.setDate(new DateTime(true, dto.getOriginalStartTime(), offset));
+			}else {//시간이 있는 일정인 경우
+				start.setDateTime(new DateTime(dto.getStartDate()));
+				end.setDateTime(new DateTime(dto.getEndDate()));
+				originalStartTime.setDateTime(new DateTime(dto.getOriginalStartTime()));
+			}
+			event.setStart(start)
+				.setEnd(end)
+				;
+			if(dto.getIsRecurrence()) {//반복 일정을 옮기는 경우
+				Event instance = new Event()
+						.setSummary(event.getSummary())
+						.setLocation(event.getLocation())
+						.setDescription(event.getDescription())
+						.setStart(start)
+						.setEnd(end)
+						.setReminders(event.getReminders())
+						.setAttendees(event.getAttendees())
+						.setRecurringEventId(dto.getEventId())
+						.setOriginalStartTime(originalStartTime)
+						;
+				service.events().insert(dto.getCalendarId(), instance).execute();
+			}else {
+				service.events().update(dto.getCalendarId(), dto.getEventId(), event).execute();
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
