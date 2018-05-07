@@ -155,11 +155,10 @@ public class GoogleCalendarService {
         	LocalDateTime localD = cur.plusDays(1).atTime(0,0);
         	ZonedDateTime zdtD = localD.atZone(ZoneId.systemDefault());
         	next = new DateTime(zdtD.toInstant().toEpochMilli());
+        	System.out.println(next.toString());
         	break;
         }
         
-        
-        //캘린더 개수만큼 스레드 만들기
         int size = calendarList.size();
         ExecutorService executorService = Executors.newFixedThreadPool(size);
         ArrayList<EventDTO> result = new ArrayList<EventDTO>();
@@ -327,6 +326,17 @@ class callable implements Callable<ArrayList<EventDTO>>{
                 }else {
                 	start = new DateTime(now.getValue());
                 }
+                DateTime end = null;
+                if(event.getEnd() != null) {
+                	if(event.getEnd().getDateTime() != null) {
+                		end = event.getEnd().getDateTime();
+                	}else {
+                		end = event.getEnd().getDate();
+                	}
+                }else {
+                	end = new DateTime(now.getValue());
+                }
+
                 if(event.getRecurringEventId() != null) {
             		String eventId = event.getRecurringEventId();
             		ArrayList<Integer> exdate = new ArrayList<>();
@@ -345,19 +355,14 @@ class callable implements Callable<ArrayList<EventDTO>>{
         			if(event.getStatus() != null && event.getStatus().equals("cancelled")) {
         				continue;
         			}
+        			long endValue = end.getValue();
+        			if(isDateOnly) {
+        				endValue -= 86400000l;
+        			}
+        			if(endValue < now.getValue() || start.getValue() >= next.getValue()) {//개별 일정 중 요청한 기간에서 벗어난 일정들이 있을 수 있음
+        				continue;
+        			}
             	}
-            
-                DateTime end = null;
-                if(event.getEnd() != null) {
-                	if(event.getEnd().getDateTime() != null) {
-                		end = event.getEnd().getDateTime();
-                	}else {
-                		end = event.getEnd().getDate();
-                	}
-                }else {
-                	end = new DateTime(now.getValue());
-                }
-
                // System.out.printf("%s (%s)\n", event.getSummary(), start.toString());
                 EventDTO tempDTO = new EventDTO();
                 tempDTO.setCalendarID(id);

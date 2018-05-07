@@ -209,9 +209,6 @@ function makeEventTitleForm(data,color,more,responseStatus,weekly){
 		text += " clickEventTitle(this,false);"
 	}
 	text +=	"return false;' href='#' data-eventId ="+data.eventID+" data-calendarId = "+data.calendarID+">"+isNull(data.summary)+"</a>";
-	if(weekly){
-		text += "<div class='changeEventTime' style='cursor:s-resize; position:absolute; bottom:0; left:0; width:100%;height:4px;'></div>";
-	}
 	text += "<span class='eventInformation' style='display:none;' data-information='"+JSON.stringify(data)+"'></span>";
 	return text;
 }
@@ -594,11 +591,14 @@ function dragEvent_date(elmnt,attr){
 	var inputJSON;
 	var drag = false;
 	var click = false;
+	var startPosX,startPosY, endPosX, endPosY;
 	function dragMouseDown_date(e){
 		drag = false;
 		click = false;
 		var x,y;
 		move = $(elmnt).clone();
+		startPosX = e.pageX;
+		startPosY = e.pageY;
 		if(attr == 'data-dateindex'){//월뷰
 			x = e.pageX - $("#dates").offset().left;
 			y = e.pageY - $("#dates").offset().top;
@@ -612,7 +612,7 @@ function dragEvent_date(elmnt,attr){
 			height = parseInt($("#header_weekly").height());
 			$(move).appendTo('#header_weekly');
 		}
-		
+		$(move).css('width',$(elmnt).css('width'));
 		$(".eventFill").css('z-index','1');
 		startIndex = parseInt(x/width) + parseInt(y/height)*7;
 		
@@ -631,6 +631,8 @@ function dragEvent_date(elmnt,attr){
 	}
 	function elementDrag_date(e){
 		drag = true;
+		endPosX = e.pageX;
+		endPosY = e.pageY;
 		if(!click){
 			if($(move).css('display') == 'none'){
 				$("[data-"+attr+"='"+startIndex+"']").addClass('clickDate');
@@ -658,6 +660,9 @@ function dragEvent_date(elmnt,attr){
 	function closeDragElement_date(e){
 		console.log("close");
 		var update = true;
+		if(Math.abs(startPosX-endPosX) < 9 || Math.abs(startPosY-endPosY) < 9){//이동한 거리가 너무 작으면
+			drag = false;
+		}
 		if(!drag){
 			click = true;
 			clickEvent(elmnt);
@@ -672,22 +677,24 @@ function dragEvent_date(elmnt,attr){
 		endIndex = $(".clickDate").attr(attr);
 		if(endIndex != undefined && update){//날짜 영역 밖에 놓은 경우는 제외
 			var firstDate;
-			var firstDay;
+			var firstDay, urlDay;
+			var path = location.pathname.split('/');
 			if(attr == 'data-dateindex'){
 				var year = $("#backBtn").attr('value');
 				var month = $("#forwardBtn").attr('value');
 				firstDate = new Date(parseInt(year),parseInt(month)-1,1);
 				firstDay = firstDate.getDay();	//시작 요일
 			}else{
-				var path = location.pathname.split('/');
 				var dateStr = path[2].split('-');
-				var urlDay = new Date(parseInt(dateStr[0]),parseInt(dateStr[1])-1,parseInt(dateStr[2]));	//사용자가 클릭한 날짜 추출
+				urlDay = new Date(parseInt(dateStr[0]),parseInt(dateStr[1])-1,parseInt(dateStr[2]));	//사용자가 클릭한 날짜 추출
 				firstDate = new Date(urlDay.getTime()-urlDay.getDay()*86400000);	//사용자가 클릭한 날짜의 주 시작 날짜
 				firstDay = 0;
-				
 			}
 			var originStart = new Date(inputJSON.startTime[0],inputJSON.startTime[1]-1,inputJSON.startTime[2]);
 			var clickDate = new Date(firstDate.getTime()+(parseInt(endIndex)-firstDay)*86400000);
+			if(path[1] == 'd'){//daily인 경우 사용자가 클릭한 날짜가 url에 있는 날짜와 동일
+				clickDate = new Date(urlDay.getTime());
+			}
 			if(originStart.getTime() == clickDate.getTime()){//원래 날짜에 놓았으면
 				$(".clickDate").removeClass('clickDate');
 				$(move).remove();
@@ -707,12 +714,13 @@ function dragEvent_date(elmnt,attr){
 					start.setMinutes(inputJSON.startTime[4]);
 					originStart.setHours(inputJSON.startTime[3]);
 					originStart.setMinutes(inputJSON.startTime[4]);
-					
+					console.log(start);
 					end.setHours(inputJSON.endTime[3]);
 					end.setMinutes(inputJSON.endTime[4]);
 				}else{
 					start.setHours(9);
 					originStart.setHours(9);
+					console.log(start);
 					end.setTime(end.getTime()+86400000);
 					end.setHours(9);
 				}

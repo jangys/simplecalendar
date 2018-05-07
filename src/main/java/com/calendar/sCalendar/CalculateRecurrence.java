@@ -142,6 +142,9 @@ public class CalculateRecurrence {
 				if(copyEvent.getEndTime()[1]< month || copyEvent.getEndTime()[0] < year) {//끝 날짜가 현재 보고 있는 날짜보다 전이면 리스트에 넣지 않음
 					continue;
 				}
+				if(copyEvent.getEndTime()[1] == month && copyEvent.getEndTime()[0] == year && copyEvent.getEndTime()[2] < date) {//끝 날짜가 현재 보고 있는 날짜보다 전 날
+					continue;
+				}
 				copyEvent.setSummary(event.getSummary());
 				copyEvent.setAttendees(event.getAttendees());
 				copyEvent.setCalendarID(event.getCalendarID());
@@ -154,13 +157,13 @@ public class CalculateRecurrence {
 				copyEvent.setStart(origin.getTime(),isDateOnly);
 				copyEvent.setOriginalStart(event.getStart());
 				list.add(copyEvent);
-//				for(int x=0;x<list.size();x++) {
-//					System.out.println(list.get(x).getStartTime()[2]);
-//				}
 			}
 			
 		}
-		
+//		System.out.println("---------------------------------------");
+//		for(int x=0;x<list.size();x++) {
+//			System.out.println(list.get(x).getStartTime()[2]);
+//		}
 		return list;
 	}
 
