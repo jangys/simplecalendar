@@ -1,10 +1,8 @@
 package com.calendar.dto;
 
 import java.util.List;
-
 import javax.print.DocFlavor.STRING;
 
-import com.calendar.sCalendar.CalculateCalendar;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.EventAttendee;
 
@@ -77,7 +75,7 @@ public class EventDTO {
 					endTime[0] --;
 					endTime[1] = 12;
 				}
-				endTime[2] = new CalculateCalendar().getLastDay(endTime[0], endTime[1]);
+				endTime[2] = getLastDay(endTime[0], endTime[1]);
 			}
 			endTime[3] = -1;
 			//this.end += 53940001;	//23시 59분 1밀리초가 되게
@@ -145,5 +143,16 @@ public class EventDTO {
 		return guestsCanSeeOtherGuests;
 	}
 
-
+	public int getLastDay(int year, int month) {
+		int result = 31;
+		if((month % 2 == 0 && month <= 6) || (month % 2 == 1 && month >= 9)){
+			result = 30;
+		}
+		if(month == 2 && year % 4 == 0 && year % 100 != 0 || year % 400 == 0){
+			result = 29;
+		}else if(month == 2){
+			result = 28;
+		}
+		return result;
+	}
 }
