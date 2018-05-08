@@ -26,6 +26,12 @@ public class EventInputDTO {
 	private String calendars;
 	private String eventId;
 	private String calendarId;
+	private boolean guestsCanModify;
+	private boolean guestsCanInviteOthers;
+	private boolean guestsCanSeeOtherGuests;
+	private String transparency;
+	private String visibility;
+	
 	
 	//for updateType
 	public static final int ONLYTHIS = 1;
@@ -93,6 +99,21 @@ public class EventInputDTO {
 	public void setCalendarId(String calendarId) {
 		this.calendarId = calendarId;
 	}
+	public void setGuestsCanModify(boolean guestsCanModify) {
+		this.guestsCanModify = guestsCanModify;
+	}
+	public void setGuestsCanInviteOthers(boolean guestsCanInviteOthers) {
+		this.guestsCanInviteOthers = guestsCanInviteOthers;
+	}	
+	public void setGuestsCanSeeOtherGuests(boolean guestsCanSeeOtherGuests) {
+		this.guestsCanSeeOtherGuests = guestsCanSeeOtherGuests;
+	}	
+	public void setTransparency(String transparency) {
+		this.transparency = transparency;
+	}
+	public void setVisibility(String visibility) {
+		this.visibility = visibility;
+	}
 	
 	public String getSummary() {
 		return summary;
@@ -154,7 +175,21 @@ public class EventInputDTO {
 	public String getCalendarId() {
 		return calendarId;
 	}
-
+	public boolean getGuestsCanModify() {
+		return guestsCanModify;
+	}
+	public boolean getGuestsCanInviteOthers() {
+		return guestsCanInviteOthers;
+	}
+	public boolean getGuestsCanSeeOtherGuests() {
+		return guestsCanSeeOtherGuests;
+	}
+	public String getTransparency() {
+		return transparency;
+	}
+	public String getVisibility() {
+		return visibility;
+	}
 
 }
 

@@ -43,6 +43,7 @@ import com.calendar.sCalendar.GoogleCalendarService;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.Calendar.Events.Get;
+import com.google.api.services.calendar.Calendar.Events.Update;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Event.Reminders;
@@ -240,6 +241,11 @@ public class EventController {
 						.setAttendees(event.getAttendees())
 						.setRecurringEventId(dto.getEventId())
 						.setOriginalStartTime(originalStartTime)
+						.setGuestsCanInviteOthers(event.getGuestsCanInviteOthers())
+						.setGuestsCanModify(event.getGuestsCanModify())
+						.setGuestsCanSeeOtherGuests(event.getGuestsCanSeeOtherGuests())
+						.setVisibility(event.getVisibility())
+						.setTransparency(event.getTransparency())
 						;
 				service.events().insert(dto.getCalendarId(), instance).execute();
 			}else {
@@ -384,21 +390,26 @@ public class EventController {
 //			recurrence.add(exdate);
 //		}
 		
-		
+		Event event = new Event()
+				.setSummary(dto.getSummary())
+				.setLocation(dto.getLocation())
+				.setDescription(dto.getDescription())
+				.setStart(start)
+				.setEnd(end)
+				.setReminders(reminders)
+				.setAttendees(dto.getAttendees())
+				.setGuestsCanInviteOthers(dto.getGuestsCanInviteOthers())
+				.setGuestsCanModify(dto.getGuestsCanModify())
+				.setGuestsCanSeeOtherGuests(dto.getGuestsCanSeeOtherGuests())
+				.setVisibility(dto.getVisibility())
+				.setTransparency(dto.getTransparency())
+				;
 		if(eventId.equals("addEvent")){//일정을 입력한 경우
 			try {
 				System.out.println("e  "+reminders.getUseDefault());
 				service = gcs.getCalendarService();
-				Event event = new Event()
-						.setSummary(dto.getSummary())
-						.setLocation(dto.getLocation())
-						.setDescription(dto.getDescription())
-						.setStart(start)
-						.setEnd(end)
-						.setReminders(reminders)
-						.setAttendees(dto.getAttendees())
-						.setRecurrence(recurrence)
-						;
+				event.setRecurrence(recurrence);
+				
 				String newCalendarId = dto.getCalendars();
 				service.events().insert(newCalendarId, event).execute();
 			} catch (IOException e) {
@@ -411,32 +422,16 @@ public class EventController {
 			try {
 				service = gcs.getCalendarService();
 				if(dto.getUpdateType() == EventInputDTO.ONLYTHIS) {	//반복 일정 한개만 수정
-					Event event = new Event()
-							.setSummary(dto.getSummary())
-							.setLocation(dto.getLocation())
-							.setDescription(dto.getDescription())
-							.setStart(start)
-							.setEnd(end)
-							.setReminders(reminders)
-							.setAttendees(dto.getAttendees())
-							.setRecurringEventId(eventId)
-							.setOriginalStartTime(originalStartTime)
-							;
+					event.setRecurringEventId(eventId)
+						.setOriginalStartTime(originalStartTime);
+
 					service.events().insert(dto.getCalendars(), event).execute();
 				}else if(dto.getUpdateType() == EventInputDTO.NEXT) {//반복 일정 향후 일정 수정
 					Event updateEvent = service.events().get(calendarId, eventId).execute();
 					updateEvent.setRecurrence(dto.getOriginRecurrence());
 					service.events().update(calendarId, updateEvent.getId(), updateEvent).execute();
-					Event event = new Event()
-							.setSummary(dto.getSummary())
-							.setLocation(dto.getLocation())
-							.setDescription(dto.getDescription())
-							.setStart(start)
-							.setEnd(end)
-							.setReminders(reminders)
-							.setAttendees(dto.getAttendees())
-							.setRecurrence(dto.getRecurrence())
-							;
+					
+					event.setRecurrence(dto.getRecurrence());
 					service.events().insert(dto.getCalendars(), event).execute();
 				}else {//반복 일정 모든 일정 수정, 그외 수정
 					Event updateEvent = service.events().get(calendarId, eventId).execute();
@@ -449,7 +444,13 @@ public class EventController {
 					.setReminders(reminders)
 					.setAttendees(dto.getAttendees())
 					.setRecurrence(recurrence)
+					.setGuestsCanInviteOthers(dto.getGuestsCanInviteOthers())
+					.setGuestsCanModify(dto.getGuestsCanModify())
+					.setGuestsCanSeeOtherGuests(dto.getGuestsCanSeeOtherGuests())
+					.setVisibility(dto.getVisibility())
+					.setTransparency(dto.getTransparency())
 					;
+					System.out.println("update Events");
 					service.events().update(calendarId, updateEvent.getId(), updateEvent).execute();
 					String newCalendarId = dto.getCalendars();
 					if(!newCalendarId.equals(calendarId)) {	// 캘린더 옮긴 경우

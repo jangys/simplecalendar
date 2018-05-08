@@ -24,7 +24,16 @@
 			 </select>
 			 <br/><br/>
 			<span class='detail_span'>장소</span><input id="location_detail" class="form-control" type="text" name="location" ><br/><br>
-			<span class='detail_span'>메모</span><textarea id="description_detail" class="form-control" rows="5" id="memo" style="display:block; width:84%;" name="description"></textarea> <br/><br>
+			<span class='detail_span'>메모</span><textarea id="description_detail" class="form-control" rows="5" id="memo" style="display:block; width:84%;" name="description"></textarea> <br/>
+			<span class='detail_span'>상태</span>
+			<label style="margin-right:15px;"><input type="radio" name="transparency" value="opaque" style="margin-right:10px;" checked>바쁨</label>
+			<label><input type="radio" name="transparency" value="transparent" style="margin-right:10px;">한가함</label>
+			<br>
+			<span class='detail_span'>공개</span>
+			<label style="margin-right:15px;"><input type="radio" name="visibility" value="default" style="margin-right:10px;" checked>기본</label>
+			<label style="margin-right:15px;"><input type="radio" name="visibility" value="public" style="margin-right:10px;">공개</label>
+			<label><input type="radio" name="visibility" value="private" style="margin-right:10px;">비공개</label>
+			<br>
 			<span class='detail_span'>알람</span><ul id="alarmList" style="list-style: none; padding:0% 0%; display:none;" data-alarmNum="0"></ul>
 			<button id="btnAddAlarm" class="btn btn-info" type="button" onclick="addAlarm_detail()">알람 추가</button><br><br>
 			<span class='detail_span'>캘린더</span><select class="form-control" id="calendarList_detail" name="calendars" onchange="changeCalendarList_detail(this);"></select><br><br>
@@ -41,8 +50,19 @@
 				</select>
 			</span>
 			<br>
-			<ul id="attendeeList" style="list-style:none; padding: 0% 0%; " data-attNum="0">
-				</ul>
+			<ul id="attendeeList" style="list-style:none; padding: 0% 0%; " data-attNum="0"> </ul>
+			<div id='guestsAuthorityCheckList' style='display:none;'>
+				<span class='detail_span'>게스트 권한</span>
+				<label style='margin-right:5px;'>
+					<input type='checkbox' name='guestAuthority' value='guestsCanModify'> 일정 수정
+				</label>
+				<label style='margin-right:5px;'>
+					<input type='checkbox' name='guestAuthority' value='guestsCanInviteOthers' checked> 다른 사람 초대
+				</label style='margin-right:5px;'>
+				<label>
+					<input type='checkbox' name='guestAuthority' value='guestsCanSeeOtherGuests' checked> 참석자 목록 보기
+				</label>
+			</div>
 			<input id="calendarId_detail" type="text" style="display:none;" name="calendarId">
 			<input id="eventId_detail" type="text" style="display:none;" name="eventId">
 			<br/>

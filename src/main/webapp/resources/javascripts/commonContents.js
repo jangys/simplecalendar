@@ -407,7 +407,7 @@ function clickEventTitle(title,scroll){
 	}
 	var calendar = $("[data-originalCalendarId = '"+title.getAttribute('data-calendarId')+"']");
 	var contents = "<p class='eventSummaryContents_p'><span class='eventSummaryContents_span'>제목</span>"+isNull(data.summary)+"</p>";
-	contents += "<p class='eventSummaryContents_p'><span class='eventSummaryContents_span'>일시</span>"+data.startTime[0]+"."+addZero(data.startTime[1])+"."+addZero(data.startTime[2]);
+	contents += "<p class='eventSummaryContents_p' style='font-size:15px;'><span class='eventSummaryContents_span'>일시</span>"+data.startTime[0]+"."+addZero(data.startTime[1])+"."+addZero(data.startTime[2]);
 	var check = -1;
 	for(var i = 0;i<5;i++){
 		if(data.startTime[i] != data.endTime[i]){
@@ -454,7 +454,16 @@ function clickEventTitle(title,scroll){
 	contents += "<p class='eventSummaryContents_p'><span class='eventSummaryContents_span'>내용</span>"+isNull(data.description)+"</p>";
 	if(data.attendees != null){
 		var size = data.attendees.length;
-		contents += "<p class='eventSummaryContents_p'><span class='eventSummaryContents_span'>초대</span>인원"+size+"명(";
+		var canSeeOthers = data.guestsCanSeeOtherGuests;
+		var totalNum = size;
+		var organizer = false;
+		if(data.organizer == data.calendarID){
+			organizer = true;
+		}
+		if(!organizer && !canSeeOthers){//다른 참석자 목록 볼 수 없는 경우
+			totalNum = 1;
+		}
+		contents += "<p class='eventSummaryContents_p'><span class='eventSummaryContents_span'>초대</span>인원"+totalNum+"명</span>";
 		var responseCount = {
 			"accepted" : 0,
 			"declined" : 0,
@@ -467,12 +476,23 @@ function clickEventTitle(title,scroll){
 			if(data.attendees[i].email == $("#userId").text()){//사용자 본인이 있는 경우
 				me = i;
 			}
+			if(data.attendees[i].email == data.calendarID && !organizer && !canSeeOthers){//일정 주인이지만 주최자가 아니고 다른 참석자 목록 볼 수 없는 경우
+				var responseKorean = {
+						"accepted" : '수락',
+						"declined" : '거절',
+						"tentative" : '미정',
+						"needsAction" : '대기'
+				};
+				contents += "<span style='color:#5c5c5c; margin-left:5px;'>"+responseKorean[data.attendees[i].responseStatus]+" 1명</span>";
+			}
 		}
-		contents += "<span style='color:#5c5c5c'>수락"+responseCount["accepted"]+"명, 거절"+responseCount["declined"]+"명, 미정"+responseCount["tentative"]+"명, 대기"+responseCount["needsAction"]+"명) </span>";
-		
+		if(organizer || canSeeOthers){//다른 참석자 목록 볼 수 있는 경우, 볼수 없어도 주최자 본인인 경우
+			contents += "<span style='color:#5c5c5c'>(수락"+responseCount["accepted"]+"명, 거절"+responseCount["declined"]+"명, 미정"+responseCount["tentative"]+"명, 대기"+responseCount["needsAction"]+"명) </span>";
+		}
 		contents += "</p>";
+		contents += "<p class='eventSummaryContents_p'>";
 		if(me != -1 && (data.organizer == data.calendarID || data.calendarID == $("#userId").text())){
-			contents += "<p class='eventSummaryContents_p'><span class='eventSummaryContents_span'>내 응답</span>";
+			contents += "<span class='eventSummaryContents_span'>내 응답</span>";
 			var response = ["수락","거절","미정"];
 			var myResponse = getResponseStatus(data.attendees[me].responseStatus);
 			var link = "";
@@ -486,8 +506,11 @@ function clickEventTitle(title,scroll){
 				link += " margin-right:5px;' onclick='updateResponse(this); return false;'>"+response[i]+"</a>";
 			}
 			contents += link;
-			contents += "<span style='margin-left:110px;'><a href='#' id='attendeesList_a' style='color:black' title='참석자 목록 보기'>참석자 목록</a></span></p>";
 		}
+		if(organizer || canSeeOthers){//참석자 목록 볼 수 있는 경우
+			contents += "<span style='float:right;'><a href='#' id='attendeesList_a' style='color:black' title='참석자 목록 보기'>참석자 목록</a></span>";
+		}
+		contents += "</p>";
 	}
 	$('#eventSummary_Contents').html(contents);
 	//추가한 후

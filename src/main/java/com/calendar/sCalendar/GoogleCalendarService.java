@@ -364,6 +364,10 @@ class callable implements Callable<ArrayList<EventDTO>>{
         			}
             	}
                // System.out.printf("%s (%s)\n", event.getSummary(), start.toString());
+                boolean guestsCanSeeOtherGuests = true;
+                if(event.getGuestsCanSeeOtherGuests() != null) {
+                	guestsCanSeeOtherGuests = false;
+                }
                 EventDTO tempDTO = new EventDTO();
                 tempDTO.setCalendarID(id);
                 tempDTO.setSummary(event.getSummary());
@@ -373,6 +377,7 @@ class callable implements Callable<ArrayList<EventDTO>>{
                 tempDTO.setLocation(event.getLocation());
                 tempDTO.setDescription(event.getDescription());
                 tempDTO.setAttendees(event.getAttendees());
+                tempDTO.setGuestsCanSeeOtherGuests(guestsCanSeeOtherGuests);
                 String email = "";
                 if(event.getOrganizer() != null) {
                 	email = event.getOrganizer().getEmail();

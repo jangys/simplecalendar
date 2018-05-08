@@ -22,6 +22,7 @@ public class EventDTO {
 	private List<EventAttendee> attendees;
 	private String organizer;
 	private List<String> recurrence;
+	private boolean guestsCanSeeOtherGuests;
 	
 	public void setCalendarID(String calendarID) {
 		this.calendarID = calendarID;
@@ -98,6 +99,9 @@ public class EventDTO {
 	public void setRecurrence(List<String> recurrence) {
 		this.recurrence = recurrence;
 	}
+	public void setGuestsCanSeeOtherGuests(boolean guestsCanSeeOtherGuests) {
+		this.guestsCanSeeOtherGuests = guestsCanSeeOtherGuests;
+	}
 	public String getCalendarID() {
 		return calendarID;
 	}
@@ -137,5 +141,9 @@ public class EventDTO {
 	public List<String> getRecurrence(){
 		return recurrence;
 	}
+	public boolean getGuestsCanSeeOtherGuests() {
+		return guestsCanSeeOtherGuests;
+	}
+
 
 }

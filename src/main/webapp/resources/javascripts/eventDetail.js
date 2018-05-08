@@ -14,6 +14,7 @@ function loadEventDetail(){
 	}
 	$('#timePickerDiv').html(text);
 	if($('#eventId_detail').attr('value') == "addEvent"){//그냥 삽입인 경우
+		$('#guestsAuthorityCheckList').css('display','block');
 		var date = new Date();
 		if($('#calendarId_detail').attr('value') == "0"){
 			document.getElementById('startDatePicker').valueAsDate = date;
@@ -49,7 +50,7 @@ function loadEventDetail(){
 					document.getElementById('startTimePicker').value = time[0];
 					document.getElementById('endTimePicker').value = time[1];
 				}else{
-					$("#allDayCheckBox").attr('checked',true);
+					$("#allDayCheckBox").prop('checked',true);
 					$("#allDayCheckBox").attr('value',true);
 					resetTimePicker_detail();
 				}
@@ -156,7 +157,7 @@ function showEvent_detail(data){
 	if(data.start.date != undefined){
 		allDay = true;
 		start = data.start.date.value;
-		$("#allDayCheckBox").attr('checked',true);
+		$("#allDayCheckBox").prop('checked',true);
 		$("#allDayCheckBox").attr('value',true);
 		$("#allDayCheckBox").attr('data-originalValue',true);
 		resetTimePicker_detail();
@@ -237,6 +238,12 @@ function showEvent_detail(data){
 		var organizerResponse="accepted";
 		var self = false;
 		var organizerEmail = data.organizer.email;
+		if(data.organizer.self != null){//본인이 주최자라는 의미
+			$("#guestsAuthorityCheckList").css('display','block');
+		}else{//주최자가 아닌 경우
+			$("#calendarList_detail").prop('disabled','true');
+		}
+	
 		$("#attendeeList").attr('data-originalValue',JSON.stringify(data.attendees));
 		if($("#userId").text() != $("#calendarId_detail").val()){
 			$("#attendeesDiv_detail").css('display','none');
@@ -293,7 +300,31 @@ function showEvent_detail(data){
 			$("#attendeeList").prepend(organizer);
 		}
 		$("#attendeeList").append(text);
-		
+		if(data.guestsCanModify != null){//일정 수정 가능
+			$("input:checkbox[value='guestsCanModify']").prop('checked',true);
+			$("input:checkbox[value='guestsCanModify']").attr('data-originvalue','true');
+		}else{
+			$("input:checkbox[value='guestsCanModify']").attr('data-originvalue','false');
+		}
+		if(data.guestsCanInviteOthers != null){//다른 사람 초대 불가
+			$("input:checkbox[value='guestsCanInviteOthers']").prop('checked',false);
+			$("input:checkbox[value='guestsCanInviteOthers']").attr('data-originvalue','false');
+			if(data.organizer.self == null)
+				$("#attendee").prop('disabled','true');
+		}else{
+			$("input:checkbox[value='guestsCanInviteOthers']").attr('data-originvalue','true');
+		}
+		if(data.guestsCanSeeOtherGuests != null){//참석자 목록 보지 못함
+			$("input:checkbox[value='guestsCanSeeOtherGuests']").prop('checked',false);
+			$("input:checkbox[value='guestsCanSeeOtherGuests']").attr('data-originvalue','false');
+			if(data.organizer.self == null){//주최자가 아닌 경우
+				$("#attendeeList").css('display','none');
+			}
+		}else{
+			$("input:checkbox[value='guestsCanSeeOtherGuests']").attr('data-originvalue','true');
+		}
+	}else{
+		$("#guestsAuthorityCheckList").css('display','block');
 	}//if-attendee
 	if(data.recurrence != null){
 		var rrule = data.recurrence[0];
@@ -329,6 +360,21 @@ function showEvent_detail(data){
 	//반복일정의 개별 일정인 경우
 	if(data.recurringEventId != null){
 		$("#recurrenceList_detail").prop('disabled','true');
+	}
+	//바쁨, 한가함 설정
+	if(data.transparency != null){
+		$("input:radio[value='transparent']").prop('checked',true);
+		$("input:radio[value='transparent']").attr('data-originvalue','true');
+	}else{
+		$("input:radio[value='opaque']").attr('data-originvalue','true');
+	}
+	//공개 설정
+	if(data.visibility != null){
+		console.log($("input:radio[value='"+data.visibility+"']"));
+		$("input:radio[value='"+data.visibility+"']").prop('checked',true);
+		$("input:radio[value='"+data.visibility+"']").attr('data-originvalue','true');
+	}else{
+		$("input:radio[value='default']").attr('data-originvalue','true');
 	}
 	$("#previousData_detail").text(JSON.stringify(data));
 }
@@ -683,7 +729,7 @@ function checkDate_detail(start){
 		document.getElementById('endDatePicker').valueAsDate = new Date(startDate.getTime());
 	}
 	if(start){
-		//showRecurrenceList(startDate);
+		showRecurrenceList(startDate);
 	}
 }
 //시간 유효성 체크. 시작 시간 기준으로 맞춤
@@ -918,7 +964,7 @@ function checkInputChange(input){
 	var start = "";
 	var startTime = "";
 	var date;
-	if(input.allDay == $("#allDayCheckBox").is(":checked")){
+	if(input.allDay.toString() != $("#allDayCheckBox").attr('data-originalvalue')){
 		return true;
 	}
 	var startSplit = input.startDate.split("-");
@@ -968,6 +1014,13 @@ function checkInputChange(input){
 	if(description != input.description){
 		return true;
 	}
+	console.log($("input:radio[name='visibility']:checked").attr('data-originvalue'));
+	if($("input:radio[name='visibility']:checked").attr('data-originvalue') == undefined){//새로운거 선택
+		return true;
+	}
+	if($("input:radio[name='transparency']:checked").attr('data-originvalue') == undefined){//새로운거 선택
+		return true;
+	}
 	var useDefault = false;
 	var defaultReminder = new Object();
 	if($("[data-originalcalendarid='"+input.calendars+"']").attr('data-defaultreminders') != undefined){
@@ -1002,6 +1055,20 @@ function checkInputChange(input){
 	if(previous.attendees != undefined){
 		if(previous.attendees.length != input.attendees.length){
 			return true;
+		}
+		if($("#guestsAuthorityCheckList").css('display') != 'none'){//보이는 경우만 초대자 권한 체크 여부 확인
+			if($("input:checkbox[value='guestsCanModify']").attr('data-originvalue') != input.guestsCanModify.toString()){
+				console.log("df");
+				return true;
+			}
+			if($("input:checkbox[value='guestsCanInviteOthers']").attr('data-originvalue') != input.guestsCanInviteOthers.toString()){
+				console.log("df");
+				return true;
+			}
+			if($("input:checkbox[value='guestsCanSeeOtherGuests']").attr('data-originvalue') != input.guestsCanSeeOtherGuests.toString()){
+				console.log("df");
+				return true;
+			}
 		}
 		for(var i=0;i<input.attendees.length;i++){
 			var isIn = false;
@@ -1090,6 +1157,7 @@ function submitInput_detail(){
 	originalEnd.push($("#endDatePicker").attr('data-originalDateValue'));
 	originalEnd.push($("#endDatePicker").attr('data-originalStartDate'));
 	console.log($("#endDatePicker").attr('data-originalStartDate'));
+	console.log($("input:radio[name='visibility']:checked").val());
 	var calendarId = $("#calendarList_detail").val().toString();
 	var inputJSON={
 		"summary" : $("#summary_detail").val().toString(),
@@ -1107,6 +1175,11 @@ function submitInput_detail(){
 		"attendees" : attendees,
 		"recurrence" : recurrence,
 		"updateType" : 0,
+		"guestsCanModify": $("input:checkbox[value='guestsCanModify']").is(":checked"),
+		"guestsCanInviteOthers": $("input:checkbox[value='guestsCanInviteOthers']").is(":checked"),
+		"guestsCanSeeOtherGuests": $("input:checkbox[value='guestsCanSeeOtherGuests']").is(":checked"),
+		"transparency" : $("input:radio[name='transparency']:checked").val(),
+		"visibility" : $("input:radio[name='visibility']:checked").val(),
 		"calendars" : calendarId,
 		"eventId" : $("#eventId_detail").val().toString(),
 		"calendarId" : $("#calendarId_detail").val().toString()
