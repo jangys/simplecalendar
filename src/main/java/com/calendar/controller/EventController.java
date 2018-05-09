@@ -56,7 +56,7 @@ public class EventController {
 	
 	//월 뷰 요청
 		@RequestMapping(value = "/monthly/{year}/{month}/{date}")
-		public @ResponseBody ArrayList<EventDTO> getMonthEventList(@PathVariable int year,@PathVariable int month,@PathVariable int date, Model model,HttpServletResponse response,HttpServletRequest request)throws Exception{
+		public @ResponseBody ArrayList<EventDTO> getMonthEventList(@PathVariable int year,@PathVariable int month,@PathVariable int date, HttpServletRequest request)throws Exception{
 			ArrayList<EventDTO> eventList = new ArrayList<>();
 			GoogleCalendarService gcs = new GoogleCalendarService();
 			try {
@@ -94,18 +94,34 @@ public class EventController {
 		}
 		return eventList;
 	}
-	//이벤트 디테일 요청
-	@RequestMapping(value = "/showEventDetail")
-	public @ResponseBody EventDetailDTO getEventDetail(CalendarAndEventIdDTO dto) {
-		EventDetailDTO result = new EventDetailDTO();
-		try {
-			result = new GoogleCalendarService().getEventDetail(dto.getCalendarId(), dto.getEventId());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return result;
-	}
+//	//이벤트 디테일 요청
+//	@RequestMapping(value = "/showEventDetail")
+//	public @ResponseBody EventDetailDTO getEventDetail(CalendarAndEventIdDTO dto) {
+//		EventDetailDTO result = new EventDetailDTO();
+//		try {
+//				com.google.api.services.calendar.Calendar service = new GoogleCalendarService().getCalendarService();
+//				Event event = service.events().get(dto.getCalendarId(), dto.getEventId()).execute();
+//				result.setSummary(event.getSummary());
+//				DateTime start = event.getStart().getDateTime();
+//		        if (start == null) {
+//		            start = event.getStart().getDate();
+//		        }
+//		        DateTime end = event.getEnd().getDateTime();
+//		        if(end == null) {
+//		        	end = event.getEnd().getDate();
+//		        }
+//		        result.setStart(start.getValue(), start.isDateOnly());
+//		        result.setEnd(end.getValue(), end.isDateOnly());
+//		        result.setLocation(event.getLocation());
+//				result.setDescription(event.getDescription());
+//				result.setRecurrence(event.getRecurrence());
+//				
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		return result;
+//	}
 	
 	//이벤트 삭제
 	@RequestMapping(value = "/deleteEvent", method = RequestMethod.GET)
@@ -170,7 +186,13 @@ public class EventController {
 	@RequestMapping(value = "/getEvent",method = RequestMethod.GET)
 	public @ResponseBody Event getEventObject(CalendarAndEventIdDTO dto, Model model){
 		Event result = new Event();
-		result = new GoogleCalendarService().getEvent(dto.getCalendarId(), dto.getEventId());
+		
+		try {
+			result = new GoogleCalendarService().getCalendarService().events().get(dto.getCalendarId(), dto.getEventId()).execute();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		return result;
 	}

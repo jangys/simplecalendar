@@ -2,12 +2,13 @@
 $(document).ready(function(){
 	//getList();
 	var path = location.pathname.split('/');
+	var baseUrl = location.href.split('/')[2];
 	var year;
 	var month;
 	var date;
 	if(path[1] =="event"){
 		$.ajax({
-			url: "http://localhost:8080/showEventPage",
+			url: "http://"+baseUrl+"/showEventPage",
 			dataType: "text",
 			success: function(data){
 				changeStyle("event",data);
@@ -16,7 +17,7 @@ $(document).ready(function(){
 		});
 	}else if(path[1]=="calendar"){
 		$.ajax({
-			url: "http://localhost:8080/showCalendarPage",
+			url: "http://"+baseUrl+"/showCalendarPage",
 			dataType: "text",
 			success: function(data){
 				changeStyle("calendar",data);
@@ -187,7 +188,7 @@ function requestData(request,y,m,d){
 	return pageUrl;		//day, week 추가시 삭제 해야함.
 }
 function requestDailyCalendar(year,month,date,reload){
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	var pageUrl = "/d/"+year+"-"+month+"-"+date;
 	console.log("request");
 	if(!reload){
@@ -212,7 +213,7 @@ function requestDailyCalendar(year,month,date,reload){
 	});
 }
 function requestWeeklyCalendar(year,month,date,reload){
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	var cur = new Date(year,month-1,date);
 	var firstDate = new Date(cur.getTime()-cur.getDay()*86400000);
 	var y = firstDate.getFullYear();
@@ -242,7 +243,7 @@ function requestWeeklyCalendar(year,month,date,reload){
 	});
 }
 function requestMonthlyCalendar(year,month,date,reload){
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	var pageUrl = "/m/"+year+"-"+month+"-"+date;
 	console.log("request");
 	if(!reload){
@@ -267,7 +268,7 @@ function requestMonthlyCalendar(year,month,date,reload){
 }
 
 function requestListCalendar(year,month,date,reload){
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	var pageUrl = "/l/"+year+"-"+month+"-"+date;
 	if(!reload){
 		history.pushState(null,"SimpleCalendar",pageUrl);				
@@ -378,7 +379,6 @@ function changeStyle(type,data){
 }	
 function clickEventTitle(title,scroll){
 	closeAllDiv();
-	console.log($(title));
 	var data = JSON.parse($(title).nextAll().last().attr('data-information'));
 	if(data.attendees != null){
 		if(data.recurrence == null){
@@ -610,7 +610,7 @@ function closeAllDiv(){
 }
 function clickDeleteEvent(button){
 	var result;
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	var data={
 			"calendarId" : button.getAttribute('data-calendarId'),
 			"eventId" : button.getAttribute('data-eventId')
@@ -658,7 +658,7 @@ function clickDeleteEvent(button){
 function clickDeleteRecurrenceEvent(){
 	var type = $("[name='userType']:checked").val();
 	var deleteType = 0;
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	var rrule = "";
 	switch(type){
 	case "ONLYTHIS":
@@ -715,7 +715,7 @@ function clickDeleteRecurrenceEvent(){
 }
 //updateResponseStatus
 function updateResponse(response){
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	var response = getResponseStatus($(response).text());
 	$(".updateResponseLink_Summ").css('pointer-events','none');
 	var data = {

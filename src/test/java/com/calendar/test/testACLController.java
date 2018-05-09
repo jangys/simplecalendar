@@ -4,25 +4,25 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-class GoogleCalendarServiceTest {
+class testACLController {
+
+//	@Test
+//	void testGetACLList() {
+//		fail("Not yet implemented");
+//	}
 
 	@Test
-	void testGetEventArrayListOfCalendarDTOIntIntIntInt() {
+	void testAddACLRule() {
 		fail("Not yet implemented");
 	}
 
 	@Test
-	void testGetCalendarList() {
+	void testDeleteACLRule() {
 		fail("Not yet implemented");
 	}
 
 	@Test
-	void testGetEventDetail() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	void testGetEventStringString() {
+	void testUpdateACLRule() {
 		fail("Not yet implemented");
 	}
 

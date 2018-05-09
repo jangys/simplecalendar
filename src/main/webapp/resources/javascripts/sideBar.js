@@ -1,6 +1,6 @@
 
 function getCalendarList(reload){
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	$.ajax({
 		url:baseUrl+"/CalendarList",
 		type:'GET',
@@ -40,7 +40,7 @@ function printCalendarList(data){
 			$("#userId").text(data[i].id);
 		}
 		checkList +=" onClick='clickCheckbox(this)' data-colorCode = '"+colorCode+"' data-accessRole = '"+data[i].accessRole+"'>"
-		checkList +="<span style='font-weight:bold;'>"+data[i].summary+"</span></label>";
+		checkList +="<span style='font-weight:bold;'>"+isNull(data[i].summary)+"</span></label>";
 		checkList +="<button style='cursor:pointer;'type='button' onclick='clickCalendarUpdateBtn(this);'><img src='/image/settings.png'></button>";
 		if($("#userId").text() != data[i].id){
 			checkList +="<a href='#' class='noUnderLine' style='color:#787777;' onclick='clickDeleteCalendar(this); return false;'>X</a>";
@@ -110,7 +110,7 @@ function makeMiniCalendar(y,m){
 					table += "<div class='miniCalendar_Date'><p></p></div>";
 				}else{
 					table += "<div class='miniCalendar_Date'><a href='#' class='";
-					if(m == month && dateNum == date){
+					if(year == y && m == month && dateNum == date){
 						table += "miniCalendar_today ";
 					}
 					if(y == clickYear && m == clickMonth && dateNum == clickDate){
@@ -150,7 +150,7 @@ function clickMiniCalendarNextBtn(next){
 //mini calendar에서 날짜 눌렀을 경우
 function clickMiniCalendarDate(input){
 	var strDate = $(input).attr('data-date');
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	var path =  location.pathname.split('/');
 	var type = path[1];
 	var curDate = path[2];
@@ -206,7 +206,7 @@ function clickCheckbox(box){
 	requestCheckCalendar(year,month,date,box);
 }
 function requestCheckCalendar(year,month,date,box){
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	var path = location.pathname.split('/');
 	if(path[1] == "w"){
 		var cur = new Date(year,month-1,date);
@@ -261,7 +261,7 @@ function clickDeleteCalendar(link){
 	var input = $(link).prevAll().eq(1).children().eq(1);
 	var calendarId = input.attr('data-originalcalendarid');
 	var result = false;
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	result = confirm("이 캘린더를 정말 삭제하시겠습니까?");
 	if(result){
 		$(link).attr('disabled',true);
@@ -299,15 +299,17 @@ function goToCalendarPage(type){
 	if(type == "#contacts@group.v.calendar.google.com"){
 		type = "contacts";
 	}
+	var baseUrl = "http://"+location.href.split('/')[2];
 	$.ajax({
-		url: "http://localhost:8080/showCalendarPage",
+		url: baseUrl+"/showCalendarPage",
 		dataType: "text",
 		success: function(data){
 			changeStyle("calendar",data);
 			var calendarId;
 			var eventId;
 			var path = location.pathname.split('/');
-			var url ="http://localhost:8080/calendar/"+type+"/"+path[1]+"&"+path[2];
+			var baseUrl = "http://"+location.href.split('/')[2];
+			var url = baseUrl+"/calendar/"+type+"/"+path[1]+"&"+path[2];
 			history.pushState(data,"Simple Calendar-Add/Update Event",url);
 			loadCalendarDetail();
 		}

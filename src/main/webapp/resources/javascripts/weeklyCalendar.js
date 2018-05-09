@@ -184,15 +184,16 @@ function showWeeklyAllDay(year,month,date,data,weekly){
 			index++;
 		}
 	}//for
-	if(maxcol > 5){
-		var height = table.height()+1+"px";
-		var containerHeight = $("#weekCalendar").height()-$("#title_weekly").height()-table.height()+1+"px";	//970 = 전체 크기,ㅣ 65 = 날짜
-		$("#allDay_weekly").css('height',height);
-		$(".sideDiv_weekly:eq(1)").css('height',height);
-		$("#container_weekly").css('height',containerHeight);
-		var headerHeight = $("#title_weekly").height()+table.height()+"px";
-		$("#header_weekly").css('height',headerHeight);
-	}
+	
+	//종일 일정 높이 조절
+	var height = table.height()+1+"px";
+	var containerHeight = $("#weekCalendar").height()-$("#title_weekly").height()-table.height()+1+"px";	//970 = 전체 크기,ㅣ 65 = 날짜
+	$("#allDay_weekly").css('height',height);
+	$(".sideDiv_weekly:eq(1)").css('height',height);
+	$("#container_weekly").css('height',containerHeight);
+	var headerHeight = $("#title_weekly").height()+table.height()+"px";
+	$("#header_weekly").css('height',headerHeight);
+
 	var eventTitleLinks = document.getElementsByClassName('eventTitleLink');
 	
 	//일정 드래그 등록
@@ -424,6 +425,7 @@ function arrangeWeeklyEvnetTd(timeIndex){
 			}
 			if((beforeIndex == -1|| (x-beforeIndex == 1)) && parseInt(lastDiv.attr('data-bottom')) == top){//왼쪽 일정 중 자리 빈 곳이 있으면 그 곳에 넣기
 				beforeIndex = x-1;
+				break;
 			}
 		}
 		if(beforeIndex >= 0){
@@ -704,7 +706,7 @@ function dragResizeTime(elmnt){
 					"recurrence" : recurrence,	
 					"originalStartTime" : inputJSON.start
 				};
-				var baseUrl = "http://localhost:8080";
+			var baseUrl = "http://"+location.href.split('/')[2];
 				$.ajax({
 					url: baseUrl+"/updateEventDate",
 					type:'POST',
@@ -867,7 +869,7 @@ function dragTimeEvent(elmnt,weekly){
 						"recurrence" : recurrence,	
 						"originalStartTime" : inputJSON.start
 					};
-					var baseUrl = "http://localhost:8080";
+				var baseUrl = "http://"+location.href.split('/')[2];
 					$.ajax({
 						url: baseUrl+"/updateEventDate",
 						type:'POST',

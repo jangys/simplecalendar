@@ -75,7 +75,7 @@ $("*").keypress(function(e){
 });
 //캘린더 목록 추가
 function getCalendarList_detail(getEvent){
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	$.ajax({
 		url:baseUrl+"/CalendarList",
 		type:'GET',
@@ -120,7 +120,7 @@ function getCalendarList_detail(getEvent){
 //상세보기를 눌러서 들어왔을 경우
 function getEvent_detail(){
 	console.log($("#eventId_detail").text());
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	var data={
 			"calendarId" : $("#calendarId_detail").attr('value'),
 			"eventId" : $("#eventId_detail").attr('value')
@@ -1268,7 +1268,7 @@ function submitInput_detail(){
 function submitData(inputJSON){
 	var data = JSON.stringify(inputJSON);
 	
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	$.ajax({
 		url: baseUrl+"/updateEvent",
 		type:'POST',

@@ -734,15 +734,16 @@
 		$('#eventSummary_Contents').html('');
 	}
 	function goToEventPage(type){
+		var baseUrl = "http://"+location.href.split('/')[2];
 		$.ajax({
-			url: "http://localhost:8080/showEventPage",
+			url: baseUrl+"/showEventPage",
 			dataType: "text",
 			success: function(data){
 				changeStyle("event",data);
 				var calendarId;
 				var eventId;
 				var path = location.pathname.split('/');
-				var url ="http://localhost:8080/event/";
+				var url =baseUrl+"/event/";
 				switch(type){
 					case "add":
 						calendarId = $("#addEventDate").attr('value');

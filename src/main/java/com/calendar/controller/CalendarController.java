@@ -28,7 +28,9 @@ import com.calendar.dto.CheckedCalendarDTO;
 import com.calendar.dto.EventDTO;
 import com.calendar.sCalendar.GoogleCalendarService;
 import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
+import com.google.api.services.calendar.model.EventReminder;
 
 @Controller
 public class CalendarController {
@@ -37,8 +39,27 @@ public class CalendarController {
 	
 	@RequestMapping(value = "/CalendarList", method = RequestMethod.GET)
 	public @ResponseBody ArrayList<CalendarDTO> getCalendarList(Model model,HttpServletRequest request,HttpServletResponse response) throws IOException {
-		ArrayList<CalendarDTO> result;
-		result = new GoogleCalendarService().getCalendarList();
+		ArrayList<CalendarDTO> result = new ArrayList<CalendarDTO>();
+		
+        CalendarList calendarList = new GoogleCalendarService().getCalendarService().calendarList().list().execute();
+        List<CalendarListEntry> items = calendarList.getItems();
+        
+        for (CalendarListEntry calendarListEntry : items) {
+          CalendarDTO tempDTO = new CalendarDTO();
+          tempDTO.setId(calendarListEntry.getId());
+          tempDTO.setSummary(calendarListEntry.getSummary());
+          tempDTO.setCheck(true);
+          tempDTO.setColorId(calendarListEntry.getColorId());
+          tempDTO.setDefaultReminders(calendarListEntry.getDefaultReminders());
+          boolean primary = true;
+          if(calendarListEntry.getPrimary() == null) {
+        	  primary = false;
+          }
+          tempDTO.setPrimary(primary);
+          tempDTO.setAccessRole(calendarListEntry.getAccessRole());
+          result.add(tempDTO);
+        }
+        
 		HttpSession session = request.getSession();
 		int size = result.size();
 		for(int i=0;i<size;i++) {
@@ -172,14 +193,23 @@ public class CalendarController {
 					service.calendarList().update(newCalendar.getId(), entry).execute();
 				}
 			}else {
-				CalendarListEntry entry = service.calendarList().get(dto.getType()).execute();
-				entry
-				.setSummary(dto.getSummary())
-				.setDescription(dto.getDescription())
-				.setTimeZone(dto.getTimezone())
-				.setDefaultReminders(dto.getDefaultReminders())
-				;
-				service.calendarList().update(entry.getId(), entry).execute();
+				
+				List<EventReminder> defaultReminders = null;
+				if(dto.getDefaultReminders().size() > 0) {
+					defaultReminders = dto.getDefaultReminders();
+					CalendarListEntry entry = service.calendarList().get(dto.getType()).execute();
+					entry
+					.setDefaultReminders(defaultReminders)
+					;
+					service.calendarList().update(entry.getId(), entry).execute();
+				}
+				
+				com.google.api.services.calendar.model.Calendar calendar = service.calendars().get(dto.getType()).execute();
+				calendar.setSummary(dto.getSummary())
+					.setDescription(dto.getDescription())
+					.setTimeZone(dto.getTimezone())
+					;
+				service.calendars().update(calendar.getId(), calendar).execute();
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

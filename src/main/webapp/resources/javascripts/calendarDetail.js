@@ -3,11 +3,11 @@
 function loadCalendarDetail(){
 	var path = location.href.split('/');
 	var type = checkType(path[4]);
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	//ko.south_korea#holiday@group.v.calendar.google.com
 	$("option [value='Asia/Seoul']").prop('selected',true);
 	if($("#userId").text() == ""){
-		var baseUrl = "http://localhost:8080";
+		var baseUrl = "http://"+location.href.split('/')[2];
 		$.ajax({
 			url:baseUrl+"/CalendarList",
 			type:'GET',
@@ -68,7 +68,7 @@ function showCalendarDetail(data){
 	}else{
 		$("#btnSave_calendar").css('display','inline');
 		$("#aclDiv_calendar").css('display','block');
-		var baseUrl = "http://localhost:8080";
+		var baseUrl = "http://"+location.href.split('/')[2];
 		var sendData = {
 				"type":type
 		};
@@ -165,7 +165,7 @@ function addACLRole_calendar(btn){
 			"calendarId":calendarId,
 			"value":email
 		};
-		var baseUrl = "http://localhost:8080";
+		var baseUrl = "http://"+location.href.split('/')[2];
 		$.ajax({
 			url:baseUrl+"/addACLRule",
 			data:data,
@@ -189,7 +189,7 @@ function clickDeleteACL(btn){
 			"id":id,
 			"calendarId":calendarId
 	};
-	var baseUrl = "http://localhost:8080";
+	var baseUrl = "http://"+location.href.split('/')[2];
 	$.ajax({
 		url:baseUrl+"/deleteACLRule",
 		data:data,
@@ -219,7 +219,7 @@ function changeACLSelect(select){
 					"calendarId":calendarId,
 					"role":role
 			};
-			var baseUrl = "http://localhost:8080";
+			var baseUrl = "http://"+location.href.split('/')[2];
 			$.ajax({
 				url:baseUrl+"/updateACLRule",
 				data:data,
@@ -264,7 +264,7 @@ function submitInput_calendar(){
 			"defaultReminders":overrides
 		}
 		var data = JSON.stringify(inputJSON);
-		var baseUrl = "http://localhost:8080";
+		var baseUrl = "http://"+location.href.split('/')[2];
 		$.ajax({
 			url: baseUrl+"/updateCalendar",
 			type:'POST',

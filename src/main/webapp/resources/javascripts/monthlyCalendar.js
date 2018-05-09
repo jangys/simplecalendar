@@ -209,13 +209,17 @@ function makeEventTitleForm(data,color,more,responseStatus,weekly){
 		text += " clickEventTitle(this,false);"
 	}
 	text +=	"return false;' href='#' data-eventId ="+data.eventID+" data-calendarId = "+data.calendarID+">"+isNull(data.summary)+"</a>";
-	text += "<span class='eventInformation' style='display:none;' data-information='"+JSON.stringify(data)+"'></span>";
+	var jsonStr = JSON.stringify(data).replace(/\'/g,"&#39;");
+	text += "<span class='eventInformation' style='display:none;' data-information='"+jsonStr+"'></span>";
 	return text;
 }
 function isNull(text){
 	if(text == null){
 		return "없음";
 	}
+	text = text.replace(/\'/g,"&#39;");	//'표시
+	text = text.replace(/\"/g,"&quot;");	//"표시
+
 	return text;
 }
 //이벤트 출력
@@ -737,7 +741,7 @@ function dragEvent_date(elmnt,attr){
 					"recurrence" : recurrence,	//추후 고치기
 					"originalStartTime" : originalStartTime
 				};
-				var baseUrl = "http://localhost:8080";
+				var baseUrl = "http://"+location.href.split('/')[2];
 				$.ajax({
 					url: baseUrl+"/updateEventDate",
 					type:'POST',
