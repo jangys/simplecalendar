@@ -1,0 +1,94 @@
+@charset "EUC-KR";
+.detail_span{
+	margin-right: 10px;
+}
+/*참석자 리스트 부분 span*/
+.attendeeSpan{
+	margin-right: 10px;
+}
+/*내용 들어가는 부분*/
+#contents_detail{
+	width: 85%;
+	margin: 0 auto;
+	height: 100%;
+}
+/*캘린더 리스트 select*/
+#calendarList_detail{
+	width: 30%;
+}
+.form-control{
+	width: 80%;
+	display:inline;
+}
+/*날짜 선택*/
+.datePick_detail{
+	width:22%;
+	marigin-right:1%;
+}
+/*시간 선택*/
+.timePick_detail{
+	width:19%;
+	margin-right:1%;
+}
+/*알람 메소드 선택 */
+.selectMethod_detail{
+	width: 20%;
+	margin-right: 2%;
+}
+/*알람 타입 선택*/
+.selectType_detail{
+	width: 10%;
+	margin-left: 2%;
+	margin-right: 2%;
+}
+/*참석자 중 본인*/
+.selfAttendee{
+	color:#5586EB;
+}
+/*시간 선택 창 안 목록*/
+.timePicker{
+	width:100%;
+	background-color:white;
+}
+/*시간 선택 창 안 목록 마우스 올리면*/
+.timePicker:hover{
+	background-color:#c3c3c3;
+}
+/*시간 선택 창*/
+#timePickerDiv{
+	position:absolute;
+	top:30%;
+	left:35%;
+	border: 1px solid #c3c3c3;
+	background-color:white;
+	z-index: 3;
+	width: 150px;
+	height: 200px;
+	overflow-y:scroll;
+	display:none;
+}
+
+/*반복 일정 커스텀마이징*/
+#makeRecurDiv{
+	position:absolute;
+	top:30%;
+	left:35%;
+	border: 1px solid #c3c3c3;
+	background-color:white;
+	z-index: 3;
+	width: 350px;
+	height : 390px;
+	display: none;
+}
+/*반복 일정 수정 완료 시 나오는 창*/
+#recurUpdateDiv_detail{
+	position:absolute;
+	top:30%;
+	left:35%;
+	border: 1px solid #c3c3c3;
+	background-color:white;
+	z-index: 3;
+	width: 350px;
+	height : 200px;
+	display: none;
+}

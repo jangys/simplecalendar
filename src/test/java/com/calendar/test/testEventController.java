@@ -1,9 +1,12 @@
 package com.calendar.test;
 
 import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.BufferedReader;
@@ -33,9 +36,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnit;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MockMvcBuilder;
@@ -52,12 +52,9 @@ import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
 
-@RunWith(org.mockito.junit.MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class testEventController {
 
-	@InjectMocks
-	private EventController eventcontroller;
 	private MockMvc mockMvc;
 	
 	private static ArrayList<CalendarDTO> calendarList;
@@ -72,8 +69,7 @@ public class testEventController {
 	
 	@Before
 	public void setUpMock() throws Exception{
-		MockitoAnnotations.initMocks(this);
-		mockMvc = MockMvcBuilders.standaloneSetup(eventcontroller).build();
+		mockMvc = MockMvcBuilders.standaloneSetup(new EventController()).build();
 	}
 	
 	@Test
@@ -83,8 +79,8 @@ public class testEventController {
 //		ArrayList<EventDTO> expect =  getSingleEvents(2018, 5, 1, GoogleCalendarService.MONTHLY);
 		MvcResult result = this.mockMvc.perform(get("/monthly/2018/5/1"))
 				.andExpect(status().isOk())
+				.andDo(print())
 				.andReturn();
-		System.out.println(result.toString());
 		//then
 //		assertEquals(expect.size(), result.size());
 //		for(int i=0;i<result.size();i++) {
