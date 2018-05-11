@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.calendar.dto.CalendarAndEventIdDTO;
 import com.calendar.dto.CalendarDTO;
 import com.calendar.dto.CalendarInputDTO;
 import com.calendar.dto.CheckedCalendarDTO;
@@ -219,5 +220,10 @@ public class CalendarController {
 		
 		return result;
 	}
-	
+//	@RequestMapping(value = "/downloadICSFile")
+//	public @ResponseBody String downloadICSFile(@RequestBody CalendarAndEventIdDTO dto) {
+//		String result = "";
+//		
+//		return result;
+//	}
 }

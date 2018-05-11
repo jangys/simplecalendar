@@ -27,8 +27,8 @@ public class EventInputDTO {
 	private String eventId;
 	private String calendarId;
 	private boolean guestsCanModify;
-	private boolean guestsCanInviteOthers;
-	private boolean guestsCanSeeOtherGuests;
+	private boolean guestsCanInviteOthers = true;
+	private boolean guestsCanSeeOtherGuests = true;
 	private String transparency;
 	private String visibility;
 	

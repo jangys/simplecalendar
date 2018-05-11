@@ -295,7 +295,10 @@ public class EventController {
 		System.out.println(dto.getSummary());
 		String[] strStartDate = dto.getStartDate().split("-");
 		String[] strEndDate = dto.getEndDate().split("-");
-		long originalStart = dto.getOriginalStartDate()[0]-dto.getOriginalStartDate()[1]; // 0-> 첫번째 일정의 시작 날짜, 1-> 이 반복 일정의 원래 날짜	//2->첫번째 일정이 종일이었는지 여부 0-false, 1-true
+		long originalStart = 0;
+		
+		if(dto.getOriginalStartDate() != null)
+			originalStart = dto.getOriginalStartDate()[0]-dto.getOriginalStartDate()[1]; // 0-> 첫번째 일정의 시작 날짜, 1-> 이 반복 일정의 원래 날짜	//2->첫번째 일정이 종일이었는지 여부 0-false, 1-true
 		
 		LocalDateTime updateStart = null;
 		LocalDateTime dt = LocalDateTime.now();
@@ -341,7 +344,10 @@ public class EventController {
 		}
 		
 		//일정 끝 날짜 구하기
-		long originalEnd = dto.getOriginalEndDate()[0]-dto.getOriginalEndDate()[1];
+		long originalEnd = 0;
+		if(dto.getOriginalEndDate() != null)
+			originalEnd = dto.getOriginalEndDate()[0]-dto.getOriginalEndDate()[1];
+		
 		if(dto.getAllDay().equals("true")) {//종일 일정
 			LocalDate endD = LocalDate.of(Integer.parseInt(strEndDate[0]), Integer.parseInt(strEndDate[1]), Integer.parseInt(strEndDate[2]));
 			long endDValue = endD.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
@@ -457,7 +463,7 @@ public class EventController {
 					service.events().insert(dto.getCalendars(), event).execute();
 				}else {//반복 일정 모든 일정 수정, 그외 수정
 					Event updateEvent = service.events().get(calendarId, eventId).execute();
-					updateEvent.setSummary(dto.getSummary())
+					updateEvent
 					.setSummary(dto.getSummary())
 					.setLocation(dto.getLocation())
 					.setDescription(dto.getDescription())

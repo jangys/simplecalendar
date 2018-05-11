@@ -376,6 +376,17 @@ function showEvent_detail(data){
 	}else{
 		$("input:radio[value='default']").attr('data-originvalue','true');
 	}
+	//첨부 파일이 있는 경우
+	if(data.attachments != null){
+		var div = $("#attachements_detail");
+		div.css('display','');
+		var text = "";
+		for(var i=0;i<data.attachments.length;i++){
+			text += "<img alt='"+data.attachments[i].title+"' src='"+data.attachments[i].iconLink+"'>"
+			text += "<a class='noUnderLine' href='"+data.attachments[i].fileUrl+"' target='_blank'>"+data.attachments[i].title+"</a><br/>";
+		}
+		div.children(":eq(1)").html(text);
+	}
 	$("#previousData_detail").text(JSON.stringify(data));
 }
 

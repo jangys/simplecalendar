@@ -24,7 +24,12 @@
 			 </select>
 			 <br/><br/>
 			<span class='detail_span'>장소</span><input id="location_detail" class="form-control" type="text" name="location" ><br/><br>
-			<span class='detail_span'>메모</span><textarea id="description_detail" class="form-control" rows="5" id="memo" style="display:block; width:84%;" name="description"></textarea> <br/>
+			<span class='detail_span'>메모</span><textarea id="description_detail" class="form-control" rows="5" id="memo" style="display:block; width:84%;" name="description"></textarea>
+			<div id = 'attachements_detail' style='display:none;margin-top: .5rem;'>
+				<div class='detail_span' style='float:left;'>첨부파일</div><div style="float:left;"></div>
+				<br><br>
+			</div>
+			<br>
 			<span class='detail_span'>상태</span>
 			<label style="margin-right:15px;"><input type="radio" name="transparency" value="opaque" style="margin-right:10px;" checked>바쁨</label>
 			<label><input type="radio" name="transparency" value="transparent" style="margin-right:10px;">한가함</label>
@@ -33,7 +38,7 @@
 			<label style="margin-right:15px;"><input type="radio" name="visibility" value="default" style="margin-right:10px;" checked>기본</label>
 			<label style="margin-right:15px;"><input type="radio" name="visibility" value="public" style="margin-right:10px;">공개</label>
 			<label><input type="radio" name="visibility" value="private" style="margin-right:10px;">비공개</label>
-			<br>
+			<br><br>
 			<span class='detail_span'>알람</span><ul id="alarmList" style="list-style: none; padding:0% 0%; display:none;" data-alarmNum="0"></ul>
 			<button id="btnAddAlarm" class="btn btn-info" type="button" onclick="addAlarm_detail()">알람 추가</button><br><br>
 			<span class='detail_span'>캘린더</span><select class="form-control" id="calendarList_detail" name="calendars" onchange="changeCalendarList_detail(this);"></select><br><br>

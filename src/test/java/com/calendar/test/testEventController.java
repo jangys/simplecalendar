@@ -3,6 +3,7 @@ package com.calendar.test;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -37,95 +38,235 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MockMvcBuilder;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.calendar.controller.EventController;
+import com.calendar.dto.CalendarAndEventIdDTO;
 import com.calendar.dto.CalendarDTO;
 import com.calendar.dto.EventDTO;
+import com.calendar.dto.EventInputDTO;
 import com.calendar.sCalendar.EventProcessing;
 import com.calendar.sCalendar.GoogleCalendarService;
 import com.calendar.sCalendar.comparator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
 
+import net.sf.json.JSONObject;
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class testEventController {
 
-	private MockMvc mockMvc;
-	
-	private static ArrayList<CalendarDTO> calendarList;
+	private static MockMvc mockMvc;
 	
 	@BeforeClass
-	public static void setUp() {
-		 calendarList = new ArrayList<>();
-		 CalendarDTO calDTO = new CalendarDTO();
-		 calDTO.setId("jangys9510@gmail.com");
-		 calendarList.add(calDTO);
-	}
-	
-	@Before
-	public void setUpMock() throws Exception{
+	public static void setUp() throws Exception{
 		mockMvc = MockMvcBuilders.standaloneSetup(new EventController()).build();
 	}
 	
 	@Test
 	public void test1GetMonthEventList() throws Exception {
+		//given
+		ArrayList<String> calendarId = new ArrayList<>();
+		calendarId.add("jangys9510@gmail.com");
+		calendarId.add("kakikeku@gmail.com");
+		ArrayList<EventDTO> expected =  getSingleEvents(2018, 5, 1, GoogleCalendarService.MONTHLY,calendarId);
+		ObjectMapper mapper = new ObjectMapper();
+		MockHttpSession session = new MockHttpSession();
+		session.setAttribute("jangys9510@gmail.com", true);
+		session.setAttribute("kakikeku@gmail.com", true);
+		 MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.get("/monthly/2018/5/1")
+                 .session(session);
+		 
 		//when
-//		ArrayList<EventDTO> result = new EventController().getMonthEventList(2018, 5, 1, )
-//		ArrayList<EventDTO> expect =  getSingleEvents(2018, 5, 1, GoogleCalendarService.MONTHLY);
-		MvcResult result = this.mockMvc.perform(get("/monthly/2018/5/1"))
+		MvcResult result = this.mockMvc.perform(builder)
 				.andExpect(status().isOk())
-				.andDo(print())
 				.andReturn();
+		String content = result.getResponse().getContentAsString();
+		EventDTO[] actual = mapper.readValue(content, EventDTO[].class);
+		System.out.println(actual[0].getSummary());
+		
+		// then
+		assertEquals(expected.size(), actual.length);
+		for(int i=0;i<actual.length;i++) {
+			assertEquals(expected.get(i).getStart(),actual[i].getStart());
+			assertEquals(expected.get(i).getEnd(),actual[i].getEnd());
+		}
+	}
+
+	@Test
+	public void test2GetDailyEventList() throws Exception {
+		//given
+		ArrayList<String> calendarId = new ArrayList<>();
+		calendarId.add("jangys9510@gmail.com");
+		calendarId.add("kakikeku@gmail.com");
+		ArrayList<EventDTO> expected =  getSingleEvents(2018, 5, 1, GoogleCalendarService.DAILY,calendarId);
+		ObjectMapper mapper = new ObjectMapper();
+		MockHttpSession session = new MockHttpSession();
+		session.setAttribute("jangys9510@gmail.com", true);
+		session.setAttribute("kakikeku@gmail.com", true);
+		 MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.get("/daily/2018/5/1")
+                 .session(session);
+		 
+		//when
+		MvcResult result = this.mockMvc.perform(builder)
+				.andExpect(status().isOk())
+				.andReturn();
+		String content = result.getResponse().getContentAsString();
+		EventDTO[] actual = mapper.readValue(content, EventDTO[].class);
+		System.out.println(actual[0].getSummary());
+		
+		// then
+		assertEquals(expected.size(), actual.length);
+		for(int i=0;i<actual.length;i++) {
+			assertEquals(expected.get(i).getStart(),actual[i].getStart());
+			assertEquals(expected.get(i).getEnd(),actual[i].getEnd());
+		}
+	}
+
+	@Test
+	public void test3GetWeeklyEventList() throws Exception {
+		//given
+		ArrayList<String> calendarId = new ArrayList<>();
+		calendarId.add("jangys9510@gmail.com");
+		ArrayList<EventDTO> expected =  getSingleEvents(2018, 4, 29, GoogleCalendarService.WEEKLY,calendarId);
+		ObjectMapper mapper = new ObjectMapper();
+		MockHttpSession session = new MockHttpSession();
+		session.setAttribute("jangys9510@gmail.com", true);
+		MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.get("/weekly/2018/4/29")
+                 .session(session);
+		
+		//when
+		MvcResult result = testEventController.mockMvc.perform(builder)
+				.andExpect(status().isOk())
+				.andReturn();
+		String content = result.getResponse().getContentAsString();
+		EventDTO[] actual = mapper.readValue(content, EventDTO[].class);
+		System.out.println(actual[0].getSummary());
+		
+		// then
+		assertEquals(expected.size(), actual.length);
+		for(int i=0;i<actual.length;i++) {
+			assertEquals(expected.get(i).getStart(),actual[i].getStart());
+			assertEquals(expected.get(i).getEnd(),actual[i].getEnd());
+		}
+	}
+	@Test
+	public void test4InsertEvent() throws Exception {
+		//given
+		ObjectMapper mapper = new ObjectMapper();
+		ArrayList<String> calendarId = new ArrayList<>();
+		calendarId.add("93o57qmdoijps2c0t0oo5crv04@group.calendar.google.com");
+		
+		EventInputDTO input = new EventInputDTO();
+		input.setCalendarId("addEvent");
+		input.setEventId("addEvent");
+		input.setCalendars("93o57qmdoijps2c0t0oo5crv04@group.calendar.google.com");	//testcode calendar
+		input.setSummary("test");
+		input.setAllDay("true");
+		input.setStartDate("2018-05-11");
+		input.setEndDate("2018-05-11");
+		
+		//when
+		MvcResult result = this.mockMvc.perform(post("/updateEvent")
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.content(asJsonString(input))
+				)
+				.andExpect(status().isOk())
+				.andReturn();
+		String content = result.getResponse().getContentAsString();
+		
 		//then
-//		assertEquals(expect.size(), result.size());
-//		for(int i=0;i<result.size();i++) {
-//			assertEquals(expect.get(i).getStart(), result.get(i).getStart());
-//			assertEquals(expect.get(i).getEnd(), result.get(i).getEnd());
-//		}
+		assertEquals("true", content);
+		ArrayList<EventDTO> expected = getSingleEvents(2018, 5, 11, GoogleCalendarService.DAILY, calendarId);
+		for(int i=0;i<expected.size();i++) {
+			assertEquals("test", expected.get(i).getSummary());
+		}
 	}
-
 	@Test
-	public void test2GetDailyEventList() {
+	public void test5UpdateEvent() throws Exception {
+		//given
+		ArrayList<String> calendarId = new ArrayList<>();
+		calendarId.add("93o57qmdoijps2c0t0oo5crv04@group.calendar.google.com");
+		ArrayList<EventDTO> before = getSingleEvents(2018, 5, 11, GoogleCalendarService.DAILY, calendarId);
+		
+		String eventId = before.get(0).getEventID();
+		EventInputDTO input = new EventInputDTO();
+		input.setCalendarId("93o57qmdoijps2c0t0oo5crv04@group.calendar.google.com");
+		input.setEventId(eventId);
+		input.setCalendars("93o57qmdoijps2c0t0oo5crv04@group.calendar.google.com");	//testcode calendar
+		input.setSummary("updateTest");
+		input.setAllDay("true");
+		input.setStartDate("2018-05-12");
+		input.setEndDate("2018-05-14");
+		
+		LocalDateTime start = LocalDateTime.of(2018, 5, 12, 9, 0);
+		ZonedDateTime zdtStart = start.atZone(ZoneId.systemDefault());
+		LocalDateTime end = LocalDateTime.of(2018, 5, 15, 9, 0);	//종일 일정은 하루 더 더하기
+		ZonedDateTime zdtEnd = end.atZone(ZoneId.systemDefault());
+		
+		//when
+		MvcResult result = this.mockMvc.perform(post("/updateEvent")
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.content(asJsonString(input))
+				)
+				.andExpect(status().isOk())
+				.andReturn();
+		String content = result.getResponse().getContentAsString();
+		
+		//then
+		assertEquals("true", content);
+		Event actual = new GoogleCalendarService().getCalendarService().events().get(calendarId.get(0), eventId).execute();
+		
+		assertEquals("updateTest", actual.getSummary());
+		assertEquals(zdtStart.toInstant().toEpochMilli(), actual.getStart().getDate().getValue());
+		assertEquals(zdtEnd.toInstant().toEpochMilli(), actual.getEnd().getDate().getValue());
+	}
+	@Test
+	public void test6UpdateDate() {
 		fail("Not yet implemented");
 	}
-
 	@Test
-	public void test3GetWeeklyEventList() {
+	public void test7UpdateResponseStatus() {
 		fail("Not yet implemented");
+	}
+	@Test
+	public void test8DeleteEvent() throws Exception {
+		//given
+		ArrayList<String> calendarId = new ArrayList<>();
+		calendarId.add("93o57qmdoijps2c0t0oo5crv04@group.calendar.google.com");
+		ArrayList<EventDTO> before = getSingleEvents(2018, 5, 12, GoogleCalendarService.DAILY, calendarId);
+		String eventId = before.get(0).getEventID();
+		String query = "calendarId="+"93o57qmdoijps2c0t0oo5crv04@group.calendar.google.com";
+		query += "&eventId="+eventId;
+		
+		//when
+		MvcResult result = this.mockMvc.perform(get("/deleteEvent?"+query))
+				.andExpect(status().isOk())
+				.andReturn();
+		String content = result.getResponse().getContentAsString();
+		
+		//then
+		assertEquals("true", content);
+		Event actual = new GoogleCalendarService().getCalendarService().events().get(calendarId.get(0), eventId).execute();
+		assertEquals("cancelled", actual.getStatus());
 	}
 
 	@Test
-	public void test4DeleteEvent() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void test5DeleteRecurrenceEvent() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void test6UpdateResponseStatus() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void test7UpdateEventDate() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void test8UpdateEvent() {
+	public void test9DeleteRecurrenceEvent() {
 		fail("Not yet implemented");
 	}
 	
-	public ArrayList<EventDTO> getSingleEvents(int year, int month, int date, int type) throws IOException {
-		ArrayList<EventDTO> expect = new ArrayList<>();
+	public ArrayList<EventDTO> getSingleEvents(int year, int month, int date, int type,ArrayList<String> calendarId) throws IOException {
+		ArrayList<EventDTO> expected = new ArrayList<>();
 		LocalDate cur = LocalDate.of(year,month,date);
 		LocalDateTime nowLocal = cur.atStartOfDay();
 		ZonedDateTime nowZdt = nowLocal.atZone(ZoneId.systemDefault());
@@ -149,55 +290,66 @@ public class testEventController {
          	System.out.println(next.toString());
          	break;
          }
-		Events events = new GoogleCalendarService().getCalendarService().events().list(calendarList.get(0).getId())
-				.setTimeMin(now)
-				.setTimeMax(next)
-				.setSingleEvents(true)
-				.execute();
-		 List<Event> items = events.getItems();
-		 for (Event event : items) {
-             DateTime start = null;
-             boolean isDateOnly = false;
-             if(event.getStart() != null) {
-             	if(event.getStart().getDateTime() != null) {
-             		start = event.getStart().getDateTime();
-             	}else {
-             		start = event.getStart().getDate();
-             		isDateOnly = true;
-             	}
-             }else {
-             	start = new DateTime(now.getValue());
-             }
-             DateTime end = null;
-             if(event.getEnd() != null) {
-             	if(event.getEnd().getDateTime() != null) {
-             		end = event.getEnd().getDateTime();
-             	}else {
-             		end = event.getEnd().getDate();
-             	}
-             }else {
-             	end = new DateTime(now.getValue());
-             }
-             boolean guestsCanSeeOtherGuests = true;
-             if(event.getGuestsCanSeeOtherGuests() != null) {
-             	guestsCanSeeOtherGuests = false;
-             }
-             EventDTO tempDTO = new EventDTO();
-             tempDTO.setCalendarID(calendarList.get(0).getId());
-             tempDTO.setSummary(event.getSummary());
-             tempDTO.setStart(start.getValue(),start.isDateOnly());
-             tempDTO.setEnd(end.getValue(),end.isDateOnly());
-             tempDTO.setEventID(event.getId());
-             tempDTO.setLocation(event.getLocation());
-             tempDTO.setDescription(event.getDescription());
-             tempDTO.setAttendees(event.getAttendees());
-             tempDTO.setGuestsCanSeeOtherGuests(guestsCanSeeOtherGuests);
-             expect.add(tempDTO);
-		 }
-		 Collections.sort(expect,new comparator());
-		 expect = new EventProcessing().arrangeOrder(expect, 2018, 5);
+        for(int i=0;i<calendarId.size();i++) {
+			Events events = new GoogleCalendarService().getCalendarService().events().list(calendarId.get(i))
+					.setTimeMin(now)
+					.setTimeMax(next)
+					.setSingleEvents(true)
+					.execute();
+			 List<Event> items = events.getItems();
+			 for (Event event : items) {
+	             DateTime start = null;
+	             boolean isDateOnly = false;
+	             if(event.getStart() != null) {
+	             	if(event.getStart().getDateTime() != null) {
+	             		start = event.getStart().getDateTime();
+	             	}else {
+	             		start = event.getStart().getDate();
+	             		isDateOnly = true;
+	             	}
+	             }else {
+	             	start = new DateTime(now.getValue());
+	             }
+	             DateTime end = null;
+	             if(event.getEnd() != null) {
+	             	if(event.getEnd().getDateTime() != null) {
+	             		end = event.getEnd().getDateTime();
+	             	}else {
+	             		end = event.getEnd().getDate();
+	             	}
+	             }else {
+	             	end = new DateTime(now.getValue());
+	             }
+	             boolean guestsCanSeeOtherGuests = true;
+	             if(event.getGuestsCanSeeOtherGuests() != null) {
+	             	guestsCanSeeOtherGuests = false;
+	             }
+	             EventDTO tempDTO = new EventDTO();
+	             tempDTO.setCalendarID(calendarId.get(i));
+	             tempDTO.setSummary(event.getSummary());
+	             tempDTO.setStart(start.getValue(),start.isDateOnly());
+	             tempDTO.setEnd(end.getValue(),end.isDateOnly());
+	             tempDTO.setEventID(event.getId());
+	             tempDTO.setLocation(event.getLocation());
+	             tempDTO.setDescription(event.getDescription());
+	             tempDTO.setAttendees(event.getAttendees());
+	             tempDTO.setGuestsCanSeeOtherGuests(guestsCanSeeOtherGuests);
+	             expected.add(tempDTO);
+			 }
+        }
+		 Collections.sort(expected,new comparator());
+		 expected = new EventProcessing().arrangeOrder(expected, year, month);
 		
-		return expect;
+		return expected;
 	}
-
+	public static String asJsonString(Object obj) {
+	    try {
+	        ObjectMapper mapper = new ObjectMapper();
+	        String jsonContent = mapper.writeValueAsString(obj);
+	        System.out.println(jsonContent);
+	        return jsonContent;
+	    } catch (Exception e) {
+	        throw new RuntimeException(e);
+	    }
+	}
 }

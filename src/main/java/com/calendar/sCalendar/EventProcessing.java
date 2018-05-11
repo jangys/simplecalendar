@@ -19,7 +19,7 @@ public class EventProcessing {
 		System.out.println("-----------------------------");
 		for(int i=0;i<size-1;i++) {
 
-			//시작 날짜가 해당 월이 아닌 경우
+			//시작 날짜가 해당 월보다 전인 경우
 			if(dto.get(i).getStartTime()[1] < month || dto.get(i).getStartTime()[0] < year) {
 				if(start == -1) {
 					start = i;

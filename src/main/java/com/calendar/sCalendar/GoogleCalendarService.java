@@ -160,14 +160,7 @@ public class GoogleCalendarService {
         }
         
         int size = calendarList.size();
-        System.out.println(size);
-        if(calendarList.size() == 0) {
-       	 calendarList = new ArrayList<>();
-   		 CalendarDTO calDTO = new CalendarDTO();
-   		 calDTO.setId("jangys9510@gmail.com");
-   		 calendarList.add(calDTO);
-   		 size = 1;
-       }
+      
         ExecutorService executorService = Executors.newFixedThreadPool(size);
         ArrayList<EventDTO> result = new ArrayList<EventDTO>();
         List<Future<ArrayList<EventDTO>>> future = new ArrayList<Future<ArrayList<EventDTO>>>();
