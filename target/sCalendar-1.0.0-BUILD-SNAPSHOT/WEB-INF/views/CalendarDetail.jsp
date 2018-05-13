@@ -102,8 +102,8 @@
 			<span class='detail_span'>기본 알람</span><ul id="alarmList_calendar" style="list-style: none; padding:0% 0%; display:none;" data-alarmNum="0"></ul>
 			<button id="btnAddAlarm_calendar" class="btn btn-info" type="button" onclick="addAlarm_calendar();">알람 추가</button><br><br>
 			<p id="accessRole_calendar"></p>
-			<p>캘린더 공유 설정</p>
 			<div id="aclDiv_calendar">
+				<p>캘린더 공유 설정</p>
 				<div style="vertical-align: top; margin-bottom:10px;">
 					<span class='detail_span'>공유할 사람의 이메일</span><input type="text" class="form-control calendarForm" style="width:25%;">
 					<span class="detail_span">공유 권한</span>
@@ -119,6 +119,8 @@
 				</ul>
 			</div>
 			<br>
+			<div  id='exportCalendarLink_Div' style='display:none;'>
+			</div>
 			<button id="btnSave_calendar" class="btn btn-info" type="button" name="save" value="true" onclick="submitInput_calendar();">저장</button>
 			<button id="btnCancel_calendar" class="btn btn-info" type="button" onclick="clickCancel_calendar();">취소</button>
 		</div>

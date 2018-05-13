@@ -92,6 +92,33 @@ function showCalendarDetail(data){
 		$("#alarmList_calendar").html(result);
 		$("#alarmList_calendar").attr('data-originalValue',JSON.stringify(data.reminders));
 	}
+	
+	//캘린더 내보내기 링크
+	var linkDiv = $("#exportCalendarLink_Div");
+	console.log(linkDiv);
+	linkDiv.css('display','');
+	var id = data.id;
+	id = id.replace("@","%40");
+	var link = "<a class='noUnderLine' href='"+"https://calendar.google.com/calendar/ical/"+id+"/public/basic.ics'>캘린더 내보내기</a>";
+	var href;
+	var sendData = {
+			"calendarId" : data.id,
+			"eventId" : data.summary,
+			"rrule" : data.timezone
+	};
+	var baseUrl = "http://"+location.href.split('/')[2];
+	console.log(sendData);
+	$.ajax({
+		url:baseUrl+"/downloadICSFile",
+		data:sendData,
+		type:'GET',
+		success:function(input){
+			href=input;
+			console.log(href);
+		}
+	});
+	link += "<a class='noUnderLine' href='"+href+"'>캘린더 내보내기</a><br>";
+	linkDiv.html(link);
 }
 function makeACLForm(id,role,value){
 	var text = "";
@@ -204,6 +231,7 @@ function clickDeleteACL(btn){
 	});
 	return false;	//클릭 새로고침 방지
 }
+
 function changeACLSelect(select){
 	var role = $(select).val();
 	var originalRole = $(select).parent().attr('data-role').toString();

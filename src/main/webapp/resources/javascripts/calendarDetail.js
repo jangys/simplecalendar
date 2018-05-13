@@ -96,11 +96,32 @@ function showCalendarDetail(data){
 	//캘린더 내보내기 링크
 	var linkDiv = $("#exportCalendarLink_Div");
 	console.log(linkDiv);
-	linkDiv.css('display','');
-	var id = data.id;
-	id = id.replace("@","%40");
-	var link = "<a class='noUnderLine' href='"+"https://calendar.google.com/calendar/ical/"+id+"/public/basic.ics'>캘린더 내보내기</a><br>";
-	linkDiv.html(link);
+	
+	var href;
+	var sendData = {
+			"calendarId" : data.id,
+			"calendarName" : data.summary,
+			"timezone" : data.timeZone,
+			"primary" : $("#userId").text()
+	};
+	var baseUrl = "http://"+location.href.split('/')[2];
+	console.log(sendData);
+	$.ajax({
+		url:baseUrl+"/writeICSFile",
+		data:sendData,
+		type:'GET',
+		success:function(input){
+			href="calendar.ics";
+			console.log(input);
+			linkDiv.css('display','');
+			var id = data.id;
+			id = id.replace("@","%40");
+			var link = "";
+			//"<a class='noUnderLine' href='"+"https://calendar.google.com/calendar/ical/"+id+"/public/basic.ics'>캘린더 내보내기</a>";
+			link += "<a class='noUnderLine btn btn-info' style='color:white;' href='/downloadFile?path="+href+"'>캘린더 내보내기</a><br><br>";
+			linkDiv.html(link);
+		}
+	});
 }
 function makeACLForm(id,role,value){
 	var text = "";
@@ -131,7 +152,7 @@ function showACLList(data){
 		text = makeACLForm(data[i].id,data[i].role,data[i].scope.value);
 		$("#aclList_calendar").append(text);
 		$("option[value='"+data[i].role+"']").last().prop('selected',true);
-		if(data[i].scope.value == $("#userId").text()){
+		if(data[i].scope.value == $("#userId").text()){//사용자의 아이디에 대한 캘린더 권한 수정 막기
 			$(".roleSelect_calendar").last().attr("disabled",true);
 		}
 	}
@@ -213,6 +234,7 @@ function clickDeleteACL(btn){
 	});
 	return false;	//클릭 새로고침 방지
 }
+
 function changeACLSelect(select){
 	var role = $(select).val();
 	var originalRole = $(select).parent().attr('data-role').toString();

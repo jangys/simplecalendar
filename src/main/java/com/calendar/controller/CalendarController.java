@@ -1,5 +1,6 @@
 package com.calendar.controller;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -21,13 +22,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
 
 import com.calendar.dto.CalendarAndEventIdDTO;
 import com.calendar.dto.CalendarDTO;
 import com.calendar.dto.CalendarInputDTO;
 import com.calendar.dto.CheckedCalendarDTO;
 import com.calendar.dto.EventDTO;
+import com.calendar.dto.WriteICSInputDTO;
 import com.calendar.sCalendar.GoogleCalendarService;
+import com.calendar.sCalendar.WriteICSFile;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
@@ -220,10 +224,18 @@ public class CalendarController {
 		
 		return result;
 	}
-//	@RequestMapping(value = "/downloadICSFile")
-//	public @ResponseBody String downloadICSFile(@RequestBody CalendarAndEventIdDTO dto) {
-//		String result = "";
-//		
-//		return result;
-//	}
+	@RequestMapping(value = "/writeICSFile")
+	public @ResponseBody String writeICSFile(WriteICSInputDTO dto) {
+		String result = "";
+		result = new WriteICSFile().getICSFilePath(dto.getCalendarId(),dto.getCalendarName(),dto.getTimezone(),dto.getPrimary());	//eventId->name, rrule->timezone , startTime->primary id
+		return result;
+	}
+	
+	@RequestMapping(value="/downloadFile")
+	public ModelAndView downloadFile(@RequestParam(value="path") String path) {
+		String fullPath = "D:/Java Spring/Project2/Calendar_v1/src/main/resources/"+path;
+		File downFile = new File(fullPath);
+		System.out.println(downFile.getAbsolutePath());
+		return new ModelAndView("downloadView","downloadFile",downFile);
+	}
 }
