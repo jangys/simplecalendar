@@ -6,9 +6,15 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.codehaus.groovy.util.StringUtil;
+
+import com.fasterxml.jackson.annotation.JacksonInject.Value;
+import com.google.api.client.repackaged.org.apache.commons.codec.binary.StringUtils;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
@@ -22,6 +28,7 @@ import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.extensions.parameter.Filename;
 import net.fortuna.ical4j.model.Date;
+import net.fortuna.ical4j.model.DateList;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.TimeZone;
@@ -47,6 +54,7 @@ import net.fortuna.ical4j.model.property.Description;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStamp;
 import net.fortuna.ical4j.model.property.DtStart;
+import net.fortuna.ical4j.model.property.ExDate;
 import net.fortuna.ical4j.model.property.LastModified;
 import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.Method;
@@ -100,7 +108,13 @@ public class WriteICSFile {
 	
 	public String writeICSFilePath(ArrayList<Event> eventList,String calendarId, String calendarName,String timezone,String primary) throws URISyntaxException, FileNotFoundException {
 		String path = "";
-		String calFile="D:/Java Spring/Project2/Calendar_v1/src/main/resources/calendar.ics";
+		//String calFile="D:/Java Spring/Project2/Calendar_v1/src/main/resources/calendar.ics";
+		String fileName = calendarId;
+		int occurence = org.apache.commons.lang.StringUtils.countMatches(fileName, ".");
+		if(occurence > 1) {
+			fileName = "calendar_"+calendarId.substring(0,9);
+		}
+		String calFile = "C:/Users/USER/Documents/Spring_Project2/Calendar_v1/src/main/resources/"+fileName+".ics";
 		FileOutputStream fout = new FileOutputStream(calFile);
 		net.fortuna.ical4j.model.Calendar calendar = new net.fortuna.ical4j.model.Calendar();
 		//setting calendar
@@ -131,6 +145,11 @@ public class WriteICSFile {
 			//set time
 			DtStart dtStart = null;
 			DtEnd dtEnd = null;
+			if(event.getStart() == null) {	//cancel된 경우
+				if(!event.getStatus().equals("cancelled"))
+					System.out.println(event.getSummary() + " , "+event.getId());
+				continue;
+			}
 			if(event.getStart().getDate() != null) {//allday
 				Date start = new Date(event.getStart().getDate().getValue());
 				Date end = new Date(event.getEnd().getDate().getValue());
@@ -142,6 +161,7 @@ public class WriteICSFile {
 				dtStart= new DtStart(start);
 				dtEnd = new DtEnd(end);
 			}
+			
 			if(event.getStart().getTimeZone() != null) {
 				dtStart.getParameters().add(new TzId(event.getStart().getTimeZone()));
 			}
@@ -166,6 +186,7 @@ public class WriteICSFile {
 			vEvent.getProperties().add(organizer);
 			//set uid
 			vEvent.getProperties().add(new Uid(event.getICalUID()));
+
 			//set status
 			if(event.getStatus() == null) {
 				vEvent.getProperties().add(Status.VEVENT_CONFIRMED);
@@ -239,10 +260,21 @@ public class WriteICSFile {
 			}
 			//setting rrule
 			if(event.getRecurrence() != null) {
+				ExDate exdate = null;
 				for(String rrule : event.getRecurrence()) {
 					try {
-						RRule rule = new RRule(rrule.split(":")[1]);
-						vEvent.getProperties().add(rule);
+						if(rrule.contains("EXDATE")) {
+							DateList dList = new DateList();
+							String strDate = rrule.split(":")[1];
+							dList.add(new Date(strDate));
+							exdate = new ExDate(dList);
+							exdate.getParameters().add(new net.fortuna.ical4j.model.parameter.Value("DATE"));
+							vEvent.getProperties().add(exdate);
+							System.out.println(exdate.toString());
+						}else {
+							RRule rule = new RRule(rrule.split(":")[1]);
+							vEvent.getProperties().add(rule);
+						}
 					} catch (ParseException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -265,16 +297,17 @@ public class WriteICSFile {
 			}
 			//setting class
 			if(event.getVisibility() != null) {
-				Clazz clazz = null;
 				switch(event.getVisibility()) {
 				case "private":
-					clazz = new Clazz("PRIVATE");
+					Clazz clazz = new Clazz("PRIVATE");
+					vEvent.getProperties().add(clazz);
 					break;
 				case "confidential":
-					clazz = new Clazz("CONFIDENTIAL");
+					Clazz clazztwo = new Clazz("CONFIDENTIAL");
+					vEvent.getProperties().add(clazztwo);
 					break;
 				}
-				vEvent.getProperties().add(clazz);
+				
 			}
 			
 			//setting alarm
@@ -283,11 +316,11 @@ public class WriteICSFile {
 					for(EventReminder reminder : entry.getDefaultReminders()) {
 						int minutes = -reminder.getMinutes();
 						int hours = minutes/60;
-						if(hours > 0){
+						if(hours < 0){//-값을 가지기 때문
 							minutes = minutes%60;
 						}
 						int days = hours/24;
-						if(days > 0) {
+						if(days < 0) {
 							hours = days%24;
 						}
 						VAlarm vAlarm = new VAlarm(new Dur(days, hours, minutes, 0));
@@ -335,9 +368,8 @@ public class WriteICSFile {
 					}
 				}
 			}
-			calendar.getComponents().add(vEvent);
+				calendar.getComponents().add(vEvent);
 		}
-		
 		CalendarOutputter outputter = new CalendarOutputter();
 		try {
 			outputter.output(calendar,fout);
@@ -349,7 +381,7 @@ public class WriteICSFile {
 			e.printStackTrace();
 		}
 		
-		path = "/calendar.ics";
+		path = ""+fileName+".ics";
 		return path;
 	}
 }

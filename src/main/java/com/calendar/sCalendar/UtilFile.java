@@ -16,6 +16,7 @@ import org.springframework.web.servlet.view.AbstractView;
 
 @Component
 public class UtilFile extends AbstractView {
+
 //  파일 다운로드
     @Override
     protected void renderMergedOutputModel(Map<String, Object> model, HttpServletRequest request,
@@ -23,8 +24,7 @@ public class UtilFile extends AbstractView {
         
         setContentType("text/calendar; charset=utf-8");
         
-        File file = (File) model.get("downloadFile");
-        
+        File file = (File) model.get("calendar");
         response.setContentType(getContentType());
         response.setContentLength((int) file.length()); 
         

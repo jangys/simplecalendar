@@ -1,6 +1,53 @@
 
 function getCalendarList(reload){
 	var baseUrl = "http://"+location.href.split('/')[2];
+	var path = location.pathname.split('/');
+	if(location.pathname != '/'){
+      	var fullDate = path[2].split('-');
+      	var invalid = false;
+      	var year, month, date;
+      	var now = new Date();
+  		year = now.getFullYear();
+  		month = now.getMonth()+1;
+  		date = now.getDate();
+      	if(fullDate.length != 3){
+      	}else{
+      		year = isNaN(fullDate[0]) ? year: parseInt(fullDate[0]);
+          	month = isNaN(fullDate[1]) ? month : parseInt(fullDate[1]);
+          	date = isNaN(fullDate[2]) ? date : parseInt(fullDate[2]);
+          	console.log(date);
+          	if(month < 1){
+          		month = 1;
+          	}
+          	if(month > 12){
+          		month = 12;
+          	}
+          	if(date < 1){
+          		date = 1;
+          	}
+          	var lastDate = 31;
+        	//마지막 날짜 계산
+        	if((month%2 == 0 && month<= 6) || (month%2 == 1 && month>=9)){
+        		lastDate = 30;
+        	}
+        	if(month==2 && year%4 == 0 && year%100 != 0 || year%400 == 0){
+        		lastDate = 29;
+        	}else if(month == 2){
+        		lastDate = 28;
+        	}
+        	if(date > lastDate){
+        		console.log(lastDate)
+        		date = lastDate;
+        	}
+      	}
+    	var type = path[1];
+    	if(type != 'd' && type != 'w' && type != 'm' && type != 'l' && type !='event' && type !='calendar'){
+    		type = 'm';
+    	}
+    	var pageUrl = "/"+type+"/"+year+"-"+month+"-"+date;
+		console.log(date);
+		history.replaceState(null,"SimpleCalendar",pageUrl);
+     }
 	$.ajax({
 		url:baseUrl+"/CalendarList",
 		type:'GET',

@@ -97,7 +97,6 @@ function showCalendarDetail(data){
 	var linkDiv = $("#exportCalendarLink_Div");
 	console.log(linkDiv);
 	
-	var href;
 	var sendData = {
 			"calendarId" : data.id,
 			"calendarName" : data.summary,
@@ -111,14 +110,13 @@ function showCalendarDetail(data){
 		data:sendData,
 		type:'GET',
 		success:function(input){
-			href="calendar.ics";
 			console.log(input);
 			linkDiv.css('display','');
 			var id = data.id;
 			id = id.replace("@","%40");
 			var link = "";
 			//"<a class='noUnderLine' href='"+"https://calendar.google.com/calendar/ical/"+id+"/public/basic.ics'>캘린더 내보내기</a>";
-			link += "<a class='noUnderLine btn btn-info' style='color:white;' href='/downloadFile?path="+href+"'>캘린더 내보내기</a><br><br>";
+			link += "<a class='noUnderLine btn btn-info' style='color:white;' href='/downloadFile?path="+input+"'>캘린더 내보내기</a><br><br>";
 			linkDiv.html(link);
 		}
 	});

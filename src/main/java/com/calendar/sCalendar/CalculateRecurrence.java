@@ -40,13 +40,21 @@ public class CalculateRecurrence {
 				if(exdateList == null) {
 					exdateList = new ArrayList<Integer>();
 				}
-				exdateList.add(Integer.parseInt(dateStr.substring(0, 8)));
+				if(dateStr.contains(",")) {
+					String[] dateStrSplit = dateStr.split(",");
+					for(int j=0;j<dateStrSplit.length;j++) {
+						exdateList.add(Integer.parseInt(dateStrSplit[j]));
+					}
+				}else {
+					exdateList.add(Integer.parseInt(dateStr.substring(0, 8)));
+				}
 			}
 		}
 		if(exdateList != null) {
 			Collections.sort(exdateList);
 		}
 		System.out.println(event.getSummary()+" : "+event.getRecurrence());
+		
 		//여러날 일정 반복인 경우 기간이 28일 넘어가면 그 전날부터 조사. 
 		for(int i=0;i<size;i++) {
 			Recur recur = null;

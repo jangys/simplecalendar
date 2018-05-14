@@ -29,6 +29,7 @@ $(document).ready(function(){
 		if(location.pathname == '/'){
 			getCalendarList(false);
 		}else{//새로고침 시 히스토리에 기록 남기지 않게 하기
+			console.log("Fd");
 			getCalendarList(true);
 		}
 	}
@@ -45,6 +46,9 @@ function reloadPage(data){
       	month = parseInt(fullDate[1]);
       	date = parseInt(fullDate[2]);
       	type=path[1];
+    	if(type != 'd' && type != 'w' && type != 'm' && type != 'l' && type !='event' && type !='calendar'){
+    		type = 'm';
+    	}
      }else{//맨처음  localhost:8080이 되면
     	 var now = new Date();
     	 year = now.getFullYear();
@@ -162,6 +166,11 @@ function requestData(request,y,m,d){
 	var pageUrl = "/"+year+"-"+month+"-"+date;
 	if(request==undefined || request == null){
 		request = path[1];
+		var type = path[1];
+    	if(type != 'd' && type != 'w' && type != 'm' && type != 'l' && type !='event' && type !='calendar'){
+    		type = 'm';
+    	}
+    	request = type;
 	}
 	switch(request){
 	case 'd':
@@ -310,7 +319,7 @@ $(document).on('click','#listBtn',function(){
 //버튼 배경색 설정 함수, 현재 타입에 맞게 스타일 변경
 function changeStyle(type,data){
 	
-	if($("#container").css('display') == 'none'){//전에 이벤트 상세보기를 보았으면
+	if($("#container").css('display') == 'none'){//전에 이벤트,캘린더 상세보기를 보았으면
 		$("#container").css('display','inline-block');
 		$("#header").css('display','');
 		$("#showMoreEventDiv").css('display','none');
@@ -319,6 +328,9 @@ function changeStyle(type,data){
 		$("#side").css('display','inline-block');
 		$("#container_EventDetail").css('display','none');
 		$("#container_EventDetail").html("");
+		$("#calendarDetailContents").css('display','none');
+		$("#calendarDetailContents").html("");
+		
 	}
 	if($(".pushCalendarBtn").length == 0){//타입 버튼 눌러진게 없으면
 		$("#"+type+"Btn").addClass('pushCalendarBtn');

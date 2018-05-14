@@ -13,10 +13,12 @@ function loadEventDetail(){
 		min = min == 0? 30:0;
 	}
 	$('#timePickerDiv').html(text);
+	var timeEvent = false;
 	if($('#eventId_detail').attr('value') == "addEvent"){//그냥 삽입인 경우
 		$('#guestsAuthorityCheckList').css('display','block');
 		var date = new Date();
-		if($('#calendarId_detail').attr('value') == "0"){
+		if($('#calendarId_detail').attr('value') == "0"){//시간이 안정해진 경우
+			timeEvent = true;
 			document.getElementById('startDatePicker').valueAsDate = date;
 			document.getElementById('endDatePicker').valueAsDate = date;
 			showRecurrenceList(date);
@@ -27,7 +29,7 @@ function loadEventDetail(){
 				document.getElementById('endTimePicker').value = makeTimeForm(date.getHours()+1,0,0);
 			}
 			
-		}else{
+		}else{//시간이 정해진 경우
 			var type = path[4].split("&")[0];
 			var str = $('#calendarId_detail').attr('value').split("~");
 			var time = false;
@@ -44,12 +46,14 @@ function loadEventDetail(){
 				endHour++;
 			}
 			document.getElementById('endTimePicker').value = makeTimeForm(endHour,0,0);
-			if(type == "w" || type == "d"){//종일 일정인 경우
+			
+			if(type == "w" || type == "d"){
 				if(path[2].indexOf("&") != -1){
 					var time = path[2].split("&")[1].split("~");
 					document.getElementById('startTimePicker').value = time[0];
 					document.getElementById('endTimePicker').value = time[1];
-				}else{
+					timeEvent = true;
+				}else{//종일 일정인 경우
 					$("#allDayCheckBox").prop('checked',true);
 					$("#allDayCheckBox").attr('value',true);
 					resetTimePicker_detail();
@@ -60,9 +64,9 @@ function loadEventDetail(){
 			
 		}
 		
-		getCalendarList_detail(false);
+		getCalendarList_detail(false,timeEvent);
 	}else{
-		getCalendarList_detail(true);
+		getCalendarList_detail(true,timeEvent);
 	}
 	//getList();
 }
@@ -74,7 +78,7 @@ $("*").keypress(function(e){
 	}
 });
 //캘린더 목록 추가
-function getCalendarList_detail(getEvent){
+function getCalendarList_detail(getEvent, timeEvent){
 	var baseUrl = "http://"+location.href.split('/')[2];
 	$.ajax({
 		url:baseUrl+"/CalendarList",
@@ -83,6 +87,7 @@ function getCalendarList_detail(getEvent){
 		success:function(data){
 			var size = data.length;
 			var text = "";
+			var path = location.pathname.split('/');
 			if($("checkboxList").children().length == 0)
 				printCalendarList(data);
 			for(var i=0;i<size;i++){
@@ -101,7 +106,7 @@ function getCalendarList_detail(getEvent){
 					if(data[i].primary){
 						$("#userId").text(data[i].id);
 						var type = location.pathname.split('/')[4].split("&")[0];
-						if(!getEvent && (type=='m' || type == 'l')){//일정 추가이고 월뷰, 리스트뷰 캘린더에서 요청한거면
+						if(!getEvent && (type=='m' || type == 'l' || timeEvent)){//일정 추가이고 월뷰, 리스트뷰 캘린더에서 요청한거면
 							showAlarm_detail(true,null,data[i].id);
 						}
 					}

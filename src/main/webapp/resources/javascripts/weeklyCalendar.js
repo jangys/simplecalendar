@@ -534,22 +534,31 @@ function dragTime(elmnt){
 		var div = $("#dragTimeDiv_weekly");
 //		console.log("pageY : "+e.pageY+" , divTop : "+$("#container_weekly").offset().top + " , scroll : "+ $("#container_weekly").scrollTop());
 		end = e.pageY - $("#container_weekly").offset().top +  $("#container_weekly").scrollTop();
+		var startStr, endStr;
 		if(start <= end){
 			div.css('top',start+"px");
 			div.css('bottom','');
 			div.css('height',(end-start)+"px");
+			var top = parseInt(div.css('top'));
+			var height = parseInt(div.css('height'));
+			//일의 자리수는 반올림하기 10분 단위로 만들기
+			top = Math.round(top*0.1)*10;
+			height =  Math.round(height*0.1)*10;
+			var startStr = addZero(parseInt(top/60))+":"+addZero(top%60);
+			var endStr = addZero(parseInt((top+height)/60))+":"+addZero((top+height)%60);
 		}else{
 			div.css('top','');
 			div.css('height',(start-end)+"px");
 			div.css('bottom',(1440-start)+"px");
+			var top = parseInt(div.css('top'));
+			var bottom = parseInt(start);
+			//일의 자리수는 반올림하기 10분 단위로 만들기
+			top = Math.round(top*0.1)*10;
+			bottom =  Math.round(bottom*0.1)*10;
+			var startStr = addZero(parseInt(top/60))+":"+addZero(top%60);
+			var endStr = addZero(parseInt(bottom/60))+":"+addZero(bottom%60);
 		}
-		var top = parseInt(div.css('top'));
-		var height = parseInt(div.css('height'));
-		//일의 자리수는 반올림하기 10분 단위로 만들기
-		top = Math.round(top*0.1)*10;
-		height =  Math.round(height*0.1)*10;
-		var startStr = addZero(parseInt(top/60))+":"+addZero(top%60);
-		var endStr = addZero(parseInt((top+height)/60))+":"+addZero((top+height)%60);
+		
 		div.html("<p style='font-size:small;'>"+startStr+"~"+endStr+"</p>");
 	}
 	function closeDragElement_weekly(e){

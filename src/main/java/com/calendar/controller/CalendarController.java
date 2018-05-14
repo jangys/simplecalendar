@@ -31,6 +31,7 @@ import com.calendar.dto.CheckedCalendarDTO;
 import com.calendar.dto.EventDTO;
 import com.calendar.dto.WriteICSInputDTO;
 import com.calendar.sCalendar.GoogleCalendarService;
+import com.calendar.sCalendar.UtilFile;
 import com.calendar.sCalendar.WriteICSFile;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.CalendarList;
@@ -233,9 +234,9 @@ public class CalendarController {
 	
 	@RequestMapping(value="/downloadFile")
 	public ModelAndView downloadFile(@RequestParam(value="path") String path) {
-		String fullPath = "D:/Java Spring/Project2/Calendar_v1/src/main/resources/"+path;
+		String fullPath = "C:/Users/USER/Documents/Spring_Project2/Calendar_v1/src/main/resources/"+path;
 		File downFile = new File(fullPath);
 		System.out.println(downFile.getAbsolutePath());
-		return new ModelAndView("downloadView","downloadFile",downFile);
+		return new ModelAndView("downloadView","calendar",downFile);
 	}
 }
