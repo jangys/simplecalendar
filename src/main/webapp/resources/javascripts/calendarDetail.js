@@ -26,6 +26,8 @@ function loadCalendarDetail(){
 								showCalendarDetail(data);
 							}
 						});
+					}else{
+						$("#aclDiv_calendar").css('display','none');
 					}
 			}
 		});//ajax-getCalendarList
@@ -42,6 +44,8 @@ function loadCalendarDetail(){
 					showCalendarDetail(data);
 				}
 			});
+		}else{
+			$("#aclDiv_calendar").css('display','none');
 		}
 	}
 }
@@ -142,6 +146,7 @@ function showACLList(data){
 	console.log(data);
 	var size = data.length;
 	var text = "";
+	var calendarId = location.href.split('/')[4];
 	for(var i=0;i<size;i++){
 		text = "";
 		if(data[i].scope.value.split("@")[1] == "group.calendar.google.com"){
@@ -151,6 +156,9 @@ function showACLList(data){
 		$("#aclList_calendar").append(text);
 		$("option[value='"+data[i].role+"']").last().prop('selected',true);
 		if(data[i].scope.value == $("#userId").text()){//사용자의 아이디에 대한 캘린더 권한 수정 막기
+			$(".roleSelect_calendar").last().attr("disabled",true);
+		}
+		if(data[i].scope.value == calendarId){//캘린더 원래 주인
 			$(".roleSelect_calendar").last().attr("disabled",true);
 		}
 	}

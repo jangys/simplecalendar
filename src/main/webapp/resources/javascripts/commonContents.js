@@ -351,6 +351,11 @@ function changeStyle(type,data){
 		}
 		$("#"+type+"Calendar").css("display","inline-block");
 	}
+	if(type == "month"){
+		$("#contents").css('min-height','');
+	}else{
+		$("#contents").css('min-height','875px');
+	}
 	closeAllDiv();
 	switch(type){
 	case "day":

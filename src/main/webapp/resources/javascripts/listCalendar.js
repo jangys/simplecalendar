@@ -51,7 +51,7 @@ function printList(year,month,data){
 			text +="<div class='listrow'>";
 			text += "<div class='listDate'>";
 			if(div.children().length == 0){
-				text +=month+"월 "+j+"일 "+dayList[div.attr('data-listday')];
+				text +=parseInt(month)+"월 "+j+"일 "+dayList[div.attr('data-listday')];
 			}
 			text +="</div>";
 			text += "<div class='listCalendar'><div class='calendarCircle' style='background-color:"+colorCode+"'></div></div>";

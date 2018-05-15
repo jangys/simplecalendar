@@ -452,14 +452,14 @@ public class EventController {
 				if(dto.getUpdateType() == EventInputDTO.ONLYTHIS) {	//반복 일정 한개만 수정
 					event.setRecurringEventId(eventId)
 						.setOriginalStartTime(originalStartTime);
-
 					service.events().insert(dto.getCalendars(), event).execute();
+					
 				}else if(dto.getUpdateType() == EventInputDTO.NEXT) {//반복 일정 향후 일정 수정
 					Event updateEvent = service.events().get(calendarId, eventId).execute();
 					updateEvent.setRecurrence(dto.getOriginRecurrence());
 					service.events().update(calendarId, updateEvent.getId(), updateEvent).execute();
-					
 					event.setRecurrence(dto.getRecurrence());
+					
 					service.events().insert(dto.getCalendars(), event).execute();
 				}else {//반복 일정 모든 일정 수정, 그외 수정
 					Event updateEvent = service.events().get(calendarId, eventId).execute();

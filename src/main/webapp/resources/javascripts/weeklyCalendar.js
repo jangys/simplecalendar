@@ -401,6 +401,7 @@ function arrangeWeeklyEvnetTd(timeIndex){
 	beforeDiv.attr('data-currentIndex',0);
 	
 	for(var i=1;i<size;i++){
+		//최대 칸 수 구하기
 		var top = parseInt(divs.eq(i).attr('data-top'));
 		var bottom = parseInt(divs.eq(i).attr('data-bottom'));
 		currentIndex=0;

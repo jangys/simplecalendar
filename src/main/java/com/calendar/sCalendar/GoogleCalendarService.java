@@ -160,7 +160,9 @@ public class GoogleCalendarService {
         }
         
         int size = calendarList.size();
-      
+        if(size == 0) {// 선택한 것 없음
+        	return dtoList;
+        }
         ExecutorService executorService = Executors.newFixedThreadPool(size);
         ArrayList<EventDTO> result = new ArrayList<EventDTO>();
         List<Future<ArrayList<EventDTO>>> future = new ArrayList<Future<ArrayList<EventDTO>>>();

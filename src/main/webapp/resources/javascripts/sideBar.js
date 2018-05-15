@@ -12,10 +12,10 @@ function getCalendarList(reload){
   		date = now.getDate();
       	if(fullDate.length != 3){
       	}else{
-      		year = isNaN(fullDate[0]) ? year: parseInt(fullDate[0]);
-          	month = isNaN(fullDate[1]) ? month : parseInt(fullDate[1]);
-          	date = isNaN(fullDate[2]) ? date : parseInt(fullDate[2]);
-          	console.log(date);
+      		console.log(isNaN(fullDate[0]) + " , "+fullDate[0]);
+      		year = isNaN(fullDate[0]) || fullDate[0] == '' ? year: parseInt(fullDate[0]);
+          	month = isNaN(fullDate[1]) || fullDate[1] == '' ? month : parseInt(fullDate[1]);
+          	date = isNaN(fullDate[2]) || fullDate[2] == '' ? date : parseInt(fullDate[2]);
           	if(month < 1){
           		month = 1;
           	}
