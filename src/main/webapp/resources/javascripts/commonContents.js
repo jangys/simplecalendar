@@ -692,6 +692,8 @@ function clickDeleteRecurrenceEvent(){
 		var current = new Date(new Date(parseInt(start[0]),parseInt(start[1])-1,parseInt(start[2]),9).getTime()-86400000);	//하루 빼기
 		var result = ""+(current.getFullYear())+addZero(current.getMonth()+1)+addZero(current.getDate());
 		original.UNTIL = result;
+		original.COUNT = undefined;
+
 		rrule = rruleToString(original);
 		console.log(rrule);
 		break;

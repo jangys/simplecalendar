@@ -109,7 +109,11 @@ public class CalculateRecurrence {
 			if(duration != 0) {
 				previousMonth = duration/29 + 1;
 			}
-			LocalDateTime periodStartTemp = LocalDateTime.of(year, month-previousMonth, 1, 9, 0);
+			int beforeMonth = month-previousMonth;
+			if(beforeMonth <= 0) {
+				beforeMonth += 12; 
+			}
+			LocalDateTime periodStartTemp = LocalDateTime.of(year, beforeMonth, 1, 9, 0);
 			zdt = periodStartTemp.atZone(ZoneId.systemDefault());
 			periodStartDate.setTime(zdt.toInstant().toEpochMilli());
 			

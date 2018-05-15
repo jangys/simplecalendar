@@ -45,7 +45,11 @@ function loadEventDetail(){
 			if(startDate.getTime() == endDate.getTime()){
 				endHour++;
 			}
-			document.getElementById('endTimePicker').value = makeTimeForm(endHour,0,0);
+			if(endHour == 24){
+				document.getElementById('endTimePicker').value = makeTimeForm(23,30,0);
+			}else{
+				document.getElementById('endTimePicker').value = makeTimeForm(endHour,0,0);
+			}
 			
 			if(type == "w" || type == "d"){
 				if(path[2].indexOf("&") != -1){

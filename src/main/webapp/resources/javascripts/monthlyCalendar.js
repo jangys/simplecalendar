@@ -596,6 +596,7 @@ function dragEvent_date(elmnt,attr){
 	var drag = false;
 	var click = false;
 	var startPosX,startPosY, endPosX, endPosY;
+	var divHeight;
 	function dragMouseDown_date(e){
 		drag = false;
 		click = false;
@@ -616,6 +617,7 @@ function dragEvent_date(elmnt,attr){
 			height = parseInt($("#header_weekly").height());
 			$(move).appendTo('#header_weekly');
 		}
+		divHeight = $("body").css('height');	
 		$(move).css('width',$(elmnt).css('width'));
 		$(".eventFill").css('z-index','1');
 		startIndex = parseInt(x/width) + parseInt(y/height)*7;
@@ -637,6 +639,7 @@ function dragEvent_date(elmnt,attr){
 		drag = true;
 		endPosX = e.pageX;
 		endPosY = e.pageY;
+		 $("body").css('height',divHeight);
 		if(!click){
 			if($(move).css('display') == 'none'){
 				$("[data-"+attr+"='"+startIndex+"']").addClass('clickDate');
@@ -664,6 +667,7 @@ function dragEvent_date(elmnt,attr){
 	function closeDragElement_date(e){
 		console.log("close");
 		var update = true;
+		 $("body").css('height','');
 		if(Math.abs(startPosX-endPosX) < 9 || Math.abs(startPosY-endPosY) < 9){//이동한 거리가 너무 작으면
 			drag = false;
 		}
