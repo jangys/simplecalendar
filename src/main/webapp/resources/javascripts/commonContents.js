@@ -60,19 +60,19 @@ function reloadPage(data){
   	switch(type){
 	case 'd':
 		changeStyle("day");
-		requestDailyCalendar(year,month,date,true);
+		requestCalendar(year,month,date,true,type);
 		break;
 	case 'w':
 		changeStyle("week");
-		requestWeeklyCalendar(year,month,date,true);
+		requestCalendar(year,month,date,true,type);
 		break;
 	case 'm':
 		changeStyle("month");
-		requestMonthlyCalendar(year,month,date,true);
+		requestCalendar(year,month,date,true,type);
 		break;
 	case 'l':
 		changeStyle("list");
-		requestListCalendar(year,month,date,true);
+		requestCalendar(year,month,date,true,type);
 		break;
 	case 'event':
 		changeStyle("event",data);
@@ -175,121 +175,82 @@ function requestData(request,y,m,d){
 	switch(request){
 	case 'd':
 		changeStyle("day");
-		requestDailyCalendar(year,month,date,false);
 		break;
 	case 'w':
 		changeStyle("week");
-		requestWeeklyCalendar(year,month,date,false);
 		break;
 	case 'm':
 		changeStyle("month");
-		requestMonthlyCalendar(year,month,date,false);
 		break;
 	case 'l':
 		changeStyle("list");
-		requestListCalendar(year,month,date,false);
 		break;
 	case 'first':
 		changeStyle("month");
-		requestMonthlyCalendar(year,month,date,"first");
 		break;
+	}
+	if(request != 'first'){
+		requestCalendar(year,month,date,false,request);
+	}else{
+		requestCalendar(year,month,date,"first",'m');
 	}
 	return pageUrl;		//day, week 추가시 삭제 해야함.
 }
-function requestDailyCalendar(year,month,date,reload){
-	var baseUrl = "http://"+location.href.split('/')[2];
-	var pageUrl = "/d/"+year+"-"+month+"-"+date;
-	console.log("request");
-	if(!reload){
-		history.pushState(null,"SimpleCalendar",pageUrl);				//데이터 요청이 느리니 먼저 url을 바꾸자
-	}
-	if(reload == "first"){
-		history.replaceState(null,"SimpleCalendar",pageUrl);
-	}
-	$.ajax({
-		url: baseUrl+"/daily/"+year+"/"+month+"/"+date,
-		type:'GET',
-		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-		dataType:"json",
-		success:function(data){
-			console.log(data);
-			showTitle(year,month);
-			drawWeeklyCalendar(year,month,date,data,false);	//false->daily
-		},
-		error: function (XMLHttpRequest, textStatus, errorThrown){
-      	alert(errorThrown);
-      }
-	});
-}
-function requestWeeklyCalendar(year,month,date,reload){
-	var baseUrl = "http://"+location.href.split('/')[2];
-	var cur = new Date(year,month-1,date);
-	var firstDate = new Date(cur.getTime()-cur.getDay()*86400000);
-	var y = firstDate.getFullYear();
-	var m = (firstDate.getMonth()+1);
-	var d = firstDate.getDate();
-	var pageUrl = "/w/"+year+"-"+month+"-"+date;
-	console.log("request weekly");
-	if(!reload){
-		history.pushState(null,"SimpleCalendar",pageUrl);				//데이터 요청이 느리니 먼저 url을 바꾸자
-	}
-	if(reload == "first"){
-		history.replaceState(null,"SimpleCalendar",pageUrl);
-	}
-	$.ajax({
-		url: baseUrl+"/weekly/"+y+"/"+m+"/"+d,
-		type:'GET',
-		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-		dataType:"json",
-		success:function(data){
-			showTitle(year,month);
-			console.log(data);
-			drawWeeklyCalendar(y,m,d,data,true);
-		},
-		error: function (XMLHttpRequest, textStatus, errorThrown){
-      	alert(errorThrown);
-      }
-	});
-}
-function requestMonthlyCalendar(year,month,date,reload){
-	var baseUrl = "http://"+location.href.split('/')[2];
-	var pageUrl = "/m/"+year+"-"+month+"-"+date;
-	console.log("request");
-	if(!reload){
-		history.pushState(null,"SimpleCalendar",pageUrl);				//데이터 요청이 느리니 먼저 url을 바꾸자
-	}
-	if(reload == "first"){
-		history.replaceState(null,"SimpleCalendar",pageUrl);
-	}
-	$.ajax({
-		url: baseUrl+"/monthly/"+year+"/"+month+"/"+date,
-		type:'GET',
-		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-		dataType:"json",
-		success:function(data){
-			showTitle(year,month);
-			drawCalendar(year,month-1,data);
-		},
-		error: function (XMLHttpRequest, textStatus, errorThrown){
-      	alert(errorThrown);
-      }
-	});
-}
 
-function requestListCalendar(year,month,date,reload){
+function requestCalendar(year,month,date,reload,type){
 	var baseUrl = "http://"+location.href.split('/')[2];
-	var pageUrl = "/l/"+year+"-"+month+"-"+date;
+	var pageUrl = "/"+type+"/"+year+"-"+month+"-"+date;
 	if(!reload){
-		history.pushState(null,"SimpleCalendar",pageUrl);				
+		history.pushState(null,"SimpleCalendar",pageUrl);				//데이터 요청이 느리니 먼저 url을 바꾸자
 	}
+	if(reload == "first"){
+		history.replaceState(null,"SimpleCalendar",pageUrl);
+	}
+	var requestUrl = baseUrl;
+	switch(type){
+	case 'd':
+		requestUrl += "/daily";
+		break;
+	case 'w':
+		requestUrl += "/weekly";
+		break;
+	case 'm':
+		requestUrl += "/monthly";
+		break;
+	case 'l':
+		requestUrl += "/monthly";
+		break;
+	}
+	requestUrl += "/"+year+"/"+month+"/"+date;
+	
 	$.ajax({
-		url: baseUrl+"/monthly/"+year+"/"+month+"/"+date,
+		url: requestUrl,
 		type:'GET',
 		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
 		dataType:"json",
 		success:function(data){
+			//console.log(data);
 			showTitle(year,month);
-			printList(year,month,data);
+			switch(type){
+			case 'd':
+				drawWeeklyCalendar(year,month,date,data,false);	//false->daily
+				break;
+			case 'w':
+				var cur = new Date(year,month-1,date);
+				var firstDate = new Date(cur.getTime()-cur.getDay()*86400000);
+				var y = firstDate.getFullYear();
+				var m = (firstDate.getMonth()+1);
+				var d = firstDate.getDate();
+				drawWeeklyCalendar(y,m,d,data,true);
+				break;
+			case 'm':
+				drawCalendar(year,month-1,data);
+				break;
+			case 'l':
+				printList(year,month,data);
+				break;
+			}
+			
 		},
 		error: function (XMLHttpRequest, textStatus, errorThrown){
       	alert(errorThrown);
