@@ -228,7 +228,7 @@ public class CalendarController {
 	@RequestMapping(value = "/writeICSFile")
 	public @ResponseBody String writeICSFile(WriteICSInputDTO dto) {
 		String result = "";
-		result = new WriteICSFile().getICSFilePath(dto.getCalendarId(),dto.getCalendarName(),dto.getTimezone(),dto.getPrimary());	//eventId->name, rrule->timezone , startTime->primary id
+		result = new WriteICSFile().getICSFilePath(dto.getCalendarId(),dto.getCalendarName(),dto.getTimezone(),dto.getPrimary());	
 		return result;
 	}
 	

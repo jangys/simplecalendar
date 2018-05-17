@@ -22,14 +22,7 @@ import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.property.ExDate;
 
 public class CalculateRecurrence {
-	public void example() throws ParseException {
-		Recur recur = new Recur("FREQ=WEEKLY;INTERVAL=1;BYDAY=FR;WKST=MO;UNTIL=20170428T003000Z;");
-		 DateTime startDate = new DateTime("20160727T0030000Z");
-		 Date endDate = recur.getUntil();
-		 DateTime baseDate = new DateTime("20160727T003000Z");
-		DateList dateList = recur.getDates(baseDate, startDate, endDate, Value.DATE_TIME);
-		System.out.println(dateList.toString());
-	}
+
 	public ArrayList<EventDTO> getRecurrenceEvents(boolean isDateOnly, EventDTO event, int year, int month,int date,int type,ArrayList<Integer> exdateList) throws ParseException{
 		ArrayList<EventDTO> list = new ArrayList<EventDTO>();
 		int size = event.getRecurrence().size();

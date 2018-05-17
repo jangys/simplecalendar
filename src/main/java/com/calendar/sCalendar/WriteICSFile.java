@@ -217,38 +217,38 @@ public class WriteICSFile {
 			if(event.getAttendees() != null) {
 				List<EventAttendee> attendees = event.getAttendees();
 				for(int i=0;i<attendees.size();i++) {
-					Attendee a = new Attendee(new URI("mailto",attendees.get(i).getEmail(),null));
-					a.getParameters().add(CuType.INDIVIDUAL);
+					Attendee attendee = new Attendee(new URI("mailto",attendees.get(i).getEmail(),null));
+					attendee.getParameters().add(CuType.INDIVIDUAL);
 					if(attendees.get(i).getOptional() != null) {
-						a.getParameters().add(Role.OPT_PARTICIPANT);
+						attendee.getParameters().add(Role.OPT_PARTICIPANT);
 					}else {
-						a.getParameters().add(Role.REQ_PARTICIPANT);
+						attendee.getParameters().add(Role.REQ_PARTICIPANT);
 					}
 					switch(attendees.get(i).getResponseStatus()) {
 					case "needsAction":
-						a.getParameters().add(PartStat.NEEDS_ACTION);
+						attendee.getParameters().add(PartStat.NEEDS_ACTION);
 						break;
 					case "declined":
-						a.getParameters().add(PartStat.DECLINED);
+						attendee.getParameters().add(PartStat.DECLINED);
 						break;
 					case "tentative":
-						a.getParameters().add(PartStat.TENTATIVE);
+						attendee.getParameters().add(PartStat.TENTATIVE);
 						break;
 					case "accepted":
-						a.getParameters().add(PartStat.ACCEPTED);
+						attendee.getParameters().add(PartStat.ACCEPTED);
 						break;
 					}
 					String displayName = attendees.get(i).getEmail();
 					if(attendees.get(i).getDisplayName() != null) {
 						displayName = attendees.get(i).getDisplayName();
 					}
-					a.getParameters().add(new Cn(displayName));
+					attendee.getParameters().add(new Cn(displayName));
 					String guestsNum = "0";
 					if(attendees.get(i).getAdditionalGuests() != null) {
 						guestsNum = attendees.get(i).getAdditionalGuests().toString();
 					}
-					a.getParameters().add(new XParameter("X-NUM-GUESTS",guestsNum));
-					vEvent.getProperties().add(a);
+					attendee.getParameters().add(new XParameter("X-NUM-GUESTS",guestsNum));
+					vEvent.getProperties().add(attendee);
 				}
 			}
 			//setting attach

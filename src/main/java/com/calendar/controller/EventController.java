@@ -210,7 +210,6 @@ public class EventController {
 			ArrayList<EventAttendee> attendees = new ArrayList<EventAttendee>();
 			for(EventAttendee attendee : listAttendees) {
 				if(attendee.getEmail().equals(dto.getUserId())) {
-					System.out.println(dto.getResponseStatus());
 					attendee.setResponseStatus(dto.getResponseStatus());
 				}
 				attendees.add(attendee);
@@ -408,15 +407,6 @@ public class EventController {
 		if(dto.getRecurrence() != null) {
 			recurrence.addAll(dto.getRecurrence());
 		}
-//		String exdateStr = updateStart.getYear()+addZero(updateStart.getMonthValue())+addZero(updateStart.getDayOfMonth());
-//		if(!dto.getAllDay().equals("true"))
-//			exdateStr += "T"+addZero(updateStart.getHour())+addZero(updateStart.getMinute())+"00";
-//		if(dto.getUpdateType() == EventInputDTO.ONLYTHIS) {
-//			//EXDATE;TZID=Asia/Seoul:20180515T120000
-//			String exdate = "EXDATE;TZID=Asia/Seoul:"+exdateStr;
-//			System.out.println(exdate);
-//			recurrence.add(exdate);
-//		}
 		
 		Event event = new Event()
 				.setSummary(dto.getSummary())
@@ -482,7 +472,6 @@ public class EventController {
 					service.events().update(calendarId, updateEvent.getId(), updateEvent).execute();
 					String newCalendarId = dto.getCalendars();
 					if(!newCalendarId.equals(calendarId)) {	// 캘린더 옮긴 경우
-						System.out.println("move"+newCalendarId);
 						service.events().move(calendarId, updateEvent.getId(), newCalendarId).execute();
 					}
 				}

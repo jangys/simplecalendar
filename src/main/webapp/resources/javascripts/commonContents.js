@@ -58,22 +58,6 @@ function reloadPage(data){
     	 requestData();
      }
   	switch(type){
-	case 'd':
-		changeStyle("day");
-		requestCalendar(year,month,date,true,type);
-		break;
-	case 'w':
-		changeStyle("week");
-		requestCalendar(year,month,date,true,type);
-		break;
-	case 'm':
-		changeStyle("month");
-		requestCalendar(year,month,date,true,type);
-		break;
-	case 'l':
-		changeStyle("list");
-		requestCalendar(year,month,date,true,type);
-		break;
 	case 'event':
 		changeStyle("event",data);
 		loadEventDetail();
@@ -81,6 +65,10 @@ function reloadPage(data){
 	case 'calendar':
 		changeStyle("calendar",data);
 		loadCalendarDetail();
+		break;
+	default:
+		changeStyle(type);
+		requestCalendar(year,month,date,true,type);
 		break;
 	}
 }
@@ -172,26 +160,11 @@ function requestData(request,y,m,d){
     	}
     	request = type;
 	}
-	switch(request){
-	case 'd':
-		changeStyle("day");
-		break;
-	case 'w':
-		changeStyle("week");
-		break;
-	case 'm':
-		changeStyle("month");
-		break;
-	case 'l':
-		changeStyle("list");
-		break;
-	case 'first':
-		changeStyle("month");
-		break;
-	}
 	if(request != 'first'){
+		changeStyle(request);
 		requestCalendar(year,month,date,false,request);
 	}else{
+		changeStyle('first');
 		requestCalendar(year,month,date,"first",'m');
 	}
 	return pageUrl;		//day, week 추가시 삭제 해야함.
@@ -279,7 +252,20 @@ $(document).on('click','#listBtn',function(){
 
 //버튼 배경색 설정 함수, 현재 타입에 맞게 스타일 변경
 function changeStyle(type,data){
-	
+	switch(type){
+	case 'd':
+		type = "day";
+		break;
+	case 'w':
+		type="week";
+		break;
+	case 'm':
+		type = "month";
+		break;
+	case 'l':
+		type = "list";
+		break;
+	}
 	if($("#container").css('display') == 'none'){//전에 이벤트,캘린더 상세보기를 보았으면
 		$("#container").css('display','inline-block');
 		$("#header").css('display','');
@@ -295,7 +281,7 @@ function changeStyle(type,data){
 	}
 	if($(".pushCalendarBtn").length == 0){//타입 버튼 눌러진게 없으면
 		$("#"+type+"Btn").addClass('pushCalendarBtn');
-		if(type=="day"){
+		if(type=="day"){	//????
 			type="week";
 		}
 		$("#"+type+"Calendar").css("display","inline-block");
@@ -318,19 +304,8 @@ function changeStyle(type,data){
 		$("#contents").css('min-height','875px');
 	}
 	closeAllDiv();
+
 	switch(type){
-	case "day":
-		$("#contents").css('height','90%');
-		$("#container").css('height','100%');
-		break;
-	case "week":
-		$("#contents").css('height','90%');
-		$("#container").css('height','100%');
-		break;
-	case "month":
-		$("#contents").css('height','90%');
-		$("#container").css('height','100%');
-		break;
 	case "list":
 		$("#contents").height('auto');
 		$("#container").height('auto');
@@ -352,6 +327,10 @@ function changeStyle(type,data){
 		$("#side").css('display','none');
 		$("#container_EventDetail").css('display','none');
 		$("#container_CalendarDetail").css('display','inline-block');
+		break;
+	default:	//day, week, month
+		$("#contents").css('height','90%');
+		$("#container").css('height','100%');
 		break;
 	}
 }	
