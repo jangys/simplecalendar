@@ -344,24 +344,9 @@ function showOtherPage(){
 	var type = typeSplit[0];
 	var date =  typeSplit[1];
 	var strDate =date.split("-");
-	switch(type){
-	case 'd':
-		changeStyle("day");
-		requestDailyCalendar(strDate[0],strDate[1],strDate[2],false);
-		break;
-	case 'w':
-		changeStyle("week");
-		requestWeeklyCalendar(strDate[0],strDate[1],strDate[2],false);
-		break;
-	case 'm':
-		changeStyle("month");
-		requestMonthlyCalendar(strDate[0],strDate[1],strDate[2],false);
-		break;
-	case 'l':
-		changeStyle("list");
-		requestListCalendar(strDate[0],strDate[1],strDate[2],false);
-		break;
-	}
+	
+	changeStyle(type);
+	requestCalendar(strDate[0],strDate[1],strDate[2],false,type);
 	//현재 페이지 초기화
 	$("#container_CalendarDetail").html('');
 }
