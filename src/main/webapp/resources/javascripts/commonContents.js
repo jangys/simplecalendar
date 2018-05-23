@@ -54,7 +54,7 @@ function reloadPage(data){
     	 year = now.getFullYear();
     	 month = now.getMonth()+1;
     	 date = now.getDate();
-    	 type='';
+    	 type='m';
     	 requestData();
      }
   	switch(type){
@@ -264,6 +264,9 @@ function changeStyle(type,data){
 		break;
 	case 'l':
 		type = "list";
+		break;
+	case 'first':
+		type="month";
 		break;
 	}
 	if($("#container").css('display') == 'none'){//전에 이벤트,캘린더 상세보기를 보았으면

@@ -308,7 +308,7 @@ function submitInput_calendar(){
 			data: data,
 			contentType : "application/json; charset=UTF-8",
 			success:function(data){
-				if(data=="true"){
+				if(data.indexOf("@") != -1){
 					$.ajax({
 						url:baseUrl+"/CalendarList",
 						type:'GET',

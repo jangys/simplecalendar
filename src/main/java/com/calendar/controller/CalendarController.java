@@ -183,6 +183,7 @@ public class CalendarController {
 	public @ResponseBody String updateCalendar(@RequestBody CalendarInputDTO dto) {
 		String result="true";
 		GoogleCalendarService gcs = new GoogleCalendarService();
+		com.google.api.services.calendar.model.Calendar resultCalendar = new com.google.api.services.calendar.model.Calendar();
 		try {
 			Calendar service = gcs.getCalendarService();
 			
@@ -193,6 +194,7 @@ public class CalendarController {
 				.setTimeZone(dto.getTimezone())
 				;
 				com.google.api.services.calendar.model.Calendar newCalendar = service.calendars().insert(calendar).execute();
+				resultCalendar = newCalendar;
 				if(dto.getDefaultReminders() != null && newCalendar != null) {
 					CalendarListEntry entry = service.calendarList().get(newCalendar.getId()).execute();
 					entry.setDefaultReminders(dto.getDefaultReminders());
@@ -215,7 +217,7 @@ public class CalendarController {
 					.setDescription(dto.getDescription())
 					.setTimeZone(dto.getTimezone())
 					;
-				service.calendars().update(calendar.getId(), calendar).execute();
+				resultCalendar = service.calendars().update(calendar.getId(), calendar).execute();
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -223,7 +225,7 @@ public class CalendarController {
 			result = new EventController().getErrorMessage(e.getMessage());
 		}
 		
-		return result;
+		return resultCalendar.getId();
 	}
 	@RequestMapping(value = "/writeICSFile")
 	public @ResponseBody String writeICSFile(WriteICSInputDTO dto) {
