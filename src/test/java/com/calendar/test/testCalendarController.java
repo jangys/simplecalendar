@@ -65,11 +65,6 @@ public class testCalendarController {
 	}
 
 	@Test
-	public void test2GetCheckedCalendarEventList() {
-		fail("Not yet implemented");
-	}
-
-	@Test
 	public void test3GetCheckedCalendarList() {
 		fail("Not yet implemented");
 	}

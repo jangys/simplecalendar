@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -37,14 +38,14 @@ public class ACLController {
 	}
 	
 	@RequestMapping(value="/addACLRule",method=RequestMethod.POST)
-	public @ResponseBody AclRule addACLRule(ACLInputDTO dto) {
+	public @ResponseBody AclRule addACLRule(@RequestBody ACLInputDTO dto) {
 		AclRule acl = null;
 		GoogleCalendarService gcs = new GoogleCalendarService();
 		try {
 			Calendar service = gcs.getCalendarService();
 			Scope scope = new Scope().setType("user").setValue(dto.getValue());
 			AclRule input = new AclRule().setRole(dto.getRole()).setScope(scope);
-			
+			System.out.println(dto.getValue());
 			acl = service.acl().insert(dto.getCalendarId(), input).execute();
 			
 		} catch (IOException e) {
@@ -54,7 +55,7 @@ public class ACLController {
 		return acl;
 	}
 	@RequestMapping(value="/deleteACLRule",method=RequestMethod.GET)
-	public @ResponseBody String deleteACLRule(ACLInputDTO dto) {
+	public @ResponseBody String deleteACLRule(@RequestBody ACLInputDTO dto) {
 		String result = "true";
 		GoogleCalendarService gcs = new GoogleCalendarService();
 		try {
@@ -69,7 +70,7 @@ public class ACLController {
 		return result;
 	}
 	@RequestMapping(value="/updateACLRule",method=RequestMethod.POST)
-	public @ResponseBody String updateACLRule(ACLInputDTO dto) {
+	public @ResponseBody String updateACLRule(@RequestBody ACLInputDTO dto) {
 		String result = "true";
 		GoogleCalendarService gcs = new GoogleCalendarService();
 		try {

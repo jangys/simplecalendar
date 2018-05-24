@@ -181,7 +181,7 @@ public class CalendarController {
 	
 	@RequestMapping(value = "/updateCalendar", method = RequestMethod.POST)
 	public @ResponseBody String updateCalendar(@RequestBody CalendarInputDTO dto) {
-		String result="true";
+		String result = "";
 		GoogleCalendarService gcs = new GoogleCalendarService();
 		com.google.api.services.calendar.model.Calendar resultCalendar = new com.google.api.services.calendar.model.Calendar();
 		try {
